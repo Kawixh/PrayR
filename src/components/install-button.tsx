@@ -1,4 +1,5 @@
-// components/InstallButton.tsx
+"use client";
+
 import { useEffect, useState } from "react";
 
 const InstallButton = () => {
