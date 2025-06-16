@@ -1,4 +1,5 @@
 import { getAdhanTime } from "@/backend/get-adhan-time";
+import { ModeToggle } from "@/components/ui/theme-toggle";
 import { PrayerTimeCard } from "./_components/prayer-time-card";
 import { InstallPrompt } from "./_utils/install-prompt";
 
@@ -6,8 +7,10 @@ export default async function Page() {
   const adhanTime = await getAdhanTime("London", "GB");
 
   return (
-    <div className="flex flex-col container max-w-full md:max-w-2xl lg:max-w-4xl mx-auto h-screen gap-10">
+    <div className="p-4 flex flex-col container max-w-full md:max-w-2xl lg:max-w-4xl mx-auto h-screen gap-10">
       <InstallPrompt />
+
+      <ModeToggle />
 
       <div className="flex flex-col items-center justify-center gap-4">
         <h1 className="text-4xl font-bold">Adhan Time</h1>

@@ -1,9 +1,4 @@
 module.exports = {
-  allowedDevOrigins: [
-    "local-origin.dev",
-    "*.local-origin.dev",
-    "192.168.18.161",
-  ],
   experimental: {
     reactCompiler: true,
   },
