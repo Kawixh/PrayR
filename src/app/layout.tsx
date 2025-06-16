@@ -1,3 +1,4 @@
+import InstallButton from "@/components/install-button";
 import RootLayoutClient from "@/components/root-layout-client";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata, Viewport } from "next";
@@ -98,6 +99,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <InstallButton />
           <RootLayoutClient>{children}</RootLayoutClient>
         </ThemeProvider>
       </body>
