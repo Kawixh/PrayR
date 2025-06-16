@@ -19,10 +19,8 @@ export const InstallPrompt = () => {
   }
 
   return (
-    <div>
-      <h3>Install App</h3>
-      <button>Add to Home Screen</button>
-      {isIOS && (
+    isIOS && (
+      <div className="flex flex-col items-center justify-center gap-2 rounded-lg bg-muted p-2">
         <p>
           To install this app on your iOS device, tap the share button
           <span role="img" aria-label="share icon">
@@ -36,7 +34,7 @@ export const InstallPrompt = () => {
           </span>
           .
         </p>
-      )}
-    </div>
+      </div>
+    )
   );
 };
