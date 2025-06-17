@@ -1,8 +1,3 @@
-"use client";
-
-import { motion } from "motion/react";
-import { useState } from "react";
-
 interface LiquidGlassProps {
   children: React.ReactNode;
   className?: string;
@@ -12,8 +7,6 @@ export default function LiquidGlass({
   children,
   className = "",
 }: LiquidGlassProps) {
-  const [isHovered, setIsHovered] = useState(false);
-
   return (
     <>
       {/* SVG Filter - only render once */}
@@ -68,21 +61,7 @@ export default function LiquidGlass({
         </filter>
       </svg>
 
-      <motion.div
-        className={`liquid-glass-wrapper ${className}`}
-        onHoverStart={() => setIsHovered(true)}
-        onHoverEnd={() => setIsHovered(false)}
-        initial={{
-          padding: "0.4rem",
-        }}
-        animate={{
-          padding: isHovered ? "0.6rem" : "0.4rem",
-        }}
-        transition={{
-          duration: 0.1,
-          ease: "easeInOut",
-        }}
-      >
+      <div className={`liquid-glass-wrapper ${className}`}>
         {/* Glass Effect Layer */}
         <div className="liquid-glass-effect" />
 
@@ -94,7 +73,7 @@ export default function LiquidGlass({
 
         {/* Content Layer */}
         <div className="liquid-glass-text relative z-[3]">{children}</div>
-      </motion.div>
+      </div>
     </>
   );
 }

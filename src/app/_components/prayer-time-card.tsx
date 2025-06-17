@@ -34,7 +34,6 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
   useEffect(() => {
     const prayerTimes: PrayerTime[] = [
       { name: "Fajr", time: timings.Fajr },
-      { name: "Sunrise", time: timings.Sunrise },
       { name: "Dhuhr", time: timings.Dhuhr },
       { name: "Asr", time: timings.Asr },
       { name: "Maghrib", time: timings.Maghrib },
@@ -91,47 +90,68 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
   if (!nextPrayer || !previousPrayer) return null;
 
   return (
-    <LiquidGlass className=" p-6 flex flex-col items-center justify-center text-white dark:text-black w-full max-w-md mx-auto">
-      <div className="liquidGlass-effect"></div>
-      <div className="liquidGlass-tint"></div>
-      <div className="liquidGlass-shine"></div>
-      <div className="liquidGlass-text">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Prayer Times</h2>
-        </div>
-
-        <div>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="text-right pr-4 border-r border-gray-200 dark:border-gray-700">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                Previous
-              </p>
-              <div className="text-xl font-semibold">{previousPrayer.name}</div>
-              <div className="text-lg text-gray-600 dark:text-gray-300">
-                {convertTo12Hour(previousPrayer.time)}
-              </div>
+    <div className="flex items-center w-full justify-center gap-4">
+      <LiquidGlass className="p-16 h-full flex flex-col items-center justify-center w-full">
+        <div className="flex flex-col gap-3 text-center">
+          <div className="flex items-center gap-3">
+            <div
+              className="text-4xl font-semibold"
+              style={{ mixBlendMode: "difference", color: "white" }}
+            >
+              {previousPrayer.name}
             </div>
-
-            <div className="text-left pl-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                Next
-              </p>
-              <div className="text-xl font-semibold text-primary">
-                {nextPrayer.name}
-              </div>
-              <div className="text-lg text-gray-600 dark:text-gray-300">
-                {convertTo12Hour(nextPrayer.time)}
-              </div>
+            <div
+              className="text-4xl text-gray-600 dark:text-gray-300"
+              style={{ mixBlendMode: "difference", color: "white" }}
+            >
+              {convertTo12Hour(previousPrayer.time)}
             </div>
           </div>
 
-          {isWithinFifteenMinutes && (
-            <div className="text-xl font-semibold text-primary mt-4">
-              {timeRemaining} remaining
-            </div>
-          )}
+          <p
+            className="text-sm text-gray-500 dark:text-gray-400 mb-1"
+            style={{ mixBlendMode: "difference", color: "white" }}
+          >
+            Previous Adhan
+          </p>
         </div>
-      </div>
-    </LiquidGlass>
+      </LiquidGlass>
+
+      <LiquidGlass className="h-full w-[1px]">
+        <div className="h-full w-full"></div>
+      </LiquidGlass>
+
+      <LiquidGlass className="p-16 h-full flex flex-col items-center justify-center w-full">
+        <div className="flex flex-col gap-3 text-center">
+          <div className="flex items-center gap-3">
+            <div
+              className="text-4xl font-semibold"
+              style={{ mixBlendMode: "difference", color: "white" }}
+            >
+              {nextPrayer.name}
+            </div>
+            <div
+              className="text-4xl text-gray-600 dark:text-gray-300"
+              style={{ mixBlendMode: "difference", color: "white" }}
+            >
+              {convertTo12Hour(nextPrayer.time)}
+            </div>
+          </div>
+
+          <p
+            className="text-sm text-gray-500 dark:text-gray-400 mb-1"
+            style={{ mixBlendMode: "difference", color: "white" }}
+          >
+            Previous Adhan
+          </p>
+        </div>
+
+        {isWithinFifteenMinutes && (
+          <div className="text-xl font-semibold text-primary mt-4">
+            {timeRemaining} remaining
+          </div>
+        )}
+      </LiquidGlass>
+    </div>
   );
 }
