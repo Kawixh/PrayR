@@ -41,16 +41,6 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --animate-aurora: aurora 60s linear infinite;
-
-  @keyframes aurora {
-    from {
-      background-position: 50% 50%, 50% 50%;
-    }
-    to {
-      background-position: 350% 50%, 350% 50%;
-    }
-  }
 }
 
 :root {
@@ -166,6 +156,15 @@
 
   .animated-background {
     background-size: 1000px;
-    animation: aurora 60s linear infinite;
+    animation: aurora 100s linear infinite alternate;
+  }
+
+  @keyframes aurora {
+    from {
+      background-position: 0% 0%;
+    }
+    to {
+      background-position: 100% 0%;
+    }
   }
 }

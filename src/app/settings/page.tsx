@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import LiquidGlass from "@/components/ui/liquid-glass";
 import {
   Select,
   SelectContent,
@@ -77,93 +78,98 @@ export default function SettingsPage() {
 
   return (
     <div className="p-4 flex flex-col container max-w-full md:max-w-2xl lg:max-w-4xl mx-auto h-screen gap-10">
-      <h1 className="text-2xl font-bold">Settings</h1>
+      <LiquidGlass className="p-16 h-full items-center justify-center w-full">
+        <h1 className="text-2xl font-bold">Settings</h1>
 
-      <div className="flex flex-col gap-4">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="cityName">City Name</label>
-            <input
-              type="text"
-              id="cityName"
-              name="cityName"
-              value={settings.cityName}
-              onChange={(e) =>
-                setSettings((prev) => ({ ...prev, cityName: e.target.value }))
-              }
-              className="border border-gray-300 rounded-md p-2"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label htmlFor="country">Country</label>
-            <input
-              type="text"
-              id="country"
-              name="country"
-              value={settings.country}
-              onChange={(e) =>
-                setSettings((prev) => ({ ...prev, country: e.target.value }))
-              }
-              className="border border-gray-300 rounded-md p-2"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label htmlFor="method">Calculation Method</label>
-            <Select
-              key={settings.method}
-              value={settings.method || undefined}
-              onValueChange={(value) =>
-                setSettings((prev) => ({ ...prev, method: value }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue
-                  className="w-full"
-                  placeholder="Select a calculation method"
-                />
-              </SelectTrigger>
-              <SelectContent className="w-full">
-                {calculationMethods.map((method) => (
-                  <SelectItem key={method.value} value={method.value}>
-                    {method.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label>School</label>
+        <div className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              {schools.map((school) => (
-                <div key={school.value} className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    id={`school-${school.value}`}
-                    name="school"
-                    value={school.value}
-                    checked={settings.school === school.value}
-                    onChange={(e) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        school: e.target.value,
-                      }))
-                    }
-                    className="w-4 h-4"
-                  />
-                  <label htmlFor={`school-${school.value}`} className="text-sm">
-                    {school.label}
-                  </label>
-                </div>
-              ))}
+              <label htmlFor="cityName">City Name</label>
+              <input
+                type="text"
+                id="cityName"
+                name="cityName"
+                value={settings.cityName}
+                onChange={(e) =>
+                  setSettings((prev) => ({ ...prev, cityName: e.target.value }))
+                }
+                className="border border-gray-300 rounded-md p-2"
+              />
             </div>
-          </div>
 
-          <Button type="submit">Save</Button>
-        </form>
-      </div>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="country">Country</label>
+              <input
+                type="text"
+                id="country"
+                name="country"
+                value={settings.country}
+                onChange={(e) =>
+                  setSettings((prev) => ({ ...prev, country: e.target.value }))
+                }
+                className="border border-gray-300 rounded-md p-2"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label htmlFor="method">Calculation Method</label>
+              <Select
+                key={settings.method}
+                value={settings.method || undefined}
+                onValueChange={(value) =>
+                  setSettings((prev) => ({ ...prev, method: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    className="w-full"
+                    placeholder="Select a calculation method"
+                  />
+                </SelectTrigger>
+                <SelectContent className="w-full">
+                  {calculationMethods.map((method) => (
+                    <SelectItem key={method.value} value={method.value}>
+                      {method.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label>School</label>
+              <div className="flex flex-col gap-2">
+                {schools.map((school) => (
+                  <div key={school.value} className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      id={`school-${school.value}`}
+                      name="school"
+                      value={school.value}
+                      checked={settings.school === school.value}
+                      onChange={(e) =>
+                        setSettings((prev) => ({
+                          ...prev,
+                          school: e.target.value,
+                        }))
+                      }
+                      className="w-4 h-4"
+                    />
+                    <label
+                      htmlFor={`school-${school.value}`}
+                      className="text-sm"
+                    >
+                      {school.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Button type="submit">Save</Button>
+          </form>
+        </div>
+      </LiquidGlass>
     </div>
   );
 }
