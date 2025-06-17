@@ -41,6 +41,16 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --animate-aurora: aurora 60s linear infinite;
+
+  @keyframes aurora {
+    from {
+      background-position: 50% 50%, 50% 50%;
+    }
+    to {
+      background-position: 350% 50%, 350% 50%;
+    }
+  }
 }
 
 :root {
@@ -119,25 +129,43 @@
   body {
     @apply bg-background text-foreground;
   }
-}
 
-@layer utilities {
-  @keyframes blob {
-    0% {
-      transform: translate(0px, 0px) scale(1);
-    }
-    33% {
-      transform: translate(30px, -50px) scale(1.1);
-    }
-    66% {
-      transform: translate(-20px, 20px) scale(0.9);
-    }
-    100% {
-      transform: translate(0px, 0px) scale(1);
-    }
+  /* Liquid Glass Custom Styles */
+  .liquid-glass-wrapper {
+    @apply relative flex font-semibold overflow-hidden text-black cursor-pointer;
+    @apply rounded-[1.8rem] p-2;
+
+    box-shadow: 0 6px 6px rgba(0, 0, 0, 0.2), 0 0 20px rgba(0, 0, 0, 0.1);
+
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
   }
 
-  .animate-blob {
-    animation: blob 7s infinite;
+  .liquid-glass-effect {
+    @apply absolute inset-0 z-0 overflow-hidden;
+
+    backdrop-filter: blur(3px);
+    filter: url(#glass-distortion);
+    isolation: isolate;
+  }
+
+  .liquid-glass-tint {
+    @apply absolute inset-0 z-[1];
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .liquid-glass-shine {
+    @apply absolute inset-0 z-[2] overflow-hidden;
+
+    box-shadow: inset 2px 2px 1px 0 rgba(255, 255, 255, 0.5),
+      inset -1px -1px 1px 1px rgba(255, 255, 255, 0.5);
+  }
+
+  .liquid-glass-text {
+    @apply relative z-[3];
+  }
+
+  .animated-background {
+    background-size: 1000px;
+    animation: aurora 60s linear infinite;
   }
 }

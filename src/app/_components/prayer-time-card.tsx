@@ -1,6 +1,7 @@
 "use client";
 
 import { PrayerTimings } from "@/backend/types";
+import LiquidGlass from "@/components/ui/liquid-glass";
 import { useEffect, useState } from "react";
 
 type PrayerTime = {
@@ -90,40 +91,47 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
   if (!nextPrayer || !previousPrayer) return null;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md mx-auto">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-4">Prayer Times</h2>
-
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="text-right pr-4 border-r border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-              Previous
-            </p>
-            <div className="text-xl font-semibold">{previousPrayer.name}</div>
-            <div className="text-lg text-gray-600 dark:text-gray-300">
-              {convertTo12Hour(previousPrayer.time)}
-            </div>
-          </div>
-
-          <div className="text-left pl-4">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-              Next
-            </p>
-            <div className="text-xl font-semibold text-primary">
-              {nextPrayer.name}
-            </div>
-            <div className="text-lg text-gray-600 dark:text-gray-300">
-              {convertTo12Hour(nextPrayer.time)}
-            </div>
-          </div>
+    <LiquidGlass className="rounded-lg p-6 flex flex-col items-center justify-center text-white dark:text-black w-full max-w-md mx-auto">
+      <div className="liquidGlass-effect"></div>
+      <div className="liquidGlass-tint"></div>
+      <div className="liquidGlass-shine"></div>
+      <div className="liquidGlass-text">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Prayer Times</h2>
         </div>
 
-        {isWithinFifteenMinutes && (
-          <div className="text-xl font-semibold text-primary mt-4">
-            {timeRemaining} remaining
+        <div>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="text-right pr-4 border-r border-gray-200 dark:border-gray-700">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Previous
+              </p>
+              <div className="text-xl font-semibold">{previousPrayer.name}</div>
+              <div className="text-lg text-gray-600 dark:text-gray-300">
+                {convertTo12Hour(previousPrayer.time)}
+              </div>
+            </div>
+
+            <div className="text-left pl-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Next
+              </p>
+              <div className="text-xl font-semibold text-primary">
+                {nextPrayer.name}
+              </div>
+              <div className="text-lg text-gray-600 dark:text-gray-300">
+                {convertTo12Hour(nextPrayer.time)}
+              </div>
+            </div>
           </div>
-        )}
+
+          {isWithinFifteenMinutes && (
+            <div className="text-xl font-semibold text-primary mt-4">
+              {timeRemaining} remaining
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </LiquidGlass>
   );
 }
