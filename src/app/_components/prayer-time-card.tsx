@@ -47,34 +47,28 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
       minute: "2-digit",
     });
 
-    // Find the next prayer time
     let nextPrayerTime = prayerTimes.find(
       (prayer) => prayer.time > currentTimeStr
     );
     if (!nextPrayerTime) {
-      // If no next prayer today, find the first prayer of tomorrow
       nextPrayerTime = prayerTimes[0];
     }
 
-    // Find the previous prayer time
     let previousPrayerTime = [...prayerTimes]
       .reverse()
       .find((prayer) => prayer.time < currentTimeStr);
     if (!previousPrayerTime) {
-      // If no previous prayer today, find the last prayer of yesterday
       previousPrayerTime = prayerTimes[prayerTimes.length - 1];
     }
 
     setNextPrayer(nextPrayerTime);
     setPreviousPrayer(previousPrayerTime);
 
-    // Calculate time remaining
     const [nextHour, nextMinute] = nextPrayerTime.time.split(":").map(Number);
     const nextPrayerDate = new Date(now);
     nextPrayerDate.setHours(nextHour, nextMinute, 0);
 
     if (nextPrayerTime.time < currentTimeStr) {
-      // If the next prayer is tomorrow
       nextPrayerDate.setDate(nextPrayerDate.getDate() + 1);
     }
 
@@ -82,79 +76,81 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
     const minutes = Math.floor(diff / 60000);
     const seconds = Math.floor((diff % 60000) / 1000);
 
-    // Check if the next prayer is within 15 minutes
-    setIsWithinFifteenMinutes(minutes <= 15);
+    setIsWithinFifteenMinutes(minutes < 15);
     setTimeRemaining(`${minutes}m ${seconds}s`);
   }, [currentTime, timings]);
 
   if (!nextPrayer || !previousPrayer) return null;
 
   return (
-    <div className="flex items-stretch w-full justify-center gap-8">
+    <div className="flex flex-col md:flex-row items-stretch w-full justify-center gap-4 md:gap-8">
       {/* Previous Prayer Card */}
-      <LiquidGlass className="flex flex-col justify-between items-center w-full">
-        <div className="flex flex-col p-12 justify-between h-full">
-          <div className="flex-2/3 flex w-full flex-col justify-center items-center">
-            <div className="flex justify-between items-center gap-4">
+      <LiquidGlass className="w-full min-h-[320px]">
+        <div className="flex flex-col h-full p-6 md:p-8">
+          {/* Top 2/3 section */}
+          <div className="h-2/3 flex flex-col justify-center items-center">
+            <div className="flex flex-col lg:flex-row justify-center items-center text-center lg:justify-between w-full gap-2 lg:gap-4">
               <div
-                className="text-5xl font-bold"
+                className="text-4xl lg:text-5xl font-bold"
                 style={{ mixBlendMode: "difference", color: "white" }}
               >
                 {previousPrayer.name}
               </div>
               <div
-                className="text-5xl font-bold text-right"
+                className="text-4xl lg:text-5xl font-bold"
                 style={{ mixBlendMode: "difference", color: "white" }}
               >
                 {convertTo12Hour(previousPrayer.time)}
               </div>
             </div>
           </div>
-          {/* Bottom text */}
-          <div
-            className="text-lg flex-1/3 font-semibold text-center mt-4"
-            style={{ mixBlendMode: "difference", color: "white" }}
-          >
-            Previous Adhan
+          {/* Bottom 1/3 section */}
+          <div className="h-1/3 flex justify-center items-center">
+            <div
+              className="text-base md:text-lg font-semibold text-center"
+              style={{ mixBlendMode: "difference", color: "white" }}
+            >
+              Previous Adhan
+            </div>
           </div>
         </div>
       </LiquidGlass>
 
-      {/* Divider */}
-      <LiquidGlass className="h-full w-[2px] min-h-[320px] flex-shrink-0">
-        <div className="h-full w-full"></div>
-      </LiquidGlass>
+      {/* Divider (hidden on small screens) */}
+      <LiquidGlass className="hidden md:flex h-auto w-[2px] flex-shrink-0" />
 
       {/* Next Prayer Card */}
-      <LiquidGlass className="flex flex-col justify-between items-center w-full">
-        <div className="flex flex-col p-12 justify-between h-full">
-          <div className="flex-2/3 flex flex-col justify-center items-center">
-            <div className="flex justify-between items-center gap-4">
+      <LiquidGlass className="w-full min-h-[320px]">
+        <div className="flex flex-col h-full p-6 md:p-8">
+          {/* Top 2/3 section */}
+          <div className="h-2/3 flex flex-col justify-center items-center">
+            <div className="flex flex-col lg:flex-row justify-center items-center text-center lg:justify-between w-full gap-2 lg:gap-4">
               <div
-                className="text-5xl font-bold"
+                className="text-4xl lg:text-5xl font-bold"
                 style={{ mixBlendMode: "difference", color: "white" }}
               >
                 {nextPrayer.name}
               </div>
               <div
-                className="text-5xl text-right font-bold"
+                className="text-4xl lg:text-5xl font-bold"
                 style={{ mixBlendMode: "difference", color: "white" }}
               >
                 {convertTo12Hour(nextPrayer.time)}
               </div>
             </div>
           </div>
-          <div className="flex flex-1/3 flex-col gap-4">
+          {/* Bottom 1/3 section */}
+          <div className="h-1/3 flex flex-col justify-center items-center text-center gap-2">
             {isWithinFifteenMinutes && (
               <div
-                className="text-2xl font-semibold mt-4"
+                className="text-xl md:text-2xl font-semibold"
                 style={{ mixBlendMode: "difference", color: "white" }}
               >
                 {timeRemaining} remaining
               </div>
             )}
             <div
-              className="text-lg font-semibold text-center mt-4"
+              className="text-base md:text-lg font-semibold"
               style={{ mixBlendMode: "difference", color: "white" }}
             >
               Next Adhan
