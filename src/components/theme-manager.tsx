@@ -6,7 +6,6 @@ import { useEffect } from "react";
 
 export default function ThemeManager() {
   useEffect(() => {
-    // Centralize the logic to apply the theme
     const applyTheme = () => {
       let selectedTheme = defaultTheme;
       try {
@@ -24,33 +23,25 @@ export default function ThemeManager() {
       }
 
       document.body.style.backgroundImage = `url(${selectedTheme.image})`;
-      document.body.style.backgroundSize = "cover";
+      // --- KEY CHANGE HERE ---
+      // Make the background larger than the screen to allow for panning.
+      document.body.style.backgroundSize = "150% auto";
+      // The animation will override this, but it's a good default.
       document.body.style.backgroundPosition = "center";
       document.body.style.backgroundAttachment = "fixed";
       document.body.style.transition = "background-image 0.5s ease-in-out";
     };
 
-    // Apply the theme on initial load
     applyTheme();
 
-    // Listen for changes in localStorage from other tabs/windows
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === "prayerSettings") {
-        applyTheme();
-      }
-    };
-
-    // --- ADD THIS EVENT LISTENER ---
-    // Listen for our custom event for same-page updates
     window.addEventListener("theme-changed", applyTheme);
-    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("storage", applyTheme);
 
-    // Cleanup the event listeners when the component unmounts
     return () => {
       window.removeEventListener("theme-changed", applyTheme);
-      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("storage", applyTheme);
     };
-  }, []); // Empty dependency array is correct, we manage updates with events
+  }, []);
 
-  return null; // This component does not render anything
+  return null;
 }
