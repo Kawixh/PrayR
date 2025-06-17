@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import LiquidGlass from "./ui/liquid-glass";
 
 const InstallButton = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
@@ -35,9 +36,13 @@ const InstallButton = () => {
   return (
     <>
       {isInstallable && (
-        <button onClick={handleInstallClick} className="install-button">
-          Install App
-        </button>
+        <LiquidGlass className="flex flex-col items-center justify-center gap-2 p-4">
+          <button onClick={handleInstallClick} className="install-button">
+            <p style={{ mixBlendMode: "difference", color: "white" }}>
+              Install App
+            </p>
+          </button>
+        </LiquidGlass>
       )}
     </>
   );

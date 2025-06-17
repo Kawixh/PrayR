@@ -1,5 +1,6 @@
 "use client";
 
+import LiquidGlass from "@/components/ui/liquid-glass";
 import { useEffect, useState } from "react";
 
 export const InstallPrompt = () => {
@@ -20,7 +21,7 @@ export const InstallPrompt = () => {
 
   return (
     isIOS && (
-      <div className="flex flex-col items-center justify-center gap-2 rounded-lg bg-muted p-2">
+      <LiquidGlass className="flex flex-col items-center justify-center gap-2 rounded-lg p-2">
         <p>
           To install this app on your iOS device, tap the share button
           <span role="img" aria-label="share icon">
@@ -34,7 +35,7 @@ export const InstallPrompt = () => {
           </span>
           .
         </p>
-      </div>
+      </LiquidGlass>
     )
   );
 };
