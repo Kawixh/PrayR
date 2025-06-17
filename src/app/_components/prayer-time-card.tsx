@@ -91,7 +91,7 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
   if (!nextPrayer || !previousPrayer) return null;
 
   return (
-    <LiquidGlass className="rounded-lg p-6 flex flex-col items-center justify-center text-white dark:text-black w-full max-w-md mx-auto">
+    <LiquidGlass className=" p-6 flex flex-col items-center justify-center text-white dark:text-black w-full max-w-md mx-auto">
       <div className="liquidGlass-effect"></div>
       <div className="liquidGlass-tint"></div>
       <div className="liquidGlass-shine"></div>
