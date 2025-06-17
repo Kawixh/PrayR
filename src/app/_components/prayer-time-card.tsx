@@ -92,30 +92,31 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
   return (
     <div className="flex items-stretch w-full justify-center gap-8">
       {/* Previous Prayer Card */}
-      <LiquidGlass className="flex flex-col justify-between items-center p-12 w-full max-w-md min-h-[320px]">
-        {/* Centered main part */}
-        <div className="flex-1 flex flex-col justify-center items-center">
-          <div className="flex items-center gap-4">
-            <div
-              className="text-5xl font-bold"
-              style={{ mixBlendMode: "difference", color: "white" }}
-            >
-              {previousPrayer.name}
-            </div>
-            <div
-              className="text-5xl font-bold"
-              style={{ mixBlendMode: "difference", color: "white" }}
-            >
-              {convertTo12Hour(previousPrayer.time)}
+      <LiquidGlass className="flex flex-col justify-between items-center w-full">
+        <div className="flex flex-col p-12 justify-between h-full">
+          <div className="flex-2/3 flex w-full flex-col justify-center items-center">
+            <div className="flex justify-between items-center gap-4">
+              <div
+                className="text-5xl font-bold"
+                style={{ mixBlendMode: "difference", color: "white" }}
+              >
+                {previousPrayer.name}
+              </div>
+              <div
+                className="text-5xl font-bold text-right"
+                style={{ mixBlendMode: "difference", color: "white" }}
+              >
+                {convertTo12Hour(previousPrayer.time)}
+              </div>
             </div>
           </div>
-        </div>
-        {/* Bottom text */}
-        <div
-          className="text-lg font-semibold text-center mt-4"
-          style={{ mixBlendMode: "difference", color: "white" }}
-        >
-          Previous Adhan
+          {/* Bottom text */}
+          <div
+            className="text-lg flex-1/3 font-semibold text-center mt-4"
+            style={{ mixBlendMode: "difference", color: "white" }}
+          >
+            Previous Adhan
+          </div>
         </div>
       </LiquidGlass>
 
@@ -125,38 +126,40 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
       </LiquidGlass>
 
       {/* Next Prayer Card */}
-      <LiquidGlass className="flex flex-col justify-between items-center p-12 w-full max-w-md min-h-[320px]">
-        {/* Centered main part */}
-        <div className="flex-1 flex flex-col justify-center items-center">
-          <div className="flex items-center gap-4">
-            <div
-              className="text-5xl font-bold"
-              style={{ mixBlendMode: "difference", color: "white" }}
-            >
-              {nextPrayer.name}
-            </div>
-            <div
-              className="text-5xl font-bold"
-              style={{ mixBlendMode: "difference", color: "white" }}
-            >
-              {convertTo12Hour(nextPrayer.time)}
+      <LiquidGlass className="flex flex-col justify-between items-center w-full">
+        <div className="flex flex-col p-12 justify-between h-full">
+          <div className="flex-2/3 flex flex-col justify-center items-center">
+            <div className="flex justify-between items-center gap-4">
+              <div
+                className="text-5xl font-bold"
+                style={{ mixBlendMode: "difference", color: "white" }}
+              >
+                {nextPrayer.name}
+              </div>
+              <div
+                className="text-5xl text-right font-bold"
+                style={{ mixBlendMode: "difference", color: "white" }}
+              >
+                {convertTo12Hour(nextPrayer.time)}
+              </div>
             </div>
           </div>
-          {isWithinFifteenMinutes && (
+          <div className="flex flex-1/3 flex-col gap-4">
+            {isWithinFifteenMinutes && (
+              <div
+                className="text-2xl font-semibold mt-4"
+                style={{ mixBlendMode: "difference", color: "white" }}
+              >
+                {timeRemaining} remaining
+              </div>
+            )}
             <div
-              className="text-2xl font-semibold mt-4"
+              className="text-lg font-semibold text-center mt-4"
               style={{ mixBlendMode: "difference", color: "white" }}
             >
-              {timeRemaining} remaining
+              Next Adhan
             </div>
-          )}
-        </div>
-        {/* Bottom text */}
-        <div
-          className="text-lg font-semibold text-center mt-4"
-          style={{ mixBlendMode: "difference", color: "white" }}
-        >
-          Next Adhan
+          </div>
         </div>
       </LiquidGlass>
     </div>

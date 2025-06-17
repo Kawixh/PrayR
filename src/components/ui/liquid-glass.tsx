@@ -72,7 +72,9 @@ export default function LiquidGlass({
         <div className="liquid-glass-shine" />
 
         {/* Content Layer */}
-        <div className="liquid-glass-text relative z-[3]">{children}</div>
+        <div className="liquid-glass-text h-full w-full relative z-[3]">
+          {children}
+        </div>
       </div>
     </>
   );
