@@ -36,8 +36,8 @@ const InstallButton = () => {
   return (
     <>
       {isInstallable && (
-        <LiquidGlass className="flex flex-col items-center justify-center gap-2 p-4">
-          <button onClick={handleInstallClick} className="install-button">
+        <LiquidGlass className="flex rounded-md flex-col items-center justify-center gap-2">
+          <button onClick={handleInstallClick} className="m-2 install-button">
             <p style={{ mixBlendMode: "difference", color: "white" }}>
               Install App
             </p>
