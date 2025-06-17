@@ -95,8 +95,8 @@ export default function SettingsPage() {
 
   return (
     <div className="p-4 flex flex-col container max-w-full md:max-w-2xl lg:max-w-4xl mx-auto h-screen gap-10">
-      <LiquidGlass className="w-full">
-        <div className="p-4 flex flex-col gap-4 overflow-y-scroll">
+      <LiquidGlass className="w-full overflow-hidden">
+        <div className="p-4 flex flex-col gap-4 max-h-full overflow-y-scroll">
           <h1 className="text-2xl font-bold">Settings</h1>
 
           <div className="flex flex-col gap-4">
