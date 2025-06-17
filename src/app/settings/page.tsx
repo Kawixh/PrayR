@@ -13,6 +13,8 @@ import { themes } from "@/lib/themes";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 
+type ThemeSelection = "light" | "dark" | "system" | string;
+
 const calculationMethods = [
   { value: "0", label: "Jafari / Shia Ithna-Ashari" },
   { value: "1", label: "University of Islamic Sciences, Karachi" },
@@ -50,6 +52,12 @@ const schools = [
   { value: "1", label: "Hanafi" },
 ];
 
+const themeModes: { id: ThemeSelection; label: string }[] = [
+  { id: "light", label: "Light" },
+  { id: "dark", label: "Dark" },
+  { id: "system", label: "System" },
+];
+
 export default function SettingsPage() {
   const router = useRouter();
   const [settings, setSettings] = useState({
@@ -57,39 +65,31 @@ export default function SettingsPage() {
     country: "",
     method: "",
     school: "",
-    theme: "flower", // Add theme to state, with a default
+    themeSelection: "system" as ThemeSelection,
   });
 
-  // Load saved settings on component mount
   useEffect(() => {
     const savedSettings = localStorage.getItem("prayerSettings");
     if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
+      const parsed = JSON.parse(savedSettings);
+      if (!parsed.themeSelection) {
+        parsed.themeSelection = parsed.theme || "system";
+      }
+      setSettings(parsed);
     }
   }, []);
 
-  useEffect(() => {
-    const savedSettings = localStorage.getItem("prayerSettings");
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
-  }, []);
-
-  const handleThemeSelect = (themeId: string) => {
-    // Update the local state for the UI
-    setSettings((prev) => ({ ...prev, theme: themeId }));
-    // Temporarily update localStorage so ThemeManager can apply the preview
-    localStorage.setItem(
-      "prayerSettings",
-      JSON.stringify({ ...settings, theme: themeId })
-    );
-    // Notify ThemeManager to apply the new theme immediately for the preview
+  const handleThemeChange = (selection: ThemeSelection) => {
+    const newSettings = { ...settings, themeSelection: selection };
+    setSettings(newSettings);
+    localStorage.setItem("prayerSettings", JSON.stringify(newSettings));
     window.dispatchEvent(new Event("theme-changed"));
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    localStorage.setItem("prayerSettings", JSON.stringify(settings));
+
+    handleThemeChange(settings.themeSelection);
     router.push("/");
   };
 
@@ -103,21 +103,46 @@ export default function SettingsPage() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-8">
               <div>
                 <h2 className="text-lg font-bold mb-2">Select theme</h2>
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-                  {themes.map((theme) => (
-                    <button
-                      key={theme.id}
-                      type="button"
-                      onClick={() => handleThemeSelect(theme.id)} // Use the new handler
-                      className={`w-24 h-24 rounded-lg border-4 bg-cover bg-center transition-all duration-200 ${
-                        settings.theme === theme.id
-                          ? "border-blue-500 scale-105"
-                          : "border-transparent hover:scale-105"
-                      }`}
-                      style={{ backgroundImage: `url(${theme.image})` }}
-                      aria-label={`Select ${theme.id} theme`}
-                    />
-                  ))}
+                <div>
+                  <h2 className="text-lg font-bold mb-2">Theme Mode</h2>
+                  <div className="grid grid-cols-3 gap-4">
+                    {themeModes.map((mode) => (
+                      <Button
+                        key={mode.id}
+                        type="button"
+                        variant={
+                          settings.themeSelection === mode.id
+                            ? "default"
+                            : "outline"
+                        }
+                        onClick={() => handleThemeChange(mode.id)}
+                      >
+                        {mode.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h2 className="text-lg font-bold mb-2">
+                    Or, Pick a Specific Background
+                  </h2>
+                  <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+                    {themes.map((theme) => (
+                      <button
+                        key={theme.id}
+                        type="button"
+                        onClick={() => handleThemeChange(theme.id)}
+                        className={`w-24 h-24 rounded-lg border-4 bg-cover bg-center transition-all duration-200 ${
+                          settings.themeSelection === theme.id
+                            ? "border-blue-500 scale-105"
+                            : "border-transparent hover:scale-105"
+                        }`}
+                        style={{ backgroundImage: `url(${theme.image})` }}
+                        aria-label={`Select ${theme.id} theme`}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
 

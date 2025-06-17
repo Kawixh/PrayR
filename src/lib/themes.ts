@@ -8,16 +8,16 @@ import flowers from "@/assets/flowers.jpg";
 export interface Theme {
   id: string;
   image: string;
+  type: "light" | "dark";
 }
 
-// Define the themes with their IDs and image paths
 export const themes: Theme[] = [
-  { id: "flower", image: flowers.src },
-  { id: "flower-2", image: flower2.src },
-  { id: "flower-3", image: flower3.src },
-  { id: "flower-4", image: flower4.src },
-  { id: "flower-5", image: flower5.src },
-  { id: "flower-6", image: flower6.src },
+  { id: "flower", image: flowers.src, type: "dark" },
+  { id: "flower-2", image: flower2.src, type: "dark" },
+  { id: "flower-3", image: flower3.src, type: "light" },
+  { id: "flower-4", image: flower4.src, type: "light" },
+  { id: "flower-5", image: flower5.src, type: "light" },
+  { id: "flower-6", image: flower6.src, type: "light" },
 ];
 
 // Set a default theme to fall back on
