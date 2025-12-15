@@ -1,12 +1,5 @@
-const withPWA = require("next-pwa")({
-  dest: "public",
-});
-
-module.exports = withPWA({
+module.exports = {
   reactCompiler: true,
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   async headers() {
     return [
       {
@@ -58,4 +51,4 @@ module.exports = withPWA({
       },
     ];
   },
-});
+};
