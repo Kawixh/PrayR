@@ -3,12 +3,7 @@ const withPWA = require("next-pwa")({
 });
 
 module.exports = withPWA({
-  experimental: {
-    reactCompiler: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  reactCompiler: true,
   typescript: {
     ignoreBuildErrors: true,
   },
