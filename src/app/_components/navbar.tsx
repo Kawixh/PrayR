@@ -1,7 +1,7 @@
 "use client";
 
+import { ModeToggle } from "@/components/theme-manager";
 import { Button } from "@/components/ui/button";
-import { ModeToggle } from "@/components/ui/theme-toggle";
 import { Home, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

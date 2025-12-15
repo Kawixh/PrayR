@@ -1,8 +1,6 @@
 // app/layout.tsx
 
-import InstallButton from "@/components/install-button";
 import RootLayoutClient from "@/components/root-layout-client";
-import ThemeManager from "@/components/theme-manager"; // Import the new component
 import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -103,9 +101,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ThemeManager />
           <div className="p-4 flex flex-col container max-w-full md:max-w-2xl lg:max-w-4xl mx-auto h-screen gap-10 ">
-            <InstallButton />
             <Navbar />
 
             <RootLayoutClient>{children}</RootLayoutClient>

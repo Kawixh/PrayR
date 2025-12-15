@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import LiquidGlass from "@/components/ui/liquid-glass";
+import { Card } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -9,11 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { themes } from "@/lib/themes";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-
-type ThemeSelection = "light" | "dark" | "system" | string;
 
 const calculationMethods = [
   { value: "0", label: "Jafari / Shia Ithna-Ashari" },
@@ -52,12 +49,6 @@ const schools = [
   { value: "1", label: "Hanafi" },
 ];
 
-const themeModes: { id: ThemeSelection; label: string }[] = [
-  { id: "light", label: "Light" },
-  { id: "dark", label: "Dark" },
-  { id: "system", label: "System" },
-];
-
 export default function SettingsPage() {
   const router = useRouter();
   const [settings, setSettings] = useState({
@@ -65,87 +56,35 @@ export default function SettingsPage() {
     country: "",
     method: "",
     school: "",
-    themeSelection: "system" as ThemeSelection,
   });
 
   useEffect(() => {
     const savedSettings = localStorage.getItem("prayerSettings");
+
     if (savedSettings) {
       const parsed = JSON.parse(savedSettings);
-      if (!parsed.themeSelection) {
-        parsed.themeSelection = parsed.theme || "system";
-      }
       setSettings(parsed);
     }
   }, []);
 
-  const handleThemeChange = (selection: ThemeSelection) => {
-    const newSettings = { ...settings, themeSelection: selection };
-    setSettings(newSettings);
-    localStorage.setItem("prayerSettings", JSON.stringify(newSettings));
-    window.dispatchEvent(new Event("theme-changed"));
-  };
-
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    handleThemeChange(settings.themeSelection);
+    const newSettings = { ...settings };
+    setSettings(newSettings);
+    localStorage.setItem("prayerSettings", JSON.stringify(newSettings));
+
     router.push("/");
   };
 
   return (
     <div className="p-4 flex flex-col container max-w-full md:max-w-2xl lg:max-w-4xl mx-auto h-screen gap-10">
-      <LiquidGlass className="w-full overflow-hidden">
+      <Card className="w-full overflow-hidden">
         <div className="p-4 flex flex-col gap-4 max-h-full overflow-y-scroll">
           <h1 className="text-2xl font-bold">Settings</h1>
 
           <div className="flex flex-col gap-4">
             <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-              <div>
-                <h2 className="text-lg font-bold mb-2">Select theme</h2>
-                <div>
-                  <h2 className="text-lg font-bold mb-2">Theme Mode</h2>
-                  <div className="grid grid-cols-3 gap-4">
-                    {themeModes.map((mode) => (
-                      <Button
-                        key={mode.id}
-                        type="button"
-                        variant={
-                          settings.themeSelection === mode.id
-                            ? "default"
-                            : "outline"
-                        }
-                        onClick={() => handleThemeChange(mode.id)}
-                      >
-                        {mode.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h2 className="text-lg font-bold mb-2">
-                    Or, Pick a Specific Background
-                  </h2>
-                  <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-                    {themes.map((theme) => (
-                      <button
-                        key={theme.id}
-                        type="button"
-                        onClick={() => handleThemeChange(theme.id)}
-                        className={`w-24 h-24 rounded-lg border-4 bg-cover bg-center transition-all duration-200 ${
-                          settings.themeSelection === theme.id
-                            ? "border-blue-500 scale-105"
-                            : "border-transparent hover:scale-105"
-                        }`}
-                        style={{ backgroundImage: `url(${theme.image})` }}
-                        aria-label={`Select ${theme.id} theme`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
               <div className="flex flex-col gap-2">
                 <label htmlFor="cityName">City Name</label>
                 <input
@@ -239,7 +178,7 @@ export default function SettingsPage() {
             </form>
           </div>
         </div>
-      </LiquidGlass>
+      </Card>
     </div>
   );
 }

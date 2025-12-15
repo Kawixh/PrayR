@@ -1,5 +1,5 @@
 "use client";
-import TicTacToe from "@/components/TicTacToe";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -46,9 +46,7 @@ const Fallback: React.FC = () => {
           ? "You are back online."
           : "Please check your internet connection and try again."}
       </p>
-      <div className="">
-        <TicTacToe />
-      </div>
+
       {isOnline ? (
         <Link
           href={"/"}

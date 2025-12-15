@@ -1,76 +1,108 @@
-// components/theme-manager.tsx
 "use client";
 
-import { defaultTheme, Theme, themes } from "@/lib/themes";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-export default function ThemeManager() {
-  // Get the setter and the resolved system theme from next-themes
-  const { setTheme, systemTheme } = useTheme();
+const DURATION = 400;
+const STYLES_ID = "mode-toggle-circle-style";
+
+// Type predicate for ViewTransition API
+type ViewTransitionCallback = () => void;
+type ViewTransitionResult = { ready: Promise<void> };
+
+function isViewTransitionCapable(doc: Document): doc is Document & {
+  startViewTransition: (cb: ViewTransitionCallback) => ViewTransitionResult;
+} {
+  return (
+    "startViewTransition" in doc &&
+    typeof (doc as Document & { startViewTransition?: unknown })
+      .startViewTransition === "function"
+  );
+}
+
+function injectCircleTransitionStyles() {
+  if (typeof window === "undefined" || document.getElementById(STYLES_ID))
+    return;
+  const style = document.createElement("style");
+  style.id = STYLES_ID;
+  style.textContent = `
+    ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
+  `;
+  document.head.appendChild(style);
+}
+
+function animateCircleTransition(x: number, y: number, done: () => void) {
+  if (!isViewTransitionCapable(document)) {
+    done();
+    return;
+  }
+  const r = Math.max(
+    Math.hypot(x, y),
+    Math.hypot(window.innerWidth - x, y),
+    Math.hypot(x, window.innerHeight - y),
+    Math.hypot(window.innerWidth - x, window.innerHeight - y),
+  );
+  document.startViewTransition(done).ready.then(() => {
+    document.documentElement.animate(
+      {
+        clipPath: [
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${r}px at ${x}px ${y}px)`,
+        ],
+      },
+      {
+        duration: DURATION,
+        easing: "ease-in-out",
+        pseudoElement: "::view-transition-new(root)",
+      },
+    );
+  });
+}
+
+export const ModeToggle = ({ className = "" }: { className?: string }) => {
+  const { setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  const isDark = resolvedTheme === "dark";
 
   useEffect(() => {
-    const applyTheme = () => {
-      let selection = "system";
-      try {
-        const savedSettings = localStorage.getItem("prayerSettings");
-        if (savedSettings) {
-          const settings = JSON.parse(savedSettings);
-          // Use 'themeSelection' if available, fallback for older data structure
-          selection = settings.themeSelection || settings.theme || "system";
-        }
-      } catch (error) {
-        console.error("Failed to parse prayer settings:", error);
-      }
+    injectCircleTransitionStyles();
+    setMounted(true);
+  }, []);
 
-      let finalUiTheme: "light" | "dark";
-      let finalBgTheme: Theme | undefined;
+  const handleClick = useCallback(() => {
+    if (
+      !btnRef.current ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setTheme(resolvedTheme === "dark" ? "light" : "dark");
+      return;
+    }
+    const rect = btnRef.current.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    animateCircleTransition(x, y, () =>
+      setTheme(resolvedTheme === "dark" ? "light" : "dark"),
+    );
+  }, [setTheme, resolvedTheme]);
 
-      if (selection === "light" || selection === "dark") {
-        finalUiTheme = selection;
-        const suitableThemes = themes.filter((t) => t.type === finalUiTheme);
-        finalBgTheme =
-          suitableThemes[Math.floor(Math.random() * suitableThemes.length)];
-      } else if (selection === "system") {
-        finalUiTheme = systemTheme === "dark" ? "dark" : "light";
-        const suitableThemes = themes.filter((t) => t.type === finalUiTheme);
-        finalBgTheme =
-          suitableThemes[Math.floor(Math.random() * suitableThemes.length)];
-      } else {
-        // A specific theme ID was chosen (e.g., "flower-2")
-        finalBgTheme = themes.find((t) => t.id === selection);
-        finalUiTheme = finalBgTheme ? finalBgTheme.type : "dark"; // Fallback
-      }
+  if (!mounted) return null;
 
-      // Fallback if no background was found (e.g., bad ID in localStorage)
-      if (!finalBgTheme) {
-        finalBgTheme = defaultTheme;
-        finalUiTheme = defaultTheme.type;
-      }
-
-      // 1. Set the UI theme (light/dark) for all components
-      setTheme(finalUiTheme);
-
-      // 2. Set the background image and styles
-      document.body.style.backgroundImage = `url(${finalBgTheme.image})`;
-      document.body.style.backgroundSize = "150% auto";
-      document.body.style.backgroundPosition = "center";
-      document.body.style.backgroundAttachment = "fixed";
-      document.body.style.transition = "background-image 0.5s ease-in-out";
-    };
-
-    applyTheme();
-
-    window.addEventListener("theme-changed", applyTheme);
-    window.addEventListener("storage", applyTheme);
-
-    return () => {
-      window.removeEventListener("theme-changed", applyTheme);
-      window.removeEventListener("storage", applyTheme);
-    };
-    // Add systemTheme to dependencies. If the user changes their OS theme,
-    // and our setting is "system", we need to re-evaluate.
-  }, [systemTheme, setTheme]);
-
-  return null;
-}
+  return (
+    <button
+      ref={btnRef}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      onClick={handleClick}
+      className={`relative flex size-10 items-center justify-center rounded-full bg-transparent text-2xl text-neutral-700 transition outline-none hover:bg-neutral-100 focus:ring-2 focus:ring-blue-400 md:text-3xl dark:text-neutral-200 dark:hover:bg-neutral-800 ${className}`}
+      style={{ transition: "background 0.2s" }}
+    >
+      <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+      <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+      <span className="sr-only">
+        {isDark ? "Switch to light mode" : "Switch to dark mode"}
+      </span>
+    </button>
+  );
+};
