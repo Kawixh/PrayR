@@ -26,46 +26,49 @@ export const Navbar = () => {
   const pathname = usePathname();
 
   return (
-    <nav className="glass-panel rounded-2xl p-3 sm:p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-display text-2xl leading-none text-foreground">PrayR</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Gentle daily prayer companion
-          </p>
-        </div>
+    <nav
+      aria-label="Primary"
+      className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-50"
+    >
+      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
+        <div className="pointer-events-auto glass-panel rounded-2xl border-border/80 p-2">
+          <div className="flex items-center gap-2">
+            <div className="grid flex-1 grid-cols-2 gap-2">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = item.matches(pathname);
 
-        <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap">
-          <div className="flex flex-1 items-center gap-2 sm:flex-none">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.matches(pathname);
+                return (
+                  <Button
+                    asChild
+                    className={cn(
+                      "h-10 gap-2 rounded-xl px-3",
+                      isActive
+                        ? "border-primary/35 bg-primary/16 text-foreground shadow-sm"
+                        : "border-transparent bg-transparent text-muted-foreground hover:border-border/80 hover:bg-background/60 hover:text-foreground",
+                    )}
+                    key={item.href}
+                    size="sm"
+                    variant="outline"
+                  >
+                    <Link href={item.href}>
+                      <Icon className="size-4" />
+                      <span className="text-xs font-semibold tracking-wide">
+                        {item.label}
+                      </span>
+                    </Link>
+                  </Button>
+                );
+              })}
+            </div>
 
-              return (
-                <Button
-                  asChild
-                  className={cn(
-                    "h-9 flex-1 gap-2 rounded-full px-3 sm:flex-none",
-                    isActive
-                      ? "border-primary/30 bg-primary/15 text-foreground hover:bg-primary/20"
-                      : "border-transparent bg-transparent text-muted-foreground hover:border-border/80 hover:bg-background/60 hover:text-foreground",
-                  )}
-                  key={item.href}
-                  size="sm"
-                  variant="outline"
-                >
-                  <Link href={item.href}>
-                    <Icon className="size-4" />
-                    <span className="text-xs font-semibold tracking-wide">
-                      {item.label}
-                    </span>
-                  </Link>
-                </Button>
-              );
-            })}
+            <div className="flex items-center gap-2 rounded-xl border border-border/75 bg-background/65 px-2 py-1">
+              <span className="font-display text-xs tracking-wide text-muted-foreground">
+                PrayR
+              </span>
+              <ModeToggle className="shrink-0" />
+            </div>
           </div>
-
-          <ModeToggle className="shrink-0" />
         </div>
       </div>
     </nav>

@@ -3,7 +3,7 @@
 import { PrayerTimings } from "@/backend/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Bell, BellRing } from "lucide-react";
+import { Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   formatTo12Hour,
@@ -133,56 +133,42 @@ export function PrayerReminder({ timings }: { timings: PrayerTimings }) {
     return null;
   }
 
+  if (permission === "granted") {
+    return null;
+  }
+
   return (
     <div
-      className={cn(
-        "glass-panel rounded-2xl p-4",
-        permission === "granted"
-          ? "border-emerald-400/35 bg-emerald-500/10"
-          : "border-border/80",
-      )}
+      className={cn("glass-panel rounded-2xl border-border/80 p-4")}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <div
             className={cn(
               "mt-0.5 rounded-full p-2",
-              permission === "granted"
-                ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300"
-                : "bg-primary/15 text-primary",
+              "bg-primary/15 text-primary",
             )}
           >
-            {permission === "granted" ? (
-              <BellRing className="size-4" />
-            ) : (
-              <Bell className="size-4" />
-            )}
+            <Bell className="size-4" />
           </div>
 
           <div className="min-w-0 space-y-1">
-            <p className="font-display text-xl leading-none">
-              {permission === "granted"
-                ? "Prayer reminders are active"
-                : "Enable prayer reminders"}
-            </p>
+            <p className="font-display text-xl leading-none">Enable prayer reminders</p>
             <p className="break-words text-sm leading-6 text-muted-foreground">
-              {permission === "granted"
-                ? "You will get a local reminder 15 minutes before each prayer."
-                : "Receive local reminders 15 minutes before each prayer without any server requests."}
+              Receive local reminders 15 minutes before each prayer without any
+              server requests.
             </p>
           </div>
         </div>
 
-        {permission !== "granted" ? (
-          <Button
-            className="h-9 w-full rounded-full px-5 sm:w-auto"
-            onClick={() => void requestNotificationPermission()}
-            size="sm"
-            type="button"
-          >
-            Turn on reminders
-          </Button>
-        ) : null}
+        <Button
+          className="h-9 w-full rounded-full px-5 sm:w-auto"
+          onClick={() => void requestNotificationPermission()}
+          size="sm"
+          type="button"
+        >
+          Turn on reminders
+        </Button>
       </div>
 
       {permission === "denied" ? (

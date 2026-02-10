@@ -245,24 +245,6 @@ export function PrayerTimesWrapper() {
 
   return (
     <section className="space-y-5">
-      <header className="glass-panel rounded-3xl p-5 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="soft-chip inline-flex">Today&apos;s prayer schedule</p>
-            <h1 className="mt-3 font-display text-3xl leading-tight sm:text-4xl">
-              Quiet moments, right on time
-            </h1>
-          </div>
-
-          {locationLabel ? (
-            <div className="flex items-center gap-2 rounded-full border border-border/75 bg-background/55 px-3 py-1.5 text-sm text-muted-foreground">
-              <MapPin className="size-4" />
-              <span>{locationLabel}</span>
-            </div>
-          ) : null}
-        </div>
-      </header>
-
       <PrayerReminder timings={timings} />
       <PrayerTimeCard timings={timings} />
 
@@ -286,6 +268,15 @@ export function PrayerTimesWrapper() {
           ))}
         </div>
       </Card>
+
+      {locationLabel ? (
+        <Card className="glass-panel border-border/80 p-3.5 sm:p-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <MapPin className="size-4 text-primary" />
+            <span className="truncate">{locationLabel}</span>
+          </div>
+        </Card>
+      ) : null}
     </section>
   );
 }
