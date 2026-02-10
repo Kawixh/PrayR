@@ -6,6 +6,8 @@ type GeoNamesBasePlace = {
   adminName1?: string;
   lat: string;
   lng: string;
+  fcode?: string;
+  population?: number | string;
 };
 
 type GeoNamesCountry = {
@@ -42,6 +44,8 @@ export type PlaceSuggestion = {
   adminName1?: string;
   lat: number;
   lng: number;
+  featureCode?: string;
+  population?: number;
 };
 
 function getGeoNamesUsername(): string {
@@ -106,6 +110,14 @@ async function fetchGeoNames<T>(
 function mapPlace(place: GeoNamesBasePlace): PlaceSuggestion | null {
   const lat = Number(place.lat);
   const lng = Number(place.lng);
+  const rawPopulation =
+    typeof place.population === "string"
+      ? Number(place.population)
+      : place.population;
+  const population =
+    typeof rawPopulation === "number" && !Number.isNaN(rawPopulation)
+      ? rawPopulation
+      : undefined;
 
   if (Number.isNaN(lat) || Number.isNaN(lng)) {
     return null;
@@ -119,7 +131,78 @@ function mapPlace(place: GeoNamesBasePlace): PlaceSuggestion | null {
     adminName1: place.adminName1,
     lat,
     lng,
+    featureCode: place.fcode?.trim() || undefined,
+    population,
   };
+}
+
+const CITY_FEATURE_CODE_PRIORITY: Record<string, number> = {
+  PPLC: 0,
+  PPLA: 1,
+  PPLA2: 2,
+  PPLA3: 3,
+  PPLA4: 4,
+  PPL: 5,
+  PPLG: 6,
+  PPLX: 7,
+  PPLL: 8,
+  PPLS: 9,
+};
+
+function getFeaturePriority(place: PlaceSuggestion): number {
+  if (!place.featureCode) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  return CITY_FEATURE_CODE_PRIORITY[place.featureCode] ?? Number.MAX_SAFE_INTEGER;
+}
+
+function selectBestReverseResult(places: PlaceSuggestion[]): PlaceSuggestion | null {
+  if (places.length === 0) {
+    return null;
+  }
+
+  return [...places].sort((left, right) => {
+    const featurePriorityDiff = getFeaturePriority(left) - getFeaturePriority(right);
+
+    if (featurePriorityDiff !== 0) {
+      return featurePriorityDiff;
+    }
+
+    const populationDiff = (right.population ?? 0) - (left.population ?? 0);
+
+    if (populationDiff !== 0) {
+      return populationDiff;
+    }
+
+    return left.name.localeCompare(right.name);
+  })[0];
+}
+
+async function reverseGeocodeWithParams(
+  latitude: number,
+  longitude: number,
+  params: URLSearchParams,
+): Promise<PlaceSuggestion | null> {
+  params.set("lat", String(latitude));
+  params.set("lng", String(longitude));
+  params.set("lang", "en");
+  params.set("style", "FULL");
+
+  const data = await fetchGeoNames<GeoNamesPlacesResponse>(
+    "findNearbyPlaceNameJSON",
+    params,
+  );
+
+  if (data.status?.value) {
+    throw new Error(data.status.message ?? "GeoNames reverse lookup failed");
+  }
+
+  const mapped = (data.geonames ?? [])
+    .map((place) => mapPlace(place))
+    .filter((place): place is PlaceSuggestion => place !== null);
+
+  return selectBestReverseResult(mapped);
 }
 
 export async function searchCities(
@@ -192,29 +275,27 @@ export async function reverseGeocode(
   latitude: number,
   longitude: number,
 ): Promise<PlaceSuggestion | null> {
-  const params = new URLSearchParams({
-    lat: String(latitude),
-    lng: String(longitude),
-    maxRows: "1",
-    lang: "en",
-  });
-
-  const data = await fetchGeoNames<GeoNamesPlacesResponse>(
-    "findNearbyPlaceNameJSON",
-    params,
+  const cityFirst = await reverseGeocodeWithParams(
+    latitude,
+    longitude,
+    new URLSearchParams({
+      maxRows: "10",
+      featureClass: "P",
+      cities: "cities1000",
+    }),
   );
 
-  if (data.status?.value) {
-    throw new Error(data.status.message ?? "GeoNames reverse lookup failed");
+  if (cityFirst) {
+    return cityFirst;
   }
 
-  const first = data.geonames?.[0];
-
-  if (!first) {
-    return null;
-  }
-
-  return mapPlace(first);
+  return reverseGeocodeWithParams(
+    latitude,
+    longitude,
+    new URLSearchParams({
+      maxRows: "5",
+    }),
+  );
 }
 
 export async function getCountryList(): Promise<GeoNamesCountry[]> {

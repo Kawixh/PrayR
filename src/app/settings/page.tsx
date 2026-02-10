@@ -476,7 +476,8 @@ export default function SettingsPage() {
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
           Search city and country with GeoNames autocomplete, or optionally use
-          your GPS/IP location for faster setup.
+          your GPS/IP location for faster setup. GPS resolves to city-level
+          names.
         </p>
       </header>
 
@@ -486,8 +487,8 @@ export default function SettingsPage() {
             <div className="min-w-0">
               <p className="font-display text-2xl">Quick location setup</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Optional: use your device location or IP to auto-fill city and
-                country.
+                Optional: GPS now prioritizes the nearest city (not local area),
+                and IP lookup falls back across providers for better reliability.
               </p>
             </div>
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
