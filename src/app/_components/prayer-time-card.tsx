@@ -3,26 +3,86 @@
 import { PrayerTimings } from "@/backend/types";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { formatTo12Hour, prayerTimeToDate } from "../_utils/time";
 
 type PrayerTime = {
   name: string;
   time: string;
 };
 
-const convertTo12Hour = (time24: string) => {
-  const [hours, minutes] = time24.split(":").map(Number);
-  const period = hours >= 12 ? "PM" : "AM";
-  const hours12 = hours % 12 || 12;
-  return `${hours12}:${minutes.toString().padStart(2, "0")} ${period}`;
+type PrayerStatus = {
+  nextPrayer: PrayerTime;
+  previousPrayer: PrayerTime;
+  timeRemaining: string;
+  isWithinFifteenMinutes: boolean;
 };
+
+function getPrayerStatus(now: Date, timings: PrayerTimings): PrayerStatus | null {
+  const basePrayerTimes: PrayerTime[] = [
+    { name: "Fajr", time: timings.Fajr },
+    { name: "Dhuhr", time: timings.Dhuhr },
+    { name: "Asr", time: timings.Asr },
+    { name: "Maghrib", time: timings.Maghrib },
+    { name: "Isha", time: timings.Isha },
+  ];
+
+  const prayerTimes = basePrayerTimes
+    .map((prayer) => {
+      const prayerDate = prayerTimeToDate(prayer.time, now);
+
+      if (!prayerDate) {
+        return null;
+      }
+
+      return {
+        ...prayer,
+        prayerDate,
+      };
+    })
+    .filter((prayer): prayer is PrayerTime & { prayerDate: Date } => prayer !== null);
+
+  if (prayerTimes.length === 0) {
+    return null;
+  }
+
+  const nowTimestamp = now.getTime();
+
+  let nextPrayer = prayerTimes.find(
+    (prayer) => prayer.prayerDate.getTime() > nowTimestamp,
+  );
+  let nextPrayerDate: Date;
+
+  if (nextPrayer) {
+    nextPrayerDate = nextPrayer.prayerDate;
+  } else {
+    nextPrayer = prayerTimes[0];
+    nextPrayerDate = new Date(nextPrayer.prayerDate);
+    nextPrayerDate.setDate(nextPrayerDate.getDate() + 1);
+  }
+
+  let previousPrayer = [...prayerTimes]
+    .reverse()
+    .find((prayer) => prayer.prayerDate.getTime() <= nowTimestamp);
+
+  if (!previousPrayer) {
+    previousPrayer = prayerTimes[prayerTimes.length - 1];
+  }
+
+  const diff = nextPrayerDate.getTime() - nowTimestamp;
+  const minutes = Math.floor(diff / 60000);
+  const seconds = Math.floor((diff % 60000) / 1000);
+
+  return {
+    nextPrayer,
+    previousPrayer,
+    timeRemaining: `${minutes}m ${seconds}s`,
+    isWithinFifteenMinutes: diff <= 15 * 60 * 1000,
+  };
+}
 
 export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [nextPrayer, setNextPrayer] = useState<PrayerTime | null>(null);
-  const [previousPrayer, setPreviousPrayer] = useState<PrayerTime | null>(null);
-  const [timeRemaining, setTimeRemaining] = useState<string>("");
-  const [isWithinFifteenMinutes, setIsWithinFifteenMinutes] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -32,63 +92,22 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    const prayerTimes: PrayerTime[] = [
-      { name: "Fajr", time: timings.Fajr },
-      { name: "Dhuhr", time: timings.Dhuhr },
-      { name: "Asr", time: timings.Asr },
-      { name: "Maghrib", time: timings.Maghrib },
-      { name: "Isha", time: timings.Isha },
-    ];
+  const prayerStatus = useMemo(
+    () => getPrayerStatus(currentTime, timings),
+    [currentTime, timings],
+  );
 
-    const now = currentTime;
-    const currentTimeStr = now.toLocaleTimeString("en-US", {
-      hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  if (!prayerStatus) {
+    return null;
+  }
 
-    let nextPrayerTime = prayerTimes.find(
-      (prayer) => prayer.time > currentTimeStr,
-    );
-    if (!nextPrayerTime) {
-      nextPrayerTime = prayerTimes[0];
-    }
-
-    let previousPrayerTime = [...prayerTimes]
-      .reverse()
-      .find((prayer) => prayer.time < currentTimeStr);
-    if (!previousPrayerTime) {
-      previousPrayerTime = prayerTimes[prayerTimes.length - 1];
-    }
-
-    setNextPrayer(nextPrayerTime);
-    setPreviousPrayer(previousPrayerTime);
-
-    const [nextHour, nextMinute] = nextPrayerTime.time.split(":").map(Number);
-    const nextPrayerDate = new Date(now);
-    nextPrayerDate.setHours(nextHour, nextMinute, 0);
-
-    if (nextPrayerTime.time < currentTimeStr) {
-      nextPrayerDate.setDate(nextPrayerDate.getDate() + 1);
-    }
-
-    const diff = nextPrayerDate.getTime() - now.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const seconds = Math.floor((diff % 60000) / 1000);
-
-    setIsWithinFifteenMinutes(minutes < 15);
-    setTimeRemaining(`${minutes}m ${seconds}s`);
-  }, [currentTime, timings]);
-
-  if (!nextPrayer || !previousPrayer) return null;
+  const { nextPrayer, previousPrayer, timeRemaining, isWithinFifteenMinutes } =
+    prayerStatus;
 
   return (
     <div className="flex flex-col md:flex-row items-stretch w-full justify-center gap-4 md:gap-8">
-      {/* Previous Prayer Card */}
       <Card className="w-full min-h-[320px] bg-black dark:bg-gray-900">
         <div className="flex flex-col h-full p-6 md:p-8">
-          {/* Top 2/3 section */}
           <div className="h-2/3 flex flex-col justify-center items-center">
             <div className="flex flex-col lg:flex-row justify-center items-center text-center lg:justify-between w-full gap-2 lg:gap-4">
               <div
@@ -101,20 +120,19 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
                 className="text-4xl lg:text-5xl font-bold"
                 style={{ mixBlendMode: "difference", color: "white" }}
               >
-                {convertTo12Hour(nextPrayer.time)}
+                {formatTo12Hour(nextPrayer.time)}
               </div>
             </div>
           </div>
-          {/* Bottom 1/3 section */}
           <div className="h-1/3 flex flex-col justify-center items-center text-center gap-2">
-            {isWithinFifteenMinutes && (
+            {isWithinFifteenMinutes ? (
               <div
                 className="text-xl md:text-2xl font-semibold"
                 style={{ mixBlendMode: "difference", color: "white" }}
               >
                 {timeRemaining} remaining
               </div>
-            )}
+            ) : null}
             <div
               className="text-base md:text-lg font-semibold"
               style={{ mixBlendMode: "difference", color: "white" }}
@@ -135,7 +153,6 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
 
       <Card className="w-full min-h-[320px]">
         <div className="flex flex-col h-full p-6 md:p-8">
-          {/* Top 2/3 section */}
           <div className="h-2/3 flex flex-col justify-center items-center">
             <div className="flex flex-col lg:flex-row justify-center items-center text-center lg:justify-between w-full gap-2 lg:gap-4">
               <div
@@ -148,11 +165,10 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
                 className="text-4xl lg:text-5xl font-bold"
                 style={{ mixBlendMode: "difference", color: "white" }}
               >
-                {convertTo12Hour(previousPrayer.time)}
+                {formatTo12Hour(previousPrayer.time)}
               </div>
             </div>
           </div>
-          {/* Bottom 1/3 section */}
           <div className="h-1/3 flex justify-center items-center">
             <div
               className="text-base md:text-lg font-semibold text-center"
@@ -163,8 +179,6 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
           </div>
         </div>
       </Card>
-
-      {/* Next Prayer Card */}
     </div>
   );
 }

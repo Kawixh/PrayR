@@ -37,7 +37,7 @@ module.exports = {
         ],
       },
       {
-        source: "/manifest.json",
+        source: "/manifest.webmanifest",
         headers: [
           {
             key: "Content-Type",

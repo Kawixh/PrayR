@@ -6,7 +6,9 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "PrayR",
     description:
       "Get your daily prayer times, right where you are. Real-time vibes, no cap. ✨",
+    id: "/",
     start_url: "/",
+    scope: "/",
     display: "standalone",
     background_color: "#1a1a1a",
     theme_color: "#3f51b5",

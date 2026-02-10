@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Navbar } from "./_components/navbar";
+import { PwaInstallBanner } from "./_components/pwa-install-banner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -103,6 +104,7 @@ export default function RootLayout({
         >
           <div className="p-4 flex flex-col container max-w-full md:max-w-2xl lg:max-w-4xl mx-auto h-screen gap-10 ">
             <Navbar />
+            <PwaInstallBanner />
 
             <RootLayoutClient>{children}</RootLayoutClient>
           </div>
