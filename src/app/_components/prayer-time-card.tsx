@@ -2,7 +2,7 @@
 
 import { PrayerTimings } from "@/backend/types";
 import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Clock3, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { formatTo12Hour, prayerTimeToDate } from "../_utils/time";
 
@@ -81,6 +81,66 @@ function getPrayerStatus(now: Date, timings: PrayerTimings): PrayerStatus | null
   };
 }
 
+function PrayerPanel({
+  label,
+  prayer,
+  timeRemaining,
+  highlight,
+}: {
+  label: string;
+  prayer: PrayerTime;
+  timeRemaining?: string;
+  highlight?: boolean;
+}) {
+  return (
+    <Card
+      className={
+        highlight
+          ? "relative overflow-hidden border-primary/35 bg-gradient-to-br from-primary/20 via-card to-accent/20 p-5 sm:p-6"
+          : "glass-panel border-border/80 p-5 sm:p-6"
+      }
+    >
+      {highlight ? (
+        <>
+          <div className="pointer-events-none absolute -right-14 -top-14 size-36 rounded-full bg-primary/30 blur-2xl" />
+          <div className="pointer-events-none absolute -left-20 bottom-0 size-36 rounded-full bg-accent/30 blur-2xl" />
+        </>
+      ) : null}
+
+      <div className="relative z-10 flex h-full flex-col gap-5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="soft-chip">{label}</p>
+          {highlight ? (
+            <div className="flex items-center gap-1 text-xs text-primary">
+              <Sparkles className="size-3.5" />
+              <span>Live</span>
+            </div>
+          ) : (
+            <Clock3 className="size-4 text-muted-foreground" />
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <p className="font-display text-4xl leading-none sm:text-5xl">
+            {prayer.name}
+          </p>
+          <p className="text-2xl font-semibold text-foreground/90">
+            {formatTo12Hour(prayer.time)}
+          </p>
+        </div>
+
+        {timeRemaining ? (
+          <p className="mt-auto text-sm text-muted-foreground">
+            {highlight
+              ? `Starts in ${timeRemaining}`
+              : `Started before ${timeRemaining}`}
+          </p>
+        ) : null}
+      </div>
+    </Card>
+  );
+}
+
 export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -105,80 +165,14 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
     prayerStatus;
 
   return (
-    <div className="flex flex-col md:flex-row items-stretch w-full justify-center gap-4 md:gap-8">
-      <Card className="w-full min-h-[320px] bg-black dark:bg-gray-900">
-        <div className="flex flex-col h-full p-6 md:p-8">
-          <div className="h-2/3 flex flex-col justify-center items-center">
-            <div className="flex flex-col lg:flex-row justify-center items-center text-center lg:justify-between w-full gap-2 lg:gap-4">
-              <div
-                className="text-4xl lg:text-5xl font-bold"
-                style={{ mixBlendMode: "difference", color: "white" }}
-              >
-                {nextPrayer.name}
-              </div>
-              <div
-                className="text-4xl lg:text-5xl font-bold"
-                style={{ mixBlendMode: "difference", color: "white" }}
-              >
-                {formatTo12Hour(nextPrayer.time)}
-              </div>
-            </div>
-          </div>
-          <div className="h-1/3 flex flex-col justify-center items-center text-center gap-2">
-            {isWithinFifteenMinutes ? (
-              <div
-                className="text-xl md:text-2xl font-semibold"
-                style={{ mixBlendMode: "difference", color: "white" }}
-              >
-                {timeRemaining} remaining
-              </div>
-            ) : null}
-            <div
-              className="text-base md:text-lg font-semibold"
-              style={{ mixBlendMode: "difference", color: "white" }}
-            >
-              Next Adhan
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <div className="[display:none] md:block">
-        <Separator orientation="vertical" />
-      </div>
-
-      <div className="md:[display:none]">
-        <Separator orientation="horizontal" />
-      </div>
-
-      <Card className="w-full min-h-[320px]">
-        <div className="flex flex-col h-full p-6 md:p-8">
-          <div className="h-2/3 flex flex-col justify-center items-center">
-            <div className="flex flex-col lg:flex-row justify-center items-center text-center lg:justify-between w-full gap-2 lg:gap-4">
-              <div
-                className="text-4xl lg:text-5xl font-bold"
-                style={{ mixBlendMode: "difference", color: "white" }}
-              >
-                {previousPrayer.name}
-              </div>
-              <div
-                className="text-4xl lg:text-5xl font-bold"
-                style={{ mixBlendMode: "difference", color: "white" }}
-              >
-                {formatTo12Hour(previousPrayer.time)}
-              </div>
-            </div>
-          </div>
-          <div className="h-1/3 flex justify-center items-center">
-            <div
-              className="text-base md:text-lg font-semibold text-center"
-              style={{ mixBlendMode: "difference", color: "white" }}
-            >
-              Previous Adhan
-            </div>
-          </div>
-        </div>
-      </Card>
+    <div className="grid w-full gap-4 lg:grid-cols-2">
+      <PrayerPanel
+        highlight
+        label={isWithinFifteenMinutes ? "Happening Soon" : "Next Prayer"}
+        prayer={nextPrayer}
+        timeRemaining={timeRemaining}
+      />
+      <PrayerPanel label="Previous Prayer" prayer={previousPrayer} />
     </div>
   );
 }

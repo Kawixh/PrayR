@@ -9,8 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 
 const calculationMethods = [
   { value: "0", label: "Jafari / Shia Ithna-Ashari" },
@@ -45,140 +47,210 @@ const calculationMethods = [
 ];
 
 const schools = [
-  { value: "0", label: "Shafi (or the general Sunni school)" },
+  { value: "0", label: "Shafi (general Sunni school)" },
   { value: "1", label: "Hanafi" },
 ];
 
+type PrayerSettingsState = {
+  cityName: string;
+  country: string;
+  method: string;
+  school: string;
+};
+
+function getInitialSettings(): PrayerSettingsState {
+  if (typeof window === "undefined") {
+    return {
+      cityName: "",
+      country: "",
+      method: "",
+      school: "",
+    };
+  }
+
+  const savedSettings = localStorage.getItem("prayerSettings");
+
+  if (!savedSettings) {
+    return {
+      cityName: "",
+      country: "",
+      method: "",
+      school: "",
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(savedSettings) as Partial<PrayerSettingsState>;
+
+    return {
+      cityName: parsed.cityName ?? "",
+      country: parsed.country ?? "",
+      method: parsed.method ?? "",
+      school: parsed.school ?? "",
+    };
+  } catch {
+    return {
+      cityName: "",
+      country: "",
+      method: "",
+      school: "",
+    };
+  }
+}
+
 export default function SettingsPage() {
   const router = useRouter();
-  const [settings, setSettings] = useState({
-    cityName: "",
-    country: "",
-    method: "",
-    school: "",
-  });
+  const [settings, setSettings] = useState<PrayerSettingsState>(
+    getInitialSettings,
+  );
 
-  useEffect(() => {
-    const savedSettings = localStorage.getItem("prayerSettings");
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-    if (savedSettings) {
-      const parsed = JSON.parse(savedSettings);
-      setSettings(parsed);
-    }
-  }, []);
-
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const newSettings = { ...settings };
-    setSettings(newSettings);
-    localStorage.setItem("prayerSettings", JSON.stringify(newSettings));
-
+    localStorage.setItem("prayerSettings", JSON.stringify(settings));
     router.push("/");
   };
 
   return (
-    <div className="p-4 flex flex-col container max-w-full md:max-w-2xl lg:max-w-4xl mx-auto h-screen gap-10">
-      <Card className="w-full overflow-hidden">
-        <div className="p-4 flex flex-col gap-4 max-h-full overflow-y-scroll">
-          <h1 className="text-2xl font-bold">Settings</h1>
+    <section className="space-y-5">
+      <header className="glass-panel rounded-3xl p-5 sm:p-6">
+        <p className="soft-chip inline-flex">Profile</p>
+        <h1 className="mt-3 font-display text-3xl sm:text-4xl">
+          Prayer Settings
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+          Set your location and prayer preferences once, then PrayR keeps daily
+          timings in sync.
+        </p>
+      </header>
 
-          <div className="flex flex-col gap-4">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-              <div className="flex flex-col gap-2">
-                <label htmlFor="cityName">City Name</label>
-                <input
-                  type="text"
-                  id="cityName"
-                  name="cityName"
-                  value={settings.cityName}
-                  onChange={(e) =>
-                    setSettings((prev) => ({
-                      ...prev,
-                      cityName: e.target.value,
-                    }))
-                  }
-                  className="border border-gray-300 rounded-md p-2"
-                />
-              </div>
+      <Card className="glass-panel border-border/80 p-5 sm:p-6">
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground" htmlFor="cityName">
+                City
+              </label>
+              <input
+                className="h-11 w-full rounded-xl border border-border/85 bg-background/80 px-3 text-base shadow-sm transition-colors focus-visible:border-primary focus-visible:outline-none"
+                id="cityName"
+                name="cityName"
+                onChange={(event) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    cityName: event.target.value,
+                  }))
+                }
+                placeholder="e.g. Toronto"
+                required
+                type="text"
+                value={settings.cityName}
+              />
+            </div>
 
-              <div className="flex flex-col gap-2">
-                <label htmlFor="country">Country</label>
-                <input
-                  type="text"
-                  id="country"
-                  name="country"
-                  value={settings.country}
-                  onChange={(e) =>
-                    setSettings((prev) => ({
-                      ...prev,
-                      country: e.target.value,
-                    }))
-                  }
-                  className="border border-gray-300 rounded-md p-2"
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label htmlFor="method">Calculation Method</label>
-                <Select
-                  key={settings.method}
-                  value={settings.method || undefined}
-                  onValueChange={(value) =>
-                    setSettings((prev) => ({ ...prev, method: value }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      className="w-full"
-                      placeholder="Select a calculation method"
-                    />
-                  </SelectTrigger>
-                  <SelectContent className="w-full">
-                    {calculationMethods.map((method) => (
-                      <SelectItem key={method.value} value={method.value}>
-                        {method.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label>School</label>
-                <div className="flex flex-col gap-2">
-                  {schools.map((school) => (
-                    <div key={school.value} className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        id={`school-${school.value}`}
-                        name="school"
-                        value={school.value}
-                        checked={settings.school === school.value}
-                        onChange={(e) =>
-                          setSettings((prev) => ({
-                            ...prev,
-                            school: e.target.value,
-                          }))
-                        }
-                        className="w-4 h-4"
-                      />
-                      <label
-                        htmlFor={`school-${school.value}`}
-                        className="text-sm"
-                      >
-                        {school.label}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Button type="submit">Save</Button>
-            </form>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground" htmlFor="country">
+                Country
+              </label>
+              <input
+                className="h-11 w-full rounded-xl border border-border/85 bg-background/80 px-3 text-base shadow-sm transition-colors focus-visible:border-primary focus-visible:outline-none"
+                id="country"
+                name="country"
+                onChange={(event) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    country: event.target.value,
+                  }))
+                }
+                placeholder="e.g. Canada"
+                required
+                type="text"
+                value={settings.country}
+              />
+            </div>
           </div>
-        </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground" htmlFor="method">
+              Calculation Method
+            </label>
+            <Select
+              key={settings.method}
+              onValueChange={(value) =>
+                setSettings((prev) => ({ ...prev, method: value }))
+              }
+              value={settings.method || undefined}
+            >
+              <SelectTrigger className="h-11 rounded-xl border-border/85 bg-background/80">
+                <SelectValue placeholder="Select calculation method" />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                {calculationMethods.map((method) => (
+                  <SelectItem
+                    className="h-auto whitespace-normal py-2 leading-snug"
+                    key={method.value}
+                    value={method.value}
+                  >
+                    {method.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-foreground">School</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {schools.map((school) => {
+                const selected = settings.school === school.value;
+
+                return (
+                  <label
+                    className={cn(
+                      "flex cursor-pointer items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition-colors",
+                      selected
+                        ? "border-primary/40 bg-primary/15 text-foreground"
+                        : "border-border/80 bg-background/70 text-muted-foreground hover:border-border",
+                    )}
+                    htmlFor={`school-${school.value}`}
+                    key={school.value}
+                  >
+                    <span>{school.label}</span>
+                    <input
+                      checked={selected}
+                      className="sr-only"
+                      id={`school-${school.value}`}
+                      name="school"
+                      onChange={(event) =>
+                        setSettings((prev) => ({
+                          ...prev,
+                          school: event.target.value,
+                        }))
+                      }
+                      type="radio"
+                      value={school.value}
+                    />
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Button
+              asChild
+              className="h-10 rounded-full border-border/85"
+              type="button"
+              variant="outline"
+            >
+              <Link href="/">Cancel</Link>
+            </Button>
+            <Button className="h-10 rounded-full px-6" type="submit">
+              Save settings
+            </Button>
+          </div>
+        </form>
       </Card>
-    </div>
+    </section>
   );
 }

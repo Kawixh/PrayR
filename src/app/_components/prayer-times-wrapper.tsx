@@ -1,6 +1,8 @@
 "use client";
 
 import { PrayerTimings } from "@/backend/types";
+import { Card } from "@/components/ui/card";
+import { AlertTriangle, Clock3, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatTo12Hour, getLocalDayKey } from "../_utils/time";
 import { PrayerReminder } from "./prayer-reminder";
@@ -34,8 +36,10 @@ function normalizeSettings(raw: unknown): PrayerSettings | null {
     school?: unknown;
   };
 
-  const cityName = typeof candidate.cityName === "string" ? candidate.cityName.trim() : "";
-  const country = typeof candidate.country === "string" ? candidate.country.trim() : "";
+  const cityName =
+    typeof candidate.cityName === "string" ? candidate.cityName.trim() : "";
+  const country =
+    typeof candidate.country === "string" ? candidate.country.trim() : "";
 
   const method = Number(candidate.method);
   const school = Number(candidate.school);
@@ -108,7 +112,9 @@ function writePrayerCache(cache: PrayerTimesCache): void {
   localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(cache));
 }
 
-async function fetchPrayerTimesFromApi(settings: PrayerSettings): Promise<PrayerTimings> {
+async function fetchPrayerTimesFromApi(
+  settings: PrayerSettings,
+): Promise<PrayerTimings> {
   const params = new URLSearchParams({
     city: settings.cityName,
     country: settings.country,
@@ -131,6 +137,7 @@ async function fetchPrayerTimesFromApi(settings: PrayerSettings): Promise<Prayer
 
 export function PrayerTimesWrapper() {
   const [timings, setTimings] = useState<PrayerTimings | null>(null);
+  const [locationLabel, setLocationLabel] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -147,6 +154,10 @@ export function PrayerTimesWrapper() {
           }
 
           return;
+        }
+
+        if (active) {
+          setLocationLabel(`${settings.cityName}, ${settings.country}`);
         }
 
         const dayKey = getLocalDayKey();
@@ -199,23 +210,23 @@ export function PrayerTimesWrapper() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="mb-8 text-xl font-medium text-orange-500">
-            Loading prayer times...
-          </h2>
+      <Card className="glass-panel border-border/80 p-6">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <Clock3 className="size-4 animate-pulse" />
+          <p>Loading prayer times for today...</p>
         </div>
-      </div>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="mb-8 text-xl font-medium text-red-500">{error}</h2>
+      <Card className="glass-panel border-destructive/40 bg-destructive/10 p-6">
+        <div className="flex items-start gap-3 text-destructive">
+          <AlertTriangle className="mt-0.5 size-4" />
+          <p>{error}</p>
         </div>
-      </div>
+      </Card>
     );
   }
 
@@ -223,37 +234,58 @@ export function PrayerTimesWrapper() {
     return null;
   }
 
+  const summaryItems = [
+    { name: "Fajr", time: timings.Fajr },
+    { name: "Sunrise", time: timings.Sunrise },
+    { name: "Dhuhr", time: timings.Dhuhr },
+    { name: "Asr", time: timings.Asr },
+    { name: "Maghrib", time: timings.Maghrib },
+    { name: "Isha", time: timings.Isha },
+  ];
+
   return (
-    <div className="flex flex-col items-center justify-center gap-4">
+    <section className="space-y-5">
+      <header className="glass-panel rounded-3xl p-5 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="soft-chip inline-flex">Today&apos;s prayer schedule</p>
+            <h1 className="mt-3 font-display text-3xl leading-tight sm:text-4xl">
+              Quiet moments, right on time
+            </h1>
+          </div>
+
+          {locationLabel ? (
+            <div className="flex items-center gap-2 rounded-full border border-border/75 bg-background/55 px-3 py-1.5 text-sm text-muted-foreground">
+              <MapPin className="size-4" />
+              <span>{locationLabel}</span>
+            </div>
+          ) : null}
+        </div>
+      </header>
+
       <PrayerReminder timings={timings} />
       <PrayerTimeCard timings={timings} />
 
-      <div className="grid grid-cols-2 gap-4 mt-8 md:grid-cols-3">
-        <div className="text-center">
-          <p className="text-lg font-semibold">Fajr</p>
-          <p className="text-xl">{formatTo12Hour(timings.Fajr)}</p>
+      <Card className="glass-panel border-border/80 p-4 sm:p-5">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="font-display text-2xl leading-none">All Prayer Times</h2>
+          <p className="text-xs text-muted-foreground">12-hour format</p>
         </div>
-        <div className="text-center">
-          <p className="text-lg font-semibold">Sunrise</p>
-          <p className="text-xl">{formatTo12Hour(timings.Sunrise)}</p>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {summaryItems.map((item) => (
+            <div
+              className="rounded-xl border border-border/80 bg-background/50 p-3"
+              key={item.name}
+            >
+              <p className="text-sm text-muted-foreground">{item.name}</p>
+              <p className="mt-1 text-xl font-semibold text-foreground">
+                {formatTo12Hour(item.time)}
+              </p>
+            </div>
+          ))}
         </div>
-        <div className="text-center">
-          <p className="text-lg font-semibold">Dhuhr</p>
-          <p className="text-xl">{formatTo12Hour(timings.Dhuhr)}</p>
-        </div>
-        <div className="text-center">
-          <p className="text-lg font-semibold">Asr</p>
-          <p className="text-xl">{formatTo12Hour(timings.Asr)}</p>
-        </div>
-        <div className="text-center">
-          <p className="text-lg font-semibold">Maghrib</p>
-          <p className="text-xl">{formatTo12Hour(timings.Maghrib)}</p>
-        </div>
-        <div className="text-center">
-          <p className="text-lg font-semibold">Isha</p>
-          <p className="text-xl">{formatTo12Hour(timings.Isha)}</p>
-        </div>
-      </div>
-    </div>
+      </Card>
+    </section>
   );
 }

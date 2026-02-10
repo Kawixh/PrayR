@@ -1,20 +1,18 @@
-// app/layout.tsx
-
 import RootLayoutClient from "@/components/root-layout-client";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Manrope } from "next/font/google";
 import { Navbar } from "./_components/navbar";
 import { PwaInstallBanner } from "./_components/pwa-install-banner";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const bodyFont = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const displayFont = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
 });
 
@@ -47,7 +45,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#3f51b5",
+  themeColor: "#6db7ba",
   minimumScale: 1,
   initialScale: 1,
   width: "device-width",
@@ -74,7 +72,7 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
-        <meta name="msapplication-TileColor" content="#3f51b5" />
+        <meta name="msapplication-TileColor" content="#6db7ba" />
         <meta name="msapplication-tap-highlight" content="no" />
 
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -90,11 +88,11 @@ export default function RootLayout({
           sizes="512x512"
           href="/icon-512.png"
         />
-        <link rel="mask-icon" href="/icon-512.png" color="#3f51b5" />
+        <link rel="mask-icon" href="/icon-512.png" color="#6db7ba" />
       </head>
 
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased animated-background`}
+        className={`${bodyFont.variable} ${displayFont.variable} font-sans antialiased`}
       >
         <ThemeProvider
           attribute="class"
@@ -102,11 +100,15 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="p-4 flex flex-col container max-w-full md:max-w-2xl lg:max-w-4xl mx-auto h-screen gap-10 ">
-            <Navbar />
-            <PwaInstallBanner />
+          <div className="app-canvas">
+            <div className="mx-auto flex min-h-svh w-full max-w-5xl flex-col gap-4 px-4 pb-12 pt-4 sm:px-6 lg:px-8">
+              <Navbar />
+              <PwaInstallBanner />
 
-            <RootLayoutClient>{children}</RootLayoutClient>
+              <RootLayoutClient>
+                <main className="space-y-6">{children}</main>
+              </RootLayoutClient>
+            </div>
           </div>
         </ThemeProvider>
       </body>

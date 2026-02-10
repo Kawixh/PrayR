@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Download, Sparkles, X } from "lucide-react";
 import { KeyboardEvent, useEffect, useState } from "react";
 
@@ -110,49 +111,49 @@ export function PwaInstallBanner() {
 
   return (
     <div
-      aria-label={showAndroidBanner ? "Install application" : undefined}
-      className={`relative overflow-hidden rounded-2xl border p-4 shadow-lg backdrop-blur animate-in fade-in slide-in-from-top-2 duration-500 ${
+      aria-label={showAndroidBanner ? "Install PrayR" : undefined}
+      className={cn(
+        "glass-panel animate-in fade-in slide-in-from-top-2 duration-500 rounded-2xl p-4",
         showAndroidBanner
-          ? "cursor-pointer border-primary/30 bg-gradient-to-br from-primary/15 via-card to-card"
-          : "border-border/70 bg-card/90"
-      }`}
+          ? "cursor-pointer border-primary/35 bg-gradient-to-r from-primary/15 via-card to-accent/15"
+          : "border-border/80",
+      )}
       onClick={showAndroidBanner ? () => void installOnAndroid() : undefined}
       onKeyDown={handleBannerKeyDown}
       role={showAndroidBanner ? "button" : undefined}
       tabIndex={showAndroidBanner ? 0 : undefined}
     >
-      {showAndroidBanner ? (
-        <>
-          <div className="pointer-events-none absolute -top-16 -right-16 size-40 rounded-full bg-primary/20 blur-2xl" />
-          <div className="pointer-events-none absolute -bottom-16 -left-16 size-40 rounded-full bg-emerald-400/15 blur-2xl" />
-        </>
-      ) : null}
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 rounded-full border border-primary/25 bg-primary/15 p-2 text-primary">
+          {showAndroidBanner ? (
+            <Download className="size-4" />
+          ) : (
+            <Sparkles className="size-4" />
+          )}
+        </div>
 
-      <div className="relative z-10 flex items-start justify-between gap-3">
-        <div className="flex flex-1 items-start gap-3">
-          <div className="mt-0.5 rounded-full bg-primary/15 p-2 text-primary">
-            {showAndroidBanner ? (
-              <Download className="size-4" />
-            ) : (
-              <Sparkles className="size-4" />
-            )}
-          </div>
+        <div className="min-w-0 flex-1 space-y-1">
+          <p className="font-display text-xl leading-none">
+            {showAndroidBanner ? "Install PrayR" : "Use PrayR as an App"}
+          </p>
+          <p className="break-words text-sm leading-6 text-muted-foreground">
+            {showIosBanner
+              ? "this is a PWA and add to homescreen from safari to make this an app"
+              : "Tap this card to install the app directly on Android for a smoother, faster experience."}
+          </p>
 
-          <div className="space-y-1">
-            <p className="text-sm font-semibold leading-5 text-card-foreground">
-              {showAndroidBanner ? "Install PrayR App" : "Use PrayR as an App"}
+          {showAndroidBanner ? (
+            <p className="text-xs text-muted-foreground">
+              {deferredPrompt
+                ? "Install prompt is ready"
+                : "Preparing install prompt..."}
             </p>
-            <p className="text-sm leading-5 text-muted-foreground">
-              {showIosBanner
-                ? "This is a PWA and add to homescreen from Safari to make this an app."
-                : "Tap this banner to install the full app experience on Android."}
-            </p>
-          </div>
+          ) : null}
         </div>
 
         <button
           aria-label="Dismiss install banner"
-          className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground"
           onClick={(event) => {
             event.stopPropagation();
             setDismissed(true);
@@ -164,15 +165,9 @@ export function PwaInstallBanner() {
       </div>
 
       {showAndroidBanner ? (
-        <div className="relative z-10 mt-3 flex flex-wrap items-center justify-between gap-2">
-          <div className="text-xs text-muted-foreground">
-            {deferredPrompt
-              ? "Install prompt is ready."
-              : "Preparing install prompt..."}
-          </div>
-
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <Button
-            className="h-8"
+            className="h-9 w-full rounded-full px-5 sm:w-auto"
             onClick={(event) => {
               event.stopPropagation();
               void installOnAndroid();
@@ -183,14 +178,14 @@ export function PwaInstallBanner() {
             <Download className="size-4" />
             Install now
           </Button>
-        </div>
-      ) : null}
 
-      {showAndroidBanner && showAndroidHelp ? (
-        <p className="relative z-10 mt-2 text-xs text-muted-foreground">
-          If the prompt still does not appear, open this site in Chrome and use
-          &quot;Install app&quot; from the browser menu.
-        </p>
+          {showAndroidHelp ? (
+            <p className="text-xs text-muted-foreground">
+              If prompt does not appear, open in Chrome and use
+              &quot;Install app&quot; from the menu.
+            </p>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

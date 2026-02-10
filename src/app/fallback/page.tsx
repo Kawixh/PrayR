@@ -1,17 +1,18 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Wifi, WifiOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const Fallback: React.FC = () => {
+export default function Fallback() {
   const [isOnline, setIsOnline] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      // Redirect to homepage if online
       router.push("/");
     };
 
@@ -28,42 +29,40 @@ const Fallback: React.FC = () => {
     };
   }, [router]);
 
-  const handleRefresh = () => {
-    if (navigator.onLine) {
-      router.push("/");
-    } else {
-      setIsOnline(false);
-    }
-  };
-
   return (
-    <div className="flex mx-auto h-screen max-w-[500px] w-full flex-col items-center justify-center h-screen bg-foreground p-6 mt-12 text-white">
-      <h1 className="text-3xl font-bold mb-6">
-        {isOnline ? "You are online!" : "You are offline"}
-      </h1>
-      <p className="text-lg text-center mb-6">
-        {isOnline
-          ? "You are back online."
-          : "Please check your internet connection and try again."}
-      </p>
+    <section className="flex min-h-[60svh] items-center justify-center">
+      <div className="glass-panel w-full max-w-xl rounded-3xl p-6 text-center sm:p-8">
+        <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-primary/15 text-primary">
+          {isOnline ? <Wifi className="size-5" /> : <WifiOff className="size-5" />}
+        </div>
 
-      {isOnline ? (
-        <Link
-          href={"/"}
-          className="mt-6 px-4 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-600"
-        >
-          Return to Homepage
-        </Link>
-      ) : (
-        <button
-          onClick={handleRefresh}
-          className="mt-6 px-4 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-600"
-        >
-          Refresh
-        </button>
-      )}
-    </div>
+        <h1 className="font-display text-3xl sm:text-4xl">
+          {isOnline ? "You are back online" : "You are offline"}
+        </h1>
+
+        <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">
+          {isOnline
+            ? "Connection restored. You can return to your prayer dashboard."
+            : "Please check your internet connection and try again."}
+        </p>
+
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          {isOnline ? (
+            <Button asChild className="h-10 rounded-full px-6" size="sm">
+              <Link href="/">Return home</Link>
+            </Button>
+          ) : (
+            <Button
+              className="h-10 rounded-full px-6"
+              onClick={() => window.location.reload()}
+              size="sm"
+              type="button"
+            >
+              Try again
+            </Button>
+          )}
+        </div>
+      </div>
+    </section>
   );
-};
-
-export default Fallback;
+}
