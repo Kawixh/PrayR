@@ -1,10 +1,13 @@
 "use client";
 
 import { PrayerTimings } from "@/backend/types";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AlertTriangle, Clock3, MapPin } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatTo12Hour, getLocalDayKey } from "../_utils/time";
+import { DailyAdhkarCard } from "./daily-adhkar-card";
 import { PrayerReminder } from "./prayer-reminder";
 import { PrayerTimeCard } from "./prayer-time-card";
 
@@ -246,12 +249,13 @@ export function PrayerTimesWrapper() {
   return (
     <section className="space-y-5">
       <PrayerReminder timings={timings} />
+      <DailyAdhkarCard />
       <PrayerTimeCard timings={timings} />
 
       <Card className="glass-panel border-border/80 p-4 sm:p-5">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="font-display text-2xl leading-none">All Prayer Times</h2>
-          <p className="text-xs text-muted-foreground">12-hour format</p>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-display text-2xl leading-tight">All Prayer Times</h2>
+          <p className="text-sm text-muted-foreground">12-hour format</p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -264,6 +268,16 @@ export function PrayerTimesWrapper() {
               <p className="mt-1 text-xl font-semibold text-foreground">
                 {formatTo12Hour(item.time)}
               </p>
+              <Button
+                asChild
+                className="mt-3 min-h-9 rounded-full px-3 py-2 text-sm"
+                size="sm"
+                variant="outline"
+              >
+                <Link href={`/adhkars?prayer=${encodeURIComponent(item.name)}`}>
+                  View Adhkars
+                </Link>
+              </Button>
             </div>
           ))}
         </div>
@@ -273,7 +287,7 @@ export function PrayerTimesWrapper() {
         <Card className="glass-panel border-border/80 p-3.5 sm:p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <MapPin className="size-4 text-primary" />
-            <span className="truncate">{locationLabel}</span>
+            <span className="break-words">{locationLabel}</span>
           </div>
         </Card>
       ) : null}

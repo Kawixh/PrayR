@@ -45,6 +45,7 @@
 
 :root {
   --radius: 1rem;
+  --bottom-nav-reserve: 8rem;
   --background: oklch(0.98 0.01 210);
   --foreground: oklch(0.24 0.02 230);
   --card: oklch(1 0 0 / 86%);
@@ -113,6 +114,12 @@
 }
 
 @layer base {
+  html {
+    font-size: 100%;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
   * {
     @apply border-border outline-ring/60;
   }

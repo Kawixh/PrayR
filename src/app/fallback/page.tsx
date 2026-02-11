@@ -48,12 +48,12 @@ export default function Fallback() {
 
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           {isOnline ? (
-            <Button asChild className="h-10 rounded-full px-6" size="sm">
+            <Button asChild className="min-h-10 rounded-full px-6 py-2.5" size="sm">
               <Link href="/">Return home</Link>
             </Button>
           ) : (
             <Button
-              className="h-10 rounded-full px-6"
+              className="min-h-10 rounded-full px-6 py-2.5"
               onClick={() => window.location.reload()}
               size="sm"
               type="button"

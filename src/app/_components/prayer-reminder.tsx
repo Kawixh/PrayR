@@ -153,7 +153,7 @@ export function PrayerReminder({ timings }: { timings: PrayerTimings }) {
           </div>
 
           <div className="min-w-0 space-y-1">
-            <p className="font-display text-xl leading-none">Enable prayer reminders</p>
+            <p className="font-display text-xl leading-tight">Enable prayer reminders</p>
             <p className="break-words text-sm leading-6 text-muted-foreground">
               Receive local reminders 15 minutes before each prayer without any
               server requests.
@@ -162,7 +162,7 @@ export function PrayerReminder({ timings }: { timings: PrayerTimings }) {
         </div>
 
         <Button
-          className="h-9 w-full rounded-full px-5 sm:w-auto"
+          className="min-h-10 w-full rounded-full px-5 py-2.5 sm:w-auto"
           onClick={() => void requestNotificationPermission()}
           size="sm"
           type="button"

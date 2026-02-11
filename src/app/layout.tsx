@@ -170,7 +170,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <div className="app-canvas">
-            <div className="mx-auto flex min-h-svh w-full max-w-5xl flex-col gap-4 px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 lg:px-8">
+            <div className="mx-auto flex min-h-svh w-full max-w-5xl flex-col gap-4 px-4 pb-[calc(var(--bottom-nav-reserve,8rem)+env(safe-area-inset-bottom))] pt-4 sm:px-6 lg:px-8">
               <PwaInstallBanner />
 
               <RootLayoutClient>

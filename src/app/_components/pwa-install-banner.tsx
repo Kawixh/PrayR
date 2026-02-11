@@ -133,7 +133,7 @@ export function PwaInstallBanner() {
         </div>
 
         <div className="min-w-0 flex-1 space-y-1">
-          <p className="font-display text-xl leading-none">
+          <p className="font-display text-xl leading-tight">
             {showAndroidBanner ? "Install PrayR" : "Use PrayR as an App"}
           </p>
           <p className="break-words text-sm leading-6 text-muted-foreground">
@@ -167,7 +167,7 @@ export function PwaInstallBanner() {
       {showAndroidBanner ? (
         <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <Button
-            className="h-9 w-full rounded-full px-5 sm:w-auto"
+            className="min-h-10 w-full rounded-full px-5 py-2.5 sm:w-auto"
             onClick={(event) => {
               event.stopPropagation();
               void installOnAndroid();

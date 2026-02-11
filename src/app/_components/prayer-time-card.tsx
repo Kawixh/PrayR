@@ -1,8 +1,10 @@
 "use client";
 
 import { PrayerTimings } from "@/backend/types";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Clock3, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { formatTo12Hour, prayerTimeToDate } from "../_utils/time";
 
@@ -121,7 +123,7 @@ function PrayerPanel({
         </div>
 
         <div className="space-y-2">
-          <p className="font-display text-4xl leading-none sm:text-5xl">
+          <p className="font-display text-4xl leading-tight sm:text-5xl">
             {prayer.name}
           </p>
           <p className="text-2xl font-semibold text-foreground/90">
@@ -136,6 +138,17 @@ function PrayerPanel({
               : `Started before ${timeRemaining}`}
           </p>
         ) : null}
+
+        <Button
+          asChild
+          className="min-h-9 w-fit rounded-full px-3 py-2 text-sm"
+          size="sm"
+          variant="outline"
+        >
+          <Link href={`/adhkars?prayer=${encodeURIComponent(prayer.name)}`}>
+            View Adhkars
+          </Link>
+        </Button>
       </div>
     </Card>
   );

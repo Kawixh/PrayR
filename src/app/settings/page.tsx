@@ -483,7 +483,7 @@ export default function SettingsPage() {
 
       <Card className="glass-panel border-border/80 p-5 sm:p-6">
         <div className="mb-5 rounded-2xl border border-border/70 bg-background/45 p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <p className="font-display text-2xl">Quick location setup</p>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -491,9 +491,9 @@ export default function SettingsPage() {
                 and IP lookup falls back across providers for better reliability.
               </p>
             </div>
-            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <div className="flex w-full flex-col gap-2 lg:w-auto">
               <Button
-                className="h-9 rounded-full"
+                className="min-h-10 w-full rounded-full px-4 py-2.5 text-center [overflow-wrap:anywhere] lg:w-auto"
                 disabled={resolving !== null}
                 onClick={resolveFromGps}
                 size="sm"
@@ -504,7 +504,7 @@ export default function SettingsPage() {
                 {resolving === "gps" ? "Getting GPS..." : "Use GPS"}
               </Button>
               <Button
-                className="h-9 rounded-full"
+                className="min-h-10 w-full rounded-full px-4 py-2.5 text-center [overflow-wrap:anywhere] lg:w-auto"
                 disabled={resolving !== null}
                 onClick={() => void resolveFromIp()}
                 size="sm"
@@ -518,12 +518,12 @@ export default function SettingsPage() {
           </div>
 
           {locationStatus ? (
-            <p className="mt-2 text-xs text-emerald-600 dark:text-emerald-300">
+            <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-300">
               {locationStatus}
             </p>
           ) : null}
           {locationError ? (
-            <p className="mt-2 text-xs text-destructive">{locationError}</p>
+            <p className="mt-2 text-sm text-destructive">{locationError}</p>
           ) : null}
         </div>
 
@@ -536,7 +536,7 @@ export default function SettingsPage() {
               <div className="relative">
                 <input
                   autoComplete="off"
-                  className="h-11 w-full rounded-xl border border-border/85 bg-background/80 px-3 pr-10 text-base shadow-sm transition-colors focus-visible:border-primary focus-visible:outline-none"
+                  className="min-h-11 h-auto w-full rounded-xl border border-border/85 bg-background/80 px-3 py-3 pr-10 text-base leading-normal shadow-sm transition-colors focus-visible:border-primary focus-visible:outline-none"
                   id="cityName"
                   name="cityName"
                   onBlur={() => {
@@ -564,10 +564,10 @@ export default function SettingsPage() {
               </div>
 
               {cityLoading ? (
-                <p className="text-xs text-muted-foreground">Searching cities...</p>
+                <p className="text-sm text-muted-foreground">Searching cities...</p>
               ) : null}
               {citySearchError ? (
-                <p className="text-xs text-destructive">{citySearchError}</p>
+                <p className="text-sm text-destructive">{citySearchError}</p>
               ) : null}
 
               {showCitySuggestions ? (
@@ -580,14 +580,16 @@ export default function SettingsPage() {
                       type="button"
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{city.name}</p>
-                        <p className="truncate text-xs text-muted-foreground">
+                        <p className="break-words text-sm leading-snug font-medium">
+                          {city.name}
+                        </p>
+                        <p className="break-words text-sm text-muted-foreground">
                           {[city.adminName1, city.countryName]
                             .filter(Boolean)
                             .join(", ")}
                         </p>
                       </div>
-                      <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                      <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
                         {city.countryCode}
                       </span>
                     </button>
@@ -603,7 +605,7 @@ export default function SettingsPage() {
               <div className="relative">
                 <input
                   autoComplete="off"
-                  className="h-11 w-full rounded-xl border border-border/85 bg-background/80 px-3 pr-10 text-base shadow-sm transition-colors focus-visible:border-primary focus-visible:outline-none"
+                  className="min-h-11 h-auto w-full rounded-xl border border-border/85 bg-background/80 px-3 py-3 pr-10 text-base leading-normal shadow-sm transition-colors focus-visible:border-primary focus-visible:outline-none"
                   id="country"
                   name="country"
                   onBlur={() => {
@@ -627,23 +629,23 @@ export default function SettingsPage() {
               </div>
 
               {countryLoading ? (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Searching countries...
                 </p>
               ) : null}
               {countrySearchError ? (
-                <p className="text-xs text-destructive">{countrySearchError}</p>
+                <p className="text-sm text-destructive">{countrySearchError}</p>
               ) : null}
               {comboValidation === "checking" ? (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Checking city/country combination...
                 </p>
               ) : null}
               {comboWarning ? (
-                <p className="text-xs text-destructive">{comboWarning}</p>
+                <p className="text-sm text-destructive">{comboWarning}</p>
               ) : null}
               {comboValidation === "valid" ? (
-                <p className="text-xs text-emerald-600 dark:text-emerald-300">
+                <p className="text-sm text-emerald-600 dark:text-emerald-300">
                   City and country combination looks good.
                 </p>
               ) : null}
@@ -652,15 +654,15 @@ export default function SettingsPage() {
                 <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-border/80 bg-popover p-1 shadow-lg">
                   {countrySuggestions.map((country) => (
                     <button
-                      className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-accent/50"
+                      className="flex w-full items-start justify-between rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-accent/50"
                       key={country.countryCode}
                       onMouseDown={() => selectCountrySuggestion(country)}
                       type="button"
                     >
-                      <span className="truncate text-sm font-medium">
+                      <span className="break-words text-sm leading-snug font-medium">
                         {country.countryName}
                       </span>
-                      <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                      <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
                         {country.countryCode}
                       </span>
                     </button>
@@ -681,7 +683,7 @@ export default function SettingsPage() {
               }
               value={settings.method || undefined}
             >
-              <SelectTrigger className="h-11 rounded-xl border-border/85 bg-background/80">
+              <SelectTrigger className="min-h-11 rounded-xl border-border/85 bg-background/80">
                 <SelectValue placeholder="Select calculation method" />
               </SelectTrigger>
               <SelectContent className="max-h-72">
@@ -707,7 +709,7 @@ export default function SettingsPage() {
                 return (
                   <label
                     className={cn(
-                      "flex cursor-pointer items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition-colors",
+                      "flex cursor-pointer items-start justify-between gap-2 rounded-xl border px-3 py-2.5 text-sm transition-colors",
                       selected
                         ? "border-primary/40 bg-primary/15 text-foreground"
                         : "border-border/80 bg-background/70 text-muted-foreground hover:border-border",
@@ -739,13 +741,13 @@ export default function SettingsPage() {
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Button
               asChild
-              className="h-10 rounded-full border-border/85"
+              className="min-h-10 rounded-full border-border/85 px-5 py-2.5"
               type="button"
               variant="outline"
             >
               <Link href="/">Cancel</Link>
             </Button>
-            <Button className="h-10 rounded-full px-6" type="submit">
+            <Button className="min-h-10 rounded-full px-6 py-2.5" type="submit">
               Save settings
             </Button>
           </div>
