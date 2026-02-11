@@ -72,13 +72,12 @@ function getPrayerStatus(now: Date, timings: PrayerTimings): PrayerStatus | null
   }
 
   const diff = nextPrayerDate.getTime() - nowTimestamp;
-  const minutes = Math.floor(diff / 60000);
-  const seconds = Math.floor((diff % 60000) / 1000);
+  const minutes = Math.max(0, Math.ceil(diff / 60000));
 
   return {
     nextPrayer,
     previousPrayer,
-    timeRemaining: `${minutes}m ${seconds}s`,
+    timeRemaining: `${minutes}m`,
     isWithinFifteenMinutes: diff <= 15 * 60 * 1000,
   };
 }
@@ -158,11 +157,11 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    const timer = window.setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000);
+    }, 15_000);
 
-    return () => clearInterval(timer);
+    return () => window.clearInterval(timer);
   }, []);
 
   const prayerStatus = useMemo(

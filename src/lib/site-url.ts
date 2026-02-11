@@ -1,4 +1,5 @@
-const FALLBACK_SITE_URL = "http://localhost:3000";
+const DEVELOPMENT_SITE_URL = "http://localhost:3000";
+const PRODUCTION_SITE_URL_FALLBACK = "https://prayr.kawish.dev";
 
 function normalizeUrl(rawUrl: string): string {
   const withProtocol =
@@ -17,7 +18,9 @@ export function getSiteUrl(): string {
     process.env.VERCEL_URL;
 
   if (!candidate) {
-    return FALLBACK_SITE_URL;
+    return process.env.NODE_ENV === "development"
+      ? DEVELOPMENT_SITE_URL
+      : PRODUCTION_SITE_URL_FALLBACK;
   }
 
   return normalizeUrl(candidate);

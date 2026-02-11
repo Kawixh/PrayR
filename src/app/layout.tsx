@@ -85,13 +85,6 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.webmanifest",
   applicationName: "PrayR",
-  alternates: {
-    canonical: "/",
-    languages: {
-      "en-US": "/",
-      "x-default": "/",
-    },
-  },
   description:
     "Get accurate daily prayer times by city and country, with trusted Islamic calculation methods and school preferences.",
   keywords: [
@@ -141,7 +134,6 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "PrayR",
-    url: "/",
     locale: "en_US",
     title: "PrayR Prayer Times",
     description:

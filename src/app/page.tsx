@@ -80,15 +80,38 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
+    type: "website",
+    siteName: "PrayR",
     title: "Daily Prayer Times by City and Country",
     description:
       "Check accurate Fajr, Dhuhr, Asr, Maghrib, and Isha prayer times for your city with trusted Islamic calculation methods.",
     url: "/",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "PrayR daily prayer times app",
+      },
+    ],
   },
   twitter: {
+    card: "summary_large_image",
     title: "Daily Prayer Times by City and Country",
     description:
       "Check accurate Fajr, Dhuhr, Asr, Maghrib, and Isha prayer times for your city with trusted Islamic calculation methods.",
+    images: ["/twitter-image"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 

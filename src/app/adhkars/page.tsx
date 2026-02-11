@@ -60,10 +60,31 @@ export const metadata: Metadata = {
     canonical: "/adhkars",
   },
   openGraph: {
+    type: "website",
+    siteName: "PrayR",
     title: "Adhkars Library",
     description:
       "Read daily adhkar with source-preserved Arabic text and source-provided translation wording.",
     url: "/adhkars",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "PrayR daily prayer times app",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Adhkars Library",
+    description:
+      "Read daily adhkar with source-preserved Arabic text and source-provided translation wording.",
+    images: ["/twitter-image"],
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 

@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: "Prayer Settings",
   description:
     "Configure your city, country, calculation method, and school for accurate daily prayer times.",
+  alternates: {
+    canonical: "/settings",
+  },
   robots: {
     index: false,
     follow: false,
