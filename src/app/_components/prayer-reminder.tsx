@@ -6,12 +6,16 @@ import { cn } from "@/lib/utils";
 import { Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
+  getLocalNotificationPermission,
+  type LocalNotificationPermission,
+  showLocalNotification,
+} from "../_utils/local-notifications";
+import {
   formatTo12Hour,
   getLocalDayKey,
   prayerTimeToDate,
 } from "../_utils/time";
 
-type ReminderPermission = NotificationPermission | "unsupported";
 type PrayerName = "Fajr" | "Dhuhr" | "Asr" | "Maghrib" | "Isha";
 
 const PRAYER_NAMES: PrayerName[] = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
@@ -29,37 +33,17 @@ async function showLocalPrayerReminder(
 ): Promise<void> {
   const title = `${prayer} in ${REMINDER_MINUTES_BEFORE} minutes`;
   const body = `${prayer} starts at ${formatTo12Hour(prayerTime)}.`;
-
-  if ("serviceWorker" in navigator) {
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(title, {
-        body,
-        icon: "/icon-192.png",
-        badge: "/icon-192.png",
-        tag: `prayer-reminder-${dayKey}-${prayer}`,
-      });
-      return;
-    } catch (error) {
-      console.error("Service worker notification failed:", error);
-    }
-  }
-
-  new Notification(title, {
+  await showLocalNotification({
+    title,
     body,
-    icon: "/icon-192.png",
     tag: `prayer-reminder-${dayKey}-${prayer}`,
   });
 }
 
 export function PrayerReminder({ timings }: { timings: PrayerTimings }) {
-  const [permission, setPermission] = useState<ReminderPermission>(() => {
-    if (typeof window === "undefined" || !("Notification" in window)) {
-      return "unsupported";
-    }
-
-    return Notification.permission;
-  });
+  const [permission, setPermission] = useState<LocalNotificationPermission>(
+    getLocalNotificationPermission,
+  );
   const [scheduleVersion, setScheduleVersion] = useState(0);
 
   useEffect(() => {

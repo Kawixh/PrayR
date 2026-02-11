@@ -52,6 +52,10 @@ export const metadata: Metadata = {
   applicationName: "PrayR",
   alternates: {
     canonical: "/",
+    languages: {
+      "en-US": "/",
+      "x-default": "/",
+    },
   },
   description:
     "Get accurate daily prayer times by city and country, with trusted Islamic calculation methods and school preferences.",
@@ -127,6 +131,7 @@ export const metadata: Metadata = {
     "msapplication-config": "/browserconfig.xml",
     "msapplication-TileColor": "#6db7ba",
     "mobile-web-app-capable": "yes",
+    "content-language": "en-US",
   },
 };
 
@@ -149,7 +154,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en-US" suppressHydrationWarning>
       <body
         className={`${bodyFont.variable} ${displayFont.variable} font-sans antialiased`}
       >

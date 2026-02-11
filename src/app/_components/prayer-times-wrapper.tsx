@@ -3,7 +3,7 @@
 import { PrayerTimings } from "@/backend/types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { AlertTriangle, Clock3, MapPin } from "lucide-react";
+import { AlertTriangle, Clock3 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatTo12Hour, getLocalDayKey } from "../_utils/time";
@@ -140,7 +140,6 @@ async function fetchPrayerTimesFromApi(
 
 export function PrayerTimesWrapper() {
   const [timings, setTimings] = useState<PrayerTimings | null>(null);
-  const [locationLabel, setLocationLabel] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -157,10 +156,6 @@ export function PrayerTimesWrapper() {
           }
 
           return;
-        }
-
-        if (active) {
-          setLocationLabel(`${settings.cityName}, ${settings.country}`);
         }
 
         const dayKey = getLocalDayKey();
@@ -213,12 +208,68 @@ export function PrayerTimesWrapper() {
 
   if (loading) {
     return (
-      <Card className="glass-panel border-border/80 p-6">
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <Clock3 className="size-4 animate-pulse" />
-          <p>Loading prayer times for today...</p>
+      <section className="space-y-5">
+        <Card className="glass-panel rounded-2xl border-border/80 p-4">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 rounded-full bg-primary/15 p-2 text-primary">
+              <Clock3 className="size-4" />
+            </div>
+            <div className="w-full space-y-2">
+              <div className="h-6 w-52 animate-pulse rounded bg-muted/80" />
+              <div className="h-4 w-full animate-pulse rounded bg-muted/70" />
+            </div>
+          </div>
+        </Card>
+
+        <Card className="glass-panel border-border/80 p-5 sm:p-6">
+          <div className="space-y-3">
+            <div className="h-8 w-40 animate-pulse rounded bg-muted/80" />
+            <div className="h-4 w-full animate-pulse rounded bg-muted/70" />
+            <div className="h-4 w-4/5 animate-pulse rounded bg-muted/70" />
+          </div>
+        </Card>
+
+        <div className="grid w-full gap-4 lg:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <Card
+              className="glass-panel border-border/80 p-5 sm:p-6"
+              key={`prayer-panel-skeleton-${index}`}
+            >
+              <div className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <div className="h-6 w-24 animate-pulse rounded bg-muted/80" />
+                  <div className="size-4 animate-pulse rounded bg-muted/70" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-11 w-40 animate-pulse rounded bg-muted/80" />
+                  <div className="h-8 w-28 animate-pulse rounded bg-muted/70" />
+                </div>
+                <div className="h-4 w-36 animate-pulse rounded bg-muted/70" />
+                <div className="h-9 w-28 animate-pulse rounded-full bg-muted/70" />
+              </div>
+            </Card>
+          ))}
         </div>
-      </Card>
+
+        <Card className="glass-panel border-border/80 p-4 sm:p-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="h-8 w-44 animate-pulse rounded bg-muted/80" />
+            <div className="h-4 w-24 animate-pulse rounded bg-muted/70" />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                className="rounded-xl border border-border/80 bg-background/50 p-3"
+                key={`summary-skeleton-${index}`}
+              >
+                <div className="h-4 w-14 animate-pulse rounded bg-muted/80" />
+                <div className="mt-2 h-7 w-24 animate-pulse rounded bg-muted/70" />
+                <div className="mt-3 h-9 w-28 animate-pulse rounded-full bg-muted/70" />
+              </div>
+            ))}
+          </div>
+        </Card>
+      </section>
     );
   }
 
@@ -282,15 +333,6 @@ export function PrayerTimesWrapper() {
           ))}
         </div>
       </Card>
-
-      {locationLabel ? (
-        <Card className="glass-panel border-border/80 p-3.5 sm:p-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="size-4 text-primary" />
-            <span className="break-words">{locationLabel}</span>
-          </div>
-        </Card>
-      ) : null}
     </section>
   );
 }

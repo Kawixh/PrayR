@@ -1,5 +1,6 @@
 import { getSiteUrl } from "@/lib/site-url";
 import type { Metadata } from "next";
+import { CitySeoSummary } from "./_components/city-seo-summary";
 import { PrayerTimesWrapper } from "./_components/prayer-times-wrapper";
 import { SettingsCheck } from "./_components/settings-check";
 
@@ -57,12 +58,26 @@ const softwareApplicationJsonLd = {
   },
 };
 
+const webPageJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: "Daily Prayer Times by City and Country",
+  url: siteUrl,
+  inLanguage: "en-US",
+  description:
+    "Check accurate Fajr, Dhuhr, Asr, Maghrib, and Isha prayer times for your city with trusted Islamic calculation methods.",
+};
+
 export const metadata: Metadata = {
   title: "Daily Prayer Times by City and Country",
   description:
     "Check accurate Fajr, Dhuhr, Asr, Maghrib, and Isha prayer times for your city with trusted Islamic calculation methods.",
   alternates: {
     canonical: "/",
+    languages: {
+      "en-US": "/",
+      "x-default": "/",
+    },
   },
   openGraph: {
     title: "Daily Prayer Times by City and Country",
@@ -92,23 +107,13 @@ export default function Page() {
         suppressHydrationWarning
         type="application/ld+json"
       />
-
-      <section
-        aria-labelledby="prayer-times-heading"
-        className="glass-panel border-border/80 rounded-3xl border p-5 sm:p-6"
-      >
-        <h1
-          className="font-display text-3xl leading-tight sm:text-4xl"
-          id="prayer-times-heading"
-        >
-          Daily Prayer Times for Your City
-        </h1>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base">
-          PrayR gives you today&apos;s Fajr, Dhuhr, Asr, Maghrib, and Isha times
-          based on your location and fiqh preferences. Prayer data is sourced
-          from the AlAdhan API and supports 23 calculation methods.
-        </p>
-      </section>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(webPageJsonLd),
+        }}
+        suppressHydrationWarning
+        type="application/ld+json"
+      />
 
       <SettingsCheck>
         <div className="space-y-5">
@@ -131,6 +136,24 @@ export default function Page() {
             </article>
           ))}
         </div>
+      </section>
+
+      <section
+        aria-labelledby="prayer-times-heading"
+        className="glass-panel border-border/80 rounded-3xl border p-5 sm:p-6"
+      >
+        <h2
+          className="font-display text-3xl leading-tight sm:text-4xl"
+          id="prayer-times-heading"
+        >
+          Daily Prayer Times for Your City
+        </h2>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base">
+          PrayR gives you today&apos;s Fajr, Dhuhr, Asr, Maghrib, and Isha times
+          based on your location and fiqh preferences. Prayer data is sourced
+          from the AlAdhan API and supports 23 calculation methods.
+        </p>
+        <CitySeoSummary />
       </section>
     </>
   );

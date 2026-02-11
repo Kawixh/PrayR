@@ -10,10 +10,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { LocateFixed, MapPin, Search, Sparkles } from "lucide-react";
+import {
+  BellRing,
+  FlaskConical,
+  LocateFixed,
+  MapPin,
+  Search,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import {
+  getLocalNotificationPermission,
+  type LocalNotificationPermission,
+  showLocalNotification,
+} from "../_utils/local-notifications";
 
 const calculationMethods = [
   { value: "0", label: "Jafari / Shia Ithna-Ashari" },
@@ -95,6 +107,9 @@ const EMPTY_SETTINGS: PrayerSettingsState = {
   method: "",
   school: "",
 };
+const DEV_MENU_ENABLED =
+  process.env.NODE_ENV !== "production" ||
+  process.env.NEXT_PUBLIC_ENABLE_DEV_MENU === "1";
 
 function getInitialSettings(): PrayerSettingsState {
   if (typeof window === "undefined") {
@@ -138,6 +153,27 @@ async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
   return data;
 }
 
+function SuggestionsSkeleton({ withCode = false }: { withCode?: boolean }) {
+  return (
+    <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-border/80 bg-popover p-1 shadow-lg">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <div
+          className="flex items-start justify-between rounded-lg px-2.5 py-2"
+          key={index}
+        >
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <div className="h-4 w-2/5 animate-pulse rounded bg-muted/80" />
+            <div className="h-4 w-3/5 animate-pulse rounded bg-muted/70" />
+          </div>
+          {withCode ? (
+            <div className="ml-2 h-5 w-10 animate-pulse rounded-md bg-muted/70" />
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const [settings, setSettings] = useState<PrayerSettingsState>(getInitialSettings);
@@ -147,6 +183,9 @@ export default function SettingsPage() {
   >([]);
   const [cityFocused, setCityFocused] = useState(false);
   const [countryFocused, setCountryFocused] = useState(false);
+  const [cityInteracted, setCityInteracted] = useState(false);
+  const [countryInteracted, setCountryInteracted] = useState(false);
+  const [locationOptionsChanged, setLocationOptionsChanged] = useState(false);
   const [cityLoading, setCityLoading] = useState(false);
   const [countryLoading, setCountryLoading] = useState(false);
   const [citySearchError, setCitySearchError] = useState<string | null>(null);
@@ -160,11 +199,21 @@ export default function SettingsPage() {
   const [locationStatus, setLocationStatus] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [resolving, setResolving] = useState<"gps" | "ip" | null>(null);
+  const [notificationPermission, setNotificationPermission] =
+    useState<LocalNotificationPermission>(getLocalNotificationPermission);
+  const [sendingMockNotification, setSendingMockNotification] = useState(false);
+  const [isDevMenuExpanded, setIsDevMenuExpanded] = useState(false);
+  const [mockNotificationStatus, setMockNotificationStatus] = useState<
+    string | null
+  >(null);
+  const [mockNotificationError, setMockNotificationError] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     const query = settings.cityName.trim();
 
-    if (query.length < 2) {
+    if (!cityFocused || !cityInteracted || query.length < 2) {
       setCitySuggestions([]);
       setCityLoading(false);
       setCitySearchError(null);
@@ -175,6 +224,7 @@ export default function SettingsPage() {
     const timeoutId = window.setTimeout(async () => {
       try {
         setCityLoading(true);
+        setCitySuggestions([]);
         setCitySearchError(null);
         const params = new URLSearchParams({
           kind: "city",
@@ -207,12 +257,12 @@ export default function SettingsPage() {
       controller.abort();
       window.clearTimeout(timeoutId);
     };
-  }, [settings.cityName, settings.countryCode]);
+  }, [cityFocused, cityInteracted, settings.cityName, settings.countryCode]);
 
   useEffect(() => {
     const query = settings.country.trim();
 
-    if (query.length < 1) {
+    if (!countryFocused || !countryInteracted || query.length < 1) {
       setCountrySuggestions([]);
       setCountryLoading(false);
       setCountrySearchError(null);
@@ -223,6 +273,7 @@ export default function SettingsPage() {
     const timeoutId = window.setTimeout(async () => {
       try {
         setCountryLoading(true);
+        setCountrySuggestions([]);
         setCountrySearchError(null);
         const params = new URLSearchParams({
           kind: "country",
@@ -251,9 +302,13 @@ export default function SettingsPage() {
       controller.abort();
       window.clearTimeout(timeoutId);
     };
-  }, [settings.country]);
+  }, [countryFocused, countryInteracted, settings.country]);
 
   useEffect(() => {
+    if (!locationOptionsChanged) {
+      return;
+    }
+
     const city = settings.cityName.trim();
     const country = settings.country.trim();
 
@@ -309,9 +364,29 @@ export default function SettingsPage() {
       controller.abort();
       window.clearTimeout(timeoutId);
     };
-  }, [settings.cityName, settings.country, settings.countryCode]);
+  }, [locationOptionsChanged, settings.cityName, settings.country, settings.countryCode]);
+
+  useEffect(() => {
+    if (!DEV_MENU_ENABLED || typeof window === "undefined") {
+      return;
+    }
+
+    const syncPermission = () => {
+      setNotificationPermission(getLocalNotificationPermission());
+    };
+
+    syncPermission();
+    window.addEventListener("focus", syncPermission);
+    document.addEventListener("visibilitychange", syncPermission);
+
+    return () => {
+      window.removeEventListener("focus", syncPermission);
+      document.removeEventListener("visibilitychange", syncPermission);
+    };
+  }, []);
 
   const applyResolvedLocation = (location: LocationResult) => {
+    setLocationOptionsChanged(true);
     setSettings((prev) => ({
       ...prev,
       cityName: location.city,
@@ -388,6 +463,9 @@ export default function SettingsPage() {
   };
 
   const selectCitySuggestion = (city: CitySuggestion) => {
+    setLocationOptionsChanged(true);
+    setCityInteracted(false);
+    setCountryInteracted(false);
     setSettings((prev) => ({
       ...prev,
       cityName: city.name,
@@ -403,6 +481,9 @@ export default function SettingsPage() {
   };
 
   const selectCountrySuggestion = (country: CountrySuggestion) => {
+    setLocationOptionsChanged(true);
+    setCountryInteracted(false);
+    setCityInteracted(false);
     setSettings((prev) => ({
       ...prev,
       cityName: "",
@@ -464,8 +545,75 @@ export default function SettingsPage() {
     router.push("/");
   };
 
+  const requestDevNotificationPermission = async () => {
+    setMockNotificationStatus(null);
+    setMockNotificationError(null);
+
+    if (notificationPermission === "unsupported") {
+      setMockNotificationError("Notifications are not supported on this device.");
+      return;
+    }
+
+    const result = await Notification.requestPermission();
+    setNotificationPermission(result);
+
+    if (result === "granted") {
+      setMockNotificationStatus("Notification permission granted.");
+      return;
+    }
+
+    setMockNotificationError("Permission not granted. Enable notifications to test.");
+  };
+
+  const sendMockNotification = async () => {
+    setMockNotificationStatus(null);
+    setMockNotificationError(null);
+
+    const currentPermission = getLocalNotificationPermission();
+    setNotificationPermission(currentPermission);
+
+    if (currentPermission === "unsupported") {
+      setMockNotificationError("Notifications are not supported on this device.");
+      return;
+    }
+
+    if (currentPermission !== "granted") {
+      setMockNotificationError("Grant notification permission before sending a test.");
+      return;
+    }
+
+    setSendingMockNotification(true);
+
+    try {
+      await showLocalNotification({
+        title: "Mock prayer reminder",
+        body: "This is a device test notification from the developer menu.",
+        tag: `mock-prayer-reminder-${Date.now()}`,
+      });
+      setMockNotificationStatus(
+        "Mock notification sent. Check your notification center on this device.",
+      );
+    } catch (error) {
+      setMockNotificationError(
+        error instanceof Error
+          ? error.message
+          : "Unable to send a mock notification.",
+      );
+    } finally {
+      setSendingMockNotification(false);
+    }
+  };
+
   const showCitySuggestions = cityFocused && citySuggestions.length > 0;
   const showCountrySuggestions = countryFocused && countrySuggestions.length > 0;
+  const notificationPermissionLabel =
+    notificationPermission === "unsupported"
+      ? "Unsupported"
+      : notificationPermission === "granted"
+        ? "Granted"
+        : notificationPermission === "denied"
+          ? "Denied"
+          : "Default";
 
   return (
     <section className="space-y-5">
@@ -542,12 +690,14 @@ export default function SettingsPage() {
                   onBlur={() => {
                     window.setTimeout(() => setCityFocused(false), 120);
                   }}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    setCityInteracted(true);
+                    setLocationOptionsChanged(true);
                     setSettings((prev) => ({
                       ...prev,
                       cityName: event.target.value,
-                    }))
-                  }
+                    }));
+                  }}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && citySuggestions.length > 0) {
                       event.preventDefault();
@@ -563,12 +713,13 @@ export default function SettingsPage() {
                 <Search className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               </div>
 
-              {cityLoading ? (
-                <p className="text-sm text-muted-foreground">Searching cities...</p>
-              ) : null}
-              {citySearchError ? (
-                <p className="text-sm text-destructive">{citySearchError}</p>
-              ) : null}
+              <div className="min-h-5">
+                {citySearchError ? (
+                  <p className="text-sm text-destructive">{citySearchError}</p>
+                ) : null}
+              </div>
+
+              {cityFocused && cityLoading ? <SuggestionsSkeleton withCode /> : null}
 
               {showCitySuggestions ? (
                 <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-border/80 bg-popover p-1 shadow-lg">
@@ -611,14 +762,16 @@ export default function SettingsPage() {
                   onBlur={() => {
                     window.setTimeout(() => setCountryFocused(false), 120);
                   }}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    setCountryInteracted(true);
+                    setLocationOptionsChanged(true);
                     setSettings((prev) => ({
                       ...prev,
                       cityName: "",
                       country: event.target.value,
                       countryCode: "",
-                    }))
-                  }
+                    }));
+                  }}
                   onFocus={() => setCountryFocused(true)}
                   placeholder="Start typing your country..."
                   required
@@ -628,27 +781,30 @@ export default function SettingsPage() {
                 <Sparkles className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               </div>
 
-              {countryLoading ? (
-                <p className="text-sm text-muted-foreground">
-                  Searching countries...
-                </p>
+              {countryFocused && countryLoading ? (
+                <SuggestionsSkeleton withCode />
               ) : null}
-              {countrySearchError ? (
-                <p className="text-sm text-destructive">{countrySearchError}</p>
-              ) : null}
-              {comboValidation === "checking" ? (
-                <p className="text-sm text-muted-foreground">
-                  Checking city/country combination...
-                </p>
-              ) : null}
-              {comboWarning ? (
-                <p className="text-sm text-destructive">{comboWarning}</p>
-              ) : null}
-              {comboValidation === "valid" ? (
-                <p className="text-sm text-emerald-600 dark:text-emerald-300">
-                  City and country combination looks good.
-                </p>
-              ) : null}
+
+              <div className="min-h-5">
+                {countrySearchError ? (
+                  <p className="text-sm text-destructive">{countrySearchError}</p>
+                ) : null}
+              </div>
+              <div className="min-h-5">
+                {comboValidation === "checking" ? (
+                  <p className="text-sm text-muted-foreground">
+                    Checking city/country combination...
+                  </p>
+                ) : null}
+                {comboWarning ? (
+                  <p className="text-sm text-destructive">{comboWarning}</p>
+                ) : null}
+                {comboValidation === "valid" ? (
+                  <p className="text-sm text-emerald-600 dark:text-emerald-300">
+                    City and country combination looks good.
+                  </p>
+                ) : null}
+              </div>
 
               {showCountrySuggestions ? (
                 <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-border/80 bg-popover p-1 shadow-lg">
@@ -753,6 +909,87 @@ export default function SettingsPage() {
           </div>
         </form>
       </Card>
+
+      {DEV_MENU_ENABLED ? (
+        <Card className="glass-panel border-border/80 p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="soft-chip inline-flex">Developer</p>
+              <h2 className="mt-3 font-display text-2xl">Dev menu</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Collapsed by default. Expand to run device notification tests.
+              </p>
+            </div>
+            <Button
+              className="min-h-9 rounded-full px-4 py-2"
+              onClick={() => setIsDevMenuExpanded((prev) => !prev)}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              {isDevMenuExpanded ? "Minimize" : "Expand"}
+            </Button>
+          </div>
+
+          {isDevMenuExpanded ? (
+            <div className="mt-4">
+              <p
+                className={cn(
+                  "text-sm font-medium",
+                  notificationPermission === "granted"
+                    ? "text-emerald-600 dark:text-emerald-300"
+                    : notificationPermission === "denied"
+                      ? "text-destructive"
+                      : "text-muted-foreground",
+                )}
+              >
+                Permission: {notificationPermissionLabel}
+              </p>
+
+              <div className="mt-3 flex w-full flex-col gap-2 lg:w-auto">
+                <Button
+                  className="min-h-10 w-full rounded-full px-4 py-2.5 text-center [overflow-wrap:anywhere] lg:w-auto"
+                  disabled={notificationPermission === "unsupported"}
+                  onClick={() => void requestDevNotificationPermission()}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <BellRing className="size-4" />
+                  Request permission
+                </Button>
+                <Button
+                  className="min-h-10 w-full rounded-full px-4 py-2.5 text-center [overflow-wrap:anywhere] lg:w-auto"
+                  disabled={
+                    sendingMockNotification ||
+                    notificationPermission === "unsupported"
+                  }
+                  onClick={() => void sendMockNotification()}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <FlaskConical className="size-4" />
+                  {sendingMockNotification
+                    ? "Sending notification..."
+                    : "Send mock notification"}
+                </Button>
+              </div>
+
+              {mockNotificationStatus ? (
+                <p className="mt-3 text-sm text-emerald-600 dark:text-emerald-300">
+                  {mockNotificationStatus}
+                </p>
+              ) : null}
+              {mockNotificationError ? (
+                <p className="mt-3 text-sm text-destructive">
+                  {mockNotificationError}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </Card>
+      ) : null}
     </section>
   );
 }
