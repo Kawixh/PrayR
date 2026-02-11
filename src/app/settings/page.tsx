@@ -108,8 +108,7 @@ const EMPTY_SETTINGS: PrayerSettingsState = {
   school: "",
 };
 const DEV_MENU_ENABLED =
-  process.env.NODE_ENV !== "production" ||
-  process.env.NEXT_PUBLIC_ENABLE_DEV_MENU === "1";
+  process.env.NEXT_PUBLIC_ENABLE_DEV_MENU !== "0";
 
 function getInitialSettings(): PrayerSettingsState {
   if (typeof window === "undefined") {

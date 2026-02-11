@@ -42,6 +42,41 @@ const organizationJsonLd = {
   logo: `${siteUrl}/icon-512.png`,
 };
 
+const themeInitScript = `
+(() => {
+  try {
+    const root = document.documentElement;
+    const storedTheme = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const resolvedTheme =
+      storedTheme === "dark" || storedTheme === "light"
+        ? storedTheme
+        : (prefersDark ? "dark" : "light");
+    const isDark = resolvedTheme === "dark";
+    const backgroundColor = isDark ? "#10232a" : "#e9f9f7";
+
+    root.classList.toggle("dark", isDark);
+    root.classList.toggle("light", !isDark);
+    root.style.colorScheme = isDark ? "dark" : "light";
+    root.style.backgroundColor = backgroundColor;
+
+    const applyBodyBackground = () => {
+      if (document.body) {
+        document.body.style.backgroundColor = backgroundColor;
+      }
+    };
+
+    applyBodyBackground();
+
+    if (!document.body) {
+      document.addEventListener("DOMContentLoaded", applyBodyBackground, {
+        once: true,
+      });
+    }
+  } catch {}
+})();
+`;
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
@@ -155,6 +190,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en-US" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{ __html: themeInitScript }}
+          suppressHydrationWarning
+        />
+      </head>
       <body
         className={`${bodyFont.variable} ${displayFont.variable} font-sans antialiased`}
       >
