@@ -13,6 +13,7 @@ const NEW_FEATURES = [
   "Hide adhkars",
   "Simple settings",
   "Added makruh timings",
+  "Ramadan-ul-Mubarak banner with Sehar/Iftar timings",
 ] as const;
 
 export function WhatsNewBanner() {

@@ -12,7 +12,7 @@ import { formatTo12Hour } from "../_utils/time";
 
 type RamadanMubarakBannerProps = {
   dateInfo: AlAdhanDateInfo;
-  showSehrAndIftarTimes: boolean;
+  showSeharAndIftarTimes: boolean;
   timings: PrayerTimings;
 };
 
@@ -30,7 +30,7 @@ function isRamadan(dateInfo: AlAdhanDateInfo): boolean {
 
 export function RamadanMubarakBanner({
   dateInfo,
-  showSehrAndIftarTimes,
+  showSeharAndIftarTimes,
   timings,
 }: RamadanMubarakBannerProps) {
   const [isVisible, setIsVisible] = useState(() => {
@@ -48,7 +48,7 @@ export function RamadanMubarakBanner({
   }
 
   const hijriDateLabel = `${dateInfo.hijri.day} ${dateInfo.hijri.month.en} ${dateInfo.hijri.year} AH`;
-  const sehrTime = formatTo12Hour(timings.Imsak);
+  const seharTime = formatTo12Hour(timings.Imsak);
   const iftarTime = formatTo12Hour(timings.Maghrib);
 
   return (
@@ -74,13 +74,13 @@ export function RamadanMubarakBanner({
         </button>
       </div>
 
-      {showSehrAndIftarTimes ? (
+      {showSeharAndIftarTimes ? (
         <div className="grid gap-2 border-t border-primary/20 bg-card/55 p-3 sm:grid-cols-2 sm:px-5 sm:py-4">
           <article className="rounded-lg border border-border/70 bg-background/65 px-3 py-2">
             <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-              Sehr
+              Sehar
             </p>
-            <p className="mt-1 text-xl font-semibold">{sehrTime}</p>
+            <p className="mt-1 text-xl font-semibold">{seharTime}</p>
             <p className="text-xs text-muted-foreground">Imsak</p>
           </article>
 

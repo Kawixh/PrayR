@@ -19,6 +19,7 @@ import { CurrentPrayerStatusCard } from "./current-prayer-status-card";
 import { IslamicDateCalendarCard } from "./islamic-date-calendar-card";
 import { PrayerReminder } from "./prayer-reminder";
 import { RamadanMubarakBanner } from "./ramadan-mubarak-banner";
+import { SeharIftarHighlightsCard } from "./sehar-iftar-highlights-card";
 import { PrayerTimeCard } from "./prayer-time-card";
 import { PrayerTimeline } from "./prayer-timeline";
 
@@ -353,7 +354,7 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
 
   if (featureFlags.sehrAndIftarTimes) {
     summaryItems.unshift({
-      name: "Sehr",
+      name: "Sehar",
       subtitle: "Imsak",
       time: prayerDay.timings.Imsak,
     });
@@ -409,17 +410,24 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
     <section className="space-y-5">
       <RamadanMubarakBanner
         dateInfo={prayerDay.date}
-        showSehrAndIftarTimes={featureFlags.sehrAndIftarTimes}
+        showSeharAndIftarTimes={featureFlags.sehrAndIftarTimes}
         timings={prayerDay.timings}
       />
       <PrayerReminder timings={prayerDay.timings} />
+      {featureFlags.sehrAndIftarTimes ? (
+        <SeharIftarHighlightsCard timings={prayerDay.timings} />
+      ) : null}
       {featureFlags.islamicCalendar ? (
         <IslamicDateCalendarCard dateInfo={prayerDay.date} />
       ) : null}
       <CurrentPrayerStatusCard timings={prayerDay.timings} />
       {featureFlags.adhkars && featureFlags.adhkarOfTheDay ? <DailyAdhkarCard /> : null}
       {dashboardView === "timeline" ? (
-        <PrayerTimeline showAdhkarLinks={featureFlags.adhkars} timings={prayerDay.timings} />
+        <PrayerTimeline
+          showAdhkarLinks={featureFlags.adhkars}
+          showSeharAndIftarTimes={featureFlags.sehrAndIftarInTimeline}
+          timings={prayerDay.timings}
+        />
       ) : (
         <PrayerTimeCard showAdhkarLinks={featureFlags.adhkars} timings={prayerDay.timings} />
       )}
