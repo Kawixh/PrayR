@@ -1,4 +1,5 @@
 import { getAdhkarChapter } from "@/backend/adhkar";
+import { getRequestFeatureFlags } from "@/features/request";
 import { isAdhkarLanguage } from "@/lib/adhkar";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -9,6 +10,12 @@ type RouteContext = {
 };
 
 export async function GET(request: NextRequest, context: RouteContext) {
+  const featureFlags = getRequestFeatureFlags(request);
+
+  if (!featureFlags.adhkars) {
+    return NextResponse.json({ error: "Adhkars feature is disabled." }, { status: 404 });
+  }
+
   const { id } = await context.params;
   const parsedId = Number(id);
 
@@ -38,4 +45,3 @@ export async function GET(request: NextRequest, context: RouteContext) {
     );
   }
 }
-

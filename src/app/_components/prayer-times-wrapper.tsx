@@ -3,6 +3,7 @@
 import { PrayerTimings } from "@/backend/types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { type FeatureFlags } from "@/features/definitions";
 import { AlertTriangle, Clock3 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -138,7 +139,7 @@ async function fetchPrayerTimesFromApi(
   return data.timings;
 }
 
-export function PrayerTimesWrapper() {
+export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlags }) {
   const [timings, setTimings] = useState<PrayerTimings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -300,8 +301,8 @@ export function PrayerTimesWrapper() {
   return (
     <section className="space-y-5">
       <PrayerReminder timings={timings} />
-      <DailyAdhkarCard />
-      <PrayerTimeCard timings={timings} />
+      {featureFlags.adhkars && featureFlags.adhkarOfTheDay ? <DailyAdhkarCard /> : null}
+      <PrayerTimeCard showAdhkarLinks={featureFlags.adhkars} timings={timings} />
 
       <Card className="glass-panel border-border/80 p-4 sm:p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -319,16 +320,18 @@ export function PrayerTimesWrapper() {
               <p className="mt-1 text-xl font-semibold text-foreground">
                 {formatTo12Hour(item.time)}
               </p>
-              <Button
-                asChild
-                className="mt-3 min-h-9 rounded-full px-3 py-2 text-sm"
-                size="sm"
-                variant="outline"
-              >
-                <Link href={`/adhkars?prayer=${encodeURIComponent(item.name)}`}>
-                  View Adhkars
-                </Link>
-              </Button>
+              {featureFlags.adhkars ? (
+                <Button
+                  asChild
+                  className="mt-3 min-h-9 rounded-full px-3 py-2 text-sm"
+                  size="sm"
+                  variant="outline"
+                >
+                  <Link href={`/adhkars?prayer=${encodeURIComponent(item.name)}`}>
+                    View Adhkars
+                  </Link>
+                </Button>
+              ) : null}
             </div>
           ))}
         </div>

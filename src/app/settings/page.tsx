@@ -2,6 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { readClientFeatureOverrides } from "@/features/client";
+import { type FeatureFlags } from "@/features/definitions";
+import { resolveFeatureFlags } from "@/features/resolve";
 import {
   Select,
   SelectContent,
@@ -26,6 +29,7 @@ import {
   type LocalNotificationPermission,
   showLocalNotification,
 } from "../_utils/local-notifications";
+import { FeatureSettingsCard } from "./_components/feature-settings-card";
 
 const calculationMethods = [
   { value: "0", label: "Jafari / Shia Ithna-Ashari" },
@@ -109,6 +113,7 @@ const EMPTY_SETTINGS: PrayerSettingsState = {
 };
 const DEV_MENU_ENABLED =
   process.env.NEXT_PUBLIC_ENABLE_DEV_MENU !== "0";
+const DEFAULT_FEATURE_FLAGS = resolveFeatureFlags();
 
 function getInitialSettings(): PrayerSettingsState {
   if (typeof window === "undefined") {
@@ -134,6 +139,15 @@ function getInitialSettings(): PrayerSettingsState {
   } catch {
     return EMPTY_SETTINGS;
   }
+}
+
+function getInitialFeatureFlags(): FeatureFlags {
+  if (typeof window === "undefined") {
+    return DEFAULT_FEATURE_FLAGS;
+  }
+
+  const overrides = readClientFeatureOverrides();
+  return resolveFeatureFlags(overrides);
 }
 
 async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
@@ -176,6 +190,7 @@ function SuggestionsSkeleton({ withCode = false }: { withCode?: boolean }) {
 export default function SettingsPage() {
   const router = useRouter();
   const [settings, setSettings] = useState<PrayerSettingsState>(getInitialSettings);
+  const [featureFlags, setFeatureFlags] = useState<FeatureFlags>(getInitialFeatureFlags);
   const [citySuggestions, setCitySuggestions] = useState<CitySuggestion[]>([]);
   const [countrySuggestions, setCountrySuggestions] = useState<
     CountrySuggestion[]
@@ -618,17 +633,16 @@ export default function SettingsPage() {
     <section className="space-y-5">
       <header className="glass-panel rounded-3xl p-5 sm:p-6">
         <p className="soft-chip inline-flex">Profile</p>
-        <h1 className="mt-3 font-display text-3xl sm:text-4xl">
-          Prayer Settings
-        </h1>
+        <h1 className="mt-3 font-display text-3xl sm:text-4xl">App Settings</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Search city and country with GeoNames autocomplete, or optionally use
-          your GPS/IP location for faster setup. GPS resolves to city-level
-          names.
+          {featureFlags.prayerTimings
+            ? "Search city and country with GeoNames autocomplete, or optionally use your GPS/IP location for faster setup. GPS resolves to city-level names."
+            : "Prayer timings is currently disabled. Enable it in Feature Control to edit location and calculation settings."}
         </p>
       </header>
 
-      <Card className="glass-panel border-border/80 p-5 sm:p-6">
+      {featureFlags.prayerTimings ? (
+        <Card className="glass-panel border-border/80 p-5 sm:p-6">
         <div className="mb-5 rounded-2xl border border-border/70 bg-background/45 p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
@@ -907,9 +921,20 @@ export default function SettingsPage() {
             </Button>
           </div>
         </form>
-      </Card>
+        </Card>
+      ) : (
+        <Card className="glass-panel border-border/80 p-5 sm:p-6">
+          <h2 className="font-display text-2xl sm:text-3xl">Prayer timings disabled</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+            Enable the Prayer Timings feature below to unlock city, country, calculation
+            method, and school settings.
+          </p>
+        </Card>
+      )}
 
-      {DEV_MENU_ENABLED ? (
+      <FeatureSettingsCard onFeatureFlagsChange={setFeatureFlags} />
+
+      {DEV_MENU_ENABLED && featureFlags.prayerTimings ? (
         <Card className="glass-panel border-border/80 p-5 sm:p-6">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">

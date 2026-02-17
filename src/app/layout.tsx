@@ -1,5 +1,6 @@
 import RootLayoutClient from "@/components/root-layout-client";
 import { ThemeProvider } from "@/components/theme-provider";
+import { getServerFeatureFlags } from "@/features/server";
 import { getSiteUrl } from "@/lib/site-url";
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
@@ -175,11 +176,13 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const featureFlags = await getServerFeatureFlags();
+
   return (
     <html lang="en-US" suppressHydrationWarning>
       <head>
@@ -215,7 +218,7 @@ export default function RootLayout({
                 <main className="flex-1 space-y-6">{children}</main>
               </RootLayoutClient>
 
-              <Navbar />
+              <Navbar featureFlags={featureFlags} />
             </div>
           </div>
         </ThemeProvider>

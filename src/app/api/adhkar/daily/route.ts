@@ -7,6 +7,7 @@ import {
   getSeedFromDayKey,
   pickBySeed,
 } from "@/backend/adhkar";
+import { getRequestFeatureFlags } from "@/features/request";
 import { isAdhkarLanguage, PRAYER_WITH_ADHKAR, PrayerWithAdhkar } from "@/lib/adhkar";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -30,6 +31,12 @@ function selectCategoryPool(
 }
 
 export async function GET(request: NextRequest) {
+  const featureFlags = getRequestFeatureFlags(request);
+
+  if (!featureFlags.adhkars || !featureFlags.adhkarOfTheDay) {
+    return NextResponse.json({ error: "Daily adhkar feature is disabled." }, { status: 404 });
+  }
+
   const languageQuery = request.nextUrl.searchParams.get("language");
   const dayKey = request.nextUrl.searchParams.get("dayKey");
   const prayerQuery = request.nextUrl.searchParams.get("prayer");
@@ -88,4 +95,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

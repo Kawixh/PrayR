@@ -85,11 +85,13 @@ function getPrayerStatus(now: Date, timings: PrayerTimings): PrayerStatus | null
 function PrayerPanel({
   label,
   prayer,
+  showAdhkarLink,
   timeRemaining,
   highlight,
 }: {
   label: string;
   prayer: PrayerTime;
+  showAdhkarLink: boolean;
   timeRemaining?: string;
   highlight?: boolean;
 }) {
@@ -138,22 +140,30 @@ function PrayerPanel({
           </p>
         ) : null}
 
-        <Button
-          asChild
-          className="min-h-9 w-fit rounded-full px-3 py-2 text-sm"
-          size="sm"
-          variant="outline"
-        >
-          <Link href={`/adhkars?prayer=${encodeURIComponent(prayer.name)}`}>
-            View Adhkars
-          </Link>
-        </Button>
+        {showAdhkarLink ? (
+          <Button
+            asChild
+            className="min-h-9 w-fit rounded-full px-3 py-2 text-sm"
+            size="sm"
+            variant="outline"
+          >
+            <Link href={`/adhkars?prayer=${encodeURIComponent(prayer.name)}`}>
+              View Adhkars
+            </Link>
+          </Button>
+        ) : null}
       </div>
     </Card>
   );
 }
 
-export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
+export function PrayerTimeCard({
+  timings,
+  showAdhkarLinks,
+}: {
+  timings: PrayerTimings;
+  showAdhkarLinks: boolean;
+}) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -182,9 +192,14 @@ export function PrayerTimeCard({ timings }: { timings: PrayerTimings }) {
         highlight
         label={isWithinFifteenMinutes ? "Happening Soon" : "Next Prayer"}
         prayer={nextPrayer}
+        showAdhkarLink={showAdhkarLinks}
         timeRemaining={timeRemaining}
       />
-      <PrayerPanel label="Previous Prayer" prayer={previousPrayer} />
+      <PrayerPanel
+        label="Previous Prayer"
+        prayer={previousPrayer}
+        showAdhkarLink={showAdhkarLinks}
+      />
     </div>
   );
 }

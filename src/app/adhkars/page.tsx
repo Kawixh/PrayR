@@ -3,8 +3,10 @@ import {
   getAdhkarSourceUrl,
   getRecommendedCategoryIdsForPrayer,
 } from "@/backend/adhkar";
+import { getServerFeatureFlags } from "@/features/server";
 import { PRAYER_WITH_ADHKAR, PrayerWithAdhkar } from "@/lib/adhkar";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { AdhkarBrowser } from "./_components/adhkar-browser";
 
 type SearchParams = {
@@ -89,6 +91,12 @@ export const metadata: Metadata = {
 };
 
 export default async function AdhkarsPage({ searchParams }: AdhkarsPageProps) {
+  const featureFlags = await getServerFeatureFlags();
+
+  if (!featureFlags.adhkars) {
+    notFound();
+  }
+
   const resolvedParams = await searchParams;
   const requestedPrayer = parsePrayer(readFirstValue(resolvedParams.prayer));
   const requestedCategoryId = parseCategoryId(readFirstValue(resolvedParams.category));

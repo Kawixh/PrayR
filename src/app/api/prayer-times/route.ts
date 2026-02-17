@@ -1,4 +1,5 @@
 import { getAdhanTime } from "@/backend/get-adhan-time";
+import { getRequestFeatureFlags } from "@/features/request";
 import { NextRequest, NextResponse } from "next/server";
 
 function parseRequiredNumber(value: string | null): number | null {
@@ -16,6 +17,12 @@ function parseRequiredNumber(value: string | null): number | null {
 }
 
 export async function GET(request: NextRequest) {
+  const featureFlags = getRequestFeatureFlags(request);
+
+  if (!featureFlags.prayerTimings) {
+    return NextResponse.json({ error: "Prayer timings feature is disabled." }, { status: 404 });
+  }
+
   const searchParams = request.nextUrl.searchParams;
 
   const city = searchParams.get("city")?.trim() ?? "";

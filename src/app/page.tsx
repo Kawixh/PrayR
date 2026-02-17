@@ -1,5 +1,7 @@
+import { getServerFeatureFlags } from "@/features/server";
 import { getSiteUrl } from "@/lib/site-url";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { CitySeoSummary } from "./_components/city-seo-summary";
 import { PrayerTimesWrapper } from "./_components/prayer-times-wrapper";
 import { SettingsCheck } from "./_components/settings-check";
@@ -115,7 +117,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Page() {
+export default async function Page() {
+  const featureFlags = await getServerFeatureFlags();
+
+  if (!featureFlags.prayerTimings) {
+    if (featureFlags.adhkars) {
+      redirect("/adhkars");
+    }
+
+    redirect("/settings");
+  }
+
   return (
     <>
       <script
@@ -140,7 +152,7 @@ export default function Page() {
 
       <SettingsCheck>
         <div className="space-y-5">
-          <PrayerTimesWrapper />
+          <PrayerTimesWrapper featureFlags={featureFlags} />
         </div>
       </SettingsCheck>
 

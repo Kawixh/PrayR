@@ -1,7 +1,14 @@
 import { getAdhkarCategories, getAdhkarSourceUrl } from "@/backend/adhkar";
-import { NextResponse } from "next/server";
+import { getRequestFeatureFlags } from "@/features/request";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const featureFlags = getRequestFeatureFlags(request);
+
+  if (!featureFlags.adhkars) {
+    return NextResponse.json({ error: "Adhkars feature is disabled." }, { status: 404 });
+  }
+
   try {
     const categories = await getAdhkarCategories();
 
@@ -21,4 +28,3 @@ export async function GET() {
     );
   }
 }
-

@@ -1,25 +1,36 @@
 "use client";
 
+import { type FeatureFlags, type FeatureKey } from "@/features/definitions";
 import { ModeToggle } from "@/components/theme-manager";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { BookOpenText, Home, Settings } from "lucide-react";
+import { BookOpenText, Home, type LucideIcon, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
-const navItems = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  matches: (pathname: string) => boolean;
+  featureKey?: FeatureKey;
+};
+
+const navItems: NavItem[] = [
   {
     href: "/",
     label: "Prayer Times",
     icon: Home,
     matches: (pathname: string) => pathname === "/",
+    featureKey: "prayerTimings",
   },
   {
     href: "/adhkars",
     label: "Adhkars",
     icon: BookOpenText,
     matches: (pathname: string) => pathname.startsWith("/adhkars"),
+    featureKey: "adhkars",
   },
   {
     href: "/settings",
@@ -29,9 +40,16 @@ const navItems = [
   },
 ];
 
-export const Navbar = () => {
+export const Navbar = ({ featureFlags }: { featureFlags: FeatureFlags }) => {
   const pathname = usePathname();
   const navPanelRef = useRef<HTMLDivElement>(null);
+  const visibleNavItems = useMemo(
+    () =>
+      navItems.filter(
+        (item) => !item.featureKey || featureFlags[item.featureKey],
+      ),
+    [featureFlags],
+  );
 
   useEffect(() => {
     const navPanel = navPanelRef.current;
@@ -74,8 +92,16 @@ export const Navbar = () => {
           ref={navPanelRef}
         >
           <div className="flex flex-wrap items-stretch gap-2">
-            <div className="grid min-w-0 flex-1 grid-cols-3 gap-2">
-              {navItems.map((item) => {
+            <div
+              className="grid min-w-0 flex-1 gap-2"
+              style={{
+                gridTemplateColumns: `repeat(${Math.max(
+                  visibleNavItems.length,
+                  1,
+                )}, minmax(0, 1fr))`,
+              }}
+            >
+              {visibleNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = item.matches(pathname);
 
