@@ -21,6 +21,7 @@ type PrayerTimelineProps = {
 
 type PrayerName = "Fajr" | "Dhuhr" | "Asr" | "Maghrib" | "Isha";
 type ZoneKind = "makruh" | "open";
+type ScaleMode = "adaptive" | "exact";
 
 type PrayerBlock = {
   id: string;
@@ -50,10 +51,16 @@ type TimelineData = {
   zones: TimelineZone[];
 };
 
+type ScaleSegment = {
+  startHour: number;
+  endHour: number;
+  pxPerHour: number;
+};
+
 type TimelineTooltipProps = {
   body: string;
   heading: string;
-  side: "left" | "right";
+  side: "top" | "bottom" | "left" | "right";
   timeRange: string;
   touchMode: boolean;
   triggerClassName: string;
@@ -62,8 +69,8 @@ type TimelineTooltipProps = {
 };
 
 const DAY_HOURS = 24;
-const PIXELS_PER_HOUR = 28;
-const TIMELINE_HEIGHT_PX = DAY_HOURS * PIXELS_PER_HOUR;
+const BASE_PX_PER_HOUR = 34;
+const MIN_PRAYER_BLOCK_PX = 58;
 const BLOCK_GAP_PX = 4;
 const SUNRISE_MAKRUH_MINUTES = 15;
 const SOLAR_NOON_MAKRUH_MINUTES = 10;
@@ -84,10 +91,6 @@ function clampHour(hour: number): number {
   return Math.max(0, Math.min(DAY_HOURS, hour));
 }
 
-function toPercent(hours: number): number {
-  return (hours / DAY_HOURS) * 100;
-}
-
 function formatHourLabel(hour: number): string {
   return `${String(hour).padStart(2, "0")}:00`;
 }
@@ -105,6 +108,118 @@ function formatDecimalHour(value: number): string {
 
 function currentHourValue(date: Date): number {
   return date.getHours() + date.getMinutes() / 60 + date.getSeconds() / 3600;
+}
+
+type HourRange = {
+  end: number;
+  start: number;
+};
+
+function subtractRanges(baseRange: HourRange, rangesToSubtract: HourRange[]): HourRange[] {
+  let segments: HourRange[] = [baseRange];
+
+  const orderedRanges = [...rangesToSubtract].sort(
+    (left, right) => left.start - right.start,
+  );
+
+  for (const range of orderedRanges) {
+    const nextSegments: HourRange[] = [];
+
+    for (const segment of segments) {
+      if (range.end <= segment.start || range.start >= segment.end) {
+        nextSegments.push(segment);
+        continue;
+      }
+
+      if (range.start > segment.start) {
+        nextSegments.push({
+          start: segment.start,
+          end: range.start,
+        });
+      }
+
+      if (range.end < segment.end) {
+        nextSegments.push({
+          start: range.end,
+          end: segment.end,
+        });
+      }
+    }
+
+    segments = nextSegments;
+  }
+
+  return segments.filter((segment) => segment.end - segment.start > 0);
+}
+
+function uniqueSorted(values: number[]): number[] {
+  return [...new Set(values.map((value) => Number(value.toFixed(6))))].sort(
+    (left, right) => left - right,
+  );
+}
+
+function buildScaleSegments(blocks: PrayerBlock[], scaleMode: ScaleMode): ScaleSegment[] {
+  const breakpoints = uniqueSorted([
+    0,
+    DAY_HOURS,
+    ...blocks.flatMap((block) => [block.startHour, block.endHour]),
+  ]);
+
+  const segments: ScaleSegment[] = [];
+
+  for (let index = 0; index < breakpoints.length - 1; index += 1) {
+    const startHour = breakpoints[index];
+    const endHour = breakpoints[index + 1];
+
+    if (endHour <= startHour) {
+      continue;
+    }
+
+    let pxPerHour = BASE_PX_PER_HOUR;
+
+    if (scaleMode === "adaptive") {
+      const owningBlock = blocks.find(
+        (block) =>
+          startHour >= block.startHour - 1e-6 && endHour <= block.endHour + 1e-6,
+      );
+
+      if (owningBlock) {
+        const blockDuration = owningBlock.endHour - owningBlock.startHour;
+
+        if (blockDuration > 0) {
+          pxPerHour = Math.max(BASE_PX_PER_HOUR, MIN_PRAYER_BLOCK_PX / blockDuration);
+        }
+      }
+    }
+
+    segments.push({
+      startHour,
+      endHour,
+      pxPerHour,
+    });
+  }
+
+  return segments;
+}
+
+function mapHourToPixels(hour: number, segments: ScaleSegment[]): number {
+  const targetHour = clampHour(hour);
+  let y = 0;
+
+  for (const segment of segments) {
+    if (targetHour >= segment.endHour) {
+      y += (segment.endHour - segment.startHour) * segment.pxPerHour;
+      continue;
+    }
+
+    if (targetHour > segment.startHour) {
+      y += (targetHour - segment.startHour) * segment.pxPerHour;
+    }
+
+    break;
+  }
+
+  return y;
 }
 
 function buildTimelineData(timings: PrayerTimings, now: Date): TimelineData | null {
@@ -130,8 +245,6 @@ function buildTimelineData(timings: PrayerTimings, now: Date): TimelineData | nu
   const solarNoonMakruhStart = clampHour(dhuhrHour - SOLAR_NOON_MAKRUH_MINUTES / 60);
   const sunsetMakruhStart = clampHour(maghribHour - SUNSET_MAKRUH_MINUTES / 60);
 
-  // In rare regions Isha can be reported after midnight as a smaller hour than Maghrib.
-  // For a 00:00-24:00 timeline, keep Maghrib visible until midnight and render midnight->Fajr as "Isha after midnight".
   const ishaStartsTonight = ishaHour > maghribHour;
   const maghribEndHour = ishaStartsTonight ? ishaHour : DAY_HOURS;
 
@@ -201,8 +314,6 @@ function buildTimelineData(timings: PrayerTimings, now: Date): TimelineData | nu
     });
   }
 
-  const validBlocks = blocks.filter((item) => item.endHour > item.startHour);
-
   const zones: TimelineZone[] = [
     {
       id: "sunrise-makruh",
@@ -247,9 +358,45 @@ function buildTimelineData(timings: PrayerTimings, now: Date): TimelineData | nu
     },
   ].filter((item) => item.endHour > item.startHour);
 
+  const makruhRanges = zones
+    .filter((zone) => zone.kind === "makruh")
+    .map((zone) => ({
+      start: zone.startHour,
+      end: zone.endHour,
+    }));
+
+  const adjustedBlocks = blocks
+    .flatMap((block) => {
+      const subSegments = subtractRanges(
+        {
+          start: block.startHour,
+          end: block.endHour,
+        },
+        makruhRanges,
+      );
+
+      return subSegments.map((segment, index) => {
+        const wasAdjusted =
+          segment.start !== block.startHour || segment.end !== block.endHour;
+
+        return {
+          ...block,
+          id: `${block.id}-${index + 1}`,
+          startHour: segment.start,
+          endHour: segment.end,
+          startLabel: formatDecimalHour(segment.start),
+          endLabel: formatDecimalHour(segment.end),
+          description: wasAdjusted
+            ? `${block.description} (Makruh overlap excluded.)`
+            : block.description,
+        };
+      });
+    })
+    .filter((item) => item.endHour > item.startHour);
+
   return {
     nowHour: currentHourValue(now),
-    blocks: validBlocks,
+    blocks: adjustedBlocks,
     zones,
   };
 }
@@ -314,6 +461,7 @@ function TimelineTooltip({
 export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps) {
   const [currentTime, setCurrentTime] = useState(() => new Date());
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [scaleMode, setScaleMode] = useState<ScaleMode>("adaptive");
 
   useEffect(() => {
     const timerId = window.setInterval(() => {
@@ -349,10 +497,16 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
     [currentTime, timings],
   );
 
+  const scaleSegments = useMemo(
+    () => (timeline ? buildScaleSegments(timeline.blocks, scaleMode) : []),
+    [scaleMode, timeline],
+  );
+
   if (!snapshot || !timeline) {
     return null;
   }
 
+  const timelineHeightPx = mapHourToPixels(DAY_HOURS, scaleSegments);
   const activeBlock = timeline.blocks.find(
     (item) => timeline.nowHour >= item.startHour && timeline.nowHour < item.endHour,
   );
@@ -370,60 +524,84 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
               24-Hour Prayer Timeline
             </h2>
             <p className="text-muted-foreground text-sm leading-6">
-              Exact scale: 24.0 total units, 1.0 = 1 hour, 0.5 = 30 minutes.
+              {scaleMode === "adaptive"
+                ? "Adaptive scale keeps short prayer windows readable."
+                : "Exact scale keeps each hour visually equal."}
             </p>
             <p className="text-sm leading-6">
               <span className="font-semibold">Now:</span> {snapshot.nowLabel}
             </p>
           </div>
 
-          <div className="rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm">
-            {activeZone ? (
-              <p>
-                <span className="font-semibold">{activeZone.title}</span>{" "}
-                ({activeZone.startLabel} - {activeZone.endLabel})
-              </p>
-            ) : activeBlock ? (
-              <p>
-                <span className="font-semibold">Active block:</span> {activeBlock.title}
-              </p>
-            ) : (
-              <p>
-                <span className="font-semibold">Next prayer:</span> {snapshot.nextPrayer.name}
-              </p>
-            )}
-            <p className="text-muted-foreground mt-1">
-              Next prayer: {snapshot.nextPrayer.name} ({snapshot.nextPrayer.time12})
-            </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="rounded-lg border border-border/70 bg-background/70 p-1">
+              <Button
+                className="min-h-8 px-3 text-xs"
+                onClick={() => setScaleMode("adaptive")}
+                size="sm"
+                variant={scaleMode === "adaptive" ? "default" : "ghost"}
+              >
+                Adaptive
+              </Button>
+              <Button
+                className="min-h-8 px-3 text-xs"
+                onClick={() => setScaleMode("exact")}
+                size="sm"
+                variant={scaleMode === "exact" ? "default" : "ghost"}
+              >
+                Exact 24h
+              </Button>
+            </div>
+
+            <div className="rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm">
+              {activeZone ? (
+                <p>
+                  <span className="font-semibold">{activeZone.title}</span>{" "}
+                  ({activeZone.startLabel} - {activeZone.endLabel})
+                </p>
+              ) : activeBlock ? (
+                <p>
+                  <span className="font-semibold">Active block:</span> {activeBlock.title}
+                </p>
+              ) : (
+                <p>
+                  <span className="font-semibold">Next prayer:</span> {snapshot.nextPrayer.name}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
         <div className="mt-4 rounded-xl border border-border/75 bg-background/65 p-2 sm:p-3">
           <div className="relative overflow-x-auto">
-            <div className="min-w-[700px]">
-              <div className="relative" style={{ height: `${TIMELINE_HEIGHT_PX}px` }}>
+            <div className="min-w-[680px]">
+              <div className="relative" style={{ height: `${timelineHeightPx}px` }}>
                 <div className="absolute inset-y-0 left-0 w-14">
-                  {hourMarkers.map((hour) => (
-                    <div
-                      className="absolute left-0 right-0"
-                      key={`hour-label-${hour}`}
-                      style={{
-                        top: `${toPercent(hour)}%`,
-                        transform:
-                          hour === 0
-                            ? "translateY(0)"
-                            : hour === DAY_HOURS
-                              ? "translateY(-100%)"
-                              : "translateY(-50%)",
-                      }}
-                    >
-                      {hour % 2 === 0 ? (
-                        <span className="text-muted-foreground absolute left-0 text-[11px] font-medium">
-                          {formatHourLabel(hour % DAY_HOURS)}
-                        </span>
-                      ) : null}
-                    </div>
-                  ))}
+                  {hourMarkers.map((hour) => {
+                    const topPx = mapHourToPixels(hour, scaleSegments);
+
+                    return (
+                      <div
+                        className="absolute left-0 right-0"
+                        key={`hour-label-${hour}`}
+                        style={{
+                          top: `${topPx}px`,
+                          transform:
+                            hour === 0
+                              ? "translateY(0)"
+                              : hour === DAY_HOURS
+                                ? "translateY(-100%)"
+                                : "translateY(-50%)",
+                        }}
+                      >
+                        {hour % 2 === 0 ? (
+                          <span className="text-muted-foreground absolute left-0 text-[11px] font-medium">
+                            {formatHourLabel(hour % DAY_HOURS)}
+                          </span>
+                        ) : null}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <div className="absolute inset-y-0 left-14 right-0 rounded-lg border border-border/70 bg-card/60">
@@ -434,24 +612,62 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
                         hour % 6 === 0 ? "border-border/70" : "border-border/35",
                       )}
                       key={`hour-grid-${hour}`}
-                      style={{ top: `${toPercent(hour)}%` }}
+                      style={{ top: `${mapHourToPixels(hour, scaleSegments)}px` }}
                     />
                   ))}
 
+                  {timeline.zones.map((zone) => {
+                    const topPx = mapHourToPixels(zone.startHour, scaleSegments);
+                    const rawHeightPx =
+                      mapHourToPixels(zone.endHour, scaleSegments) - topPx;
+                    const isActive =
+                      timeline.nowHour >= zone.startHour && timeline.nowHour < zone.endHour;
+                    const hatch =
+                      zone.kind === "makruh"
+                        ? "repeating-linear-gradient(-35deg, color-mix(in oklab, var(--destructive) 28%, transparent) 0px, color-mix(in oklab, var(--destructive) 28%, transparent) 7px, color-mix(in oklab, var(--destructive) 6%, transparent) 7px, color-mix(in oklab, var(--destructive) 6%, transparent) 14px)"
+                        : "repeating-linear-gradient(-35deg, color-mix(in oklab, var(--primary) 15%, transparent) 0px, color-mix(in oklab, var(--primary) 15%, transparent) 10px, color-mix(in oklab, var(--primary) 4%, transparent) 10px, color-mix(in oklab, var(--primary) 4%, transparent) 20px)";
+
+                    return (
+                      <TimelineTooltip
+                        body={zone.description}
+                        heading={zone.title}
+                        key={zone.id}
+                        side="right"
+                        timeRange={`${zone.startLabel} - ${zone.endLabel}`}
+                        touchMode={isTouchDevice}
+                        triggerClassName={cn(
+                          "absolute left-2 right-2 z-10 rounded-sm border border-dashed outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/65",
+                          zone.kind === "makruh"
+                            ? "border-destructive/70 bg-destructive/7"
+                            : "border-primary/40 bg-primary/7",
+                          isActive ? "ring-1 ring-primary/35" : undefined,
+                        )}
+                        triggerStyle={{
+                          top: `${topPx}px`,
+                          height: `${Math.max(rawHeightPx, 4)}px`,
+                          backgroundImage: hatch,
+                        }}
+                      >
+                        <span className="sr-only">
+                          {zone.title} {zone.startLabel} to {zone.endLabel}
+                        </span>
+                      </TimelineTooltip>
+                    );
+                  })}
+
                   {timeline.blocks.map((block) => {
-                    const blockDuration = block.endHour - block.startHour;
-                    const blockHeightPx = blockDuration * PIXELS_PER_HOUR;
-                    const compact = blockHeightPx < 42;
-                    const showDescription = blockHeightPx >= 78;
+                    const rawTopPx = mapHourToPixels(block.startHour, scaleSegments);
+                    const rawHeightPx =
+                      mapHourToPixels(block.endHour, scaleSegments) - rawTopPx;
+                    const useGap = rawHeightPx > BLOCK_GAP_PX * 2 + 8;
+                    const topPx = rawTopPx + (useGap ? BLOCK_GAP_PX : 0);
+                    const heightPx =
+                      rawHeightPx - (useGap ? BLOCK_GAP_PX * 2 : 0);
+                    const compact = heightPx < 42;
+                    const showDescription = heightPx >= 78;
                     const isActive =
                       timeline.nowHour >= block.startHour &&
                       timeline.nowHour < block.endHour;
-                    const gapPercent = (BLOCK_GAP_PX / TIMELINE_HEIGHT_PX) * 100;
-                    const useGap = blockHeightPx > BLOCK_GAP_PX * 2 + 8;
-                    const topPercent =
-                      toPercent(block.startHour) + (useGap ? gapPercent : 0);
-                    const heightPercent =
-                      toPercent(blockDuration) - (useGap ? gapPercent * 2 : 0);
 
                     return (
                       <TimelineTooltip
@@ -462,17 +678,22 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
                         timeRange={`${block.startLabel} - ${block.endLabel}`}
                         touchMode={isTouchDevice}
                         triggerClassName={cn(
-                          "absolute left-2 right-16 z-20 overflow-hidden rounded-md border text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/65",
+                          "absolute left-2 right-2 z-20 overflow-hidden rounded-md border text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/65",
                           isActive
                             ? "border-primary/55 bg-primary/10"
                             : "border-border/70 bg-background/92 hover:border-primary/45 hover:bg-primary/8",
                         )}
                         triggerStyle={{
-                          top: `${topPercent}%`,
-                          height: `${heightPercent}%`,
+                          top: `${topPx}px`,
+                          height: `${Math.max(heightPx, 8)}px`,
                         }}
                       >
-                        <div className={cn("flex items-start gap-2", compact ? "px-2 py-1" : "px-3 py-2")}>
+                        <div
+                          className={cn(
+                            "flex items-start gap-2",
+                            compact ? "px-2 py-1" : "px-3 py-2",
+                          )}
+                        >
                           <div className="min-w-0">
                             <p className={cn("font-semibold", compact ? "text-xs" : "text-sm")}>
                               {block.title}
@@ -491,48 +712,12 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
                     );
                   })}
 
-                  {timeline.zones.map((zone) => {
-                    const zoneDuration = zone.endHour - zone.startHour;
-                    const isActive =
-                      timeline.nowHour >= zone.startHour && timeline.nowHour < zone.endHour;
-                    const hatch = zone.kind === "makruh"
-                      ? "repeating-linear-gradient(-35deg, color-mix(in oklab, var(--destructive) 30%, transparent) 0px, color-mix(in oklab, var(--destructive) 30%, transparent) 7px, color-mix(in oklab, var(--destructive) 6%, transparent) 7px, color-mix(in oklab, var(--destructive) 6%, transparent) 14px)"
-                      : "repeating-linear-gradient(-35deg, color-mix(in oklab, var(--primary) 16%, transparent) 0px, color-mix(in oklab, var(--primary) 16%, transparent) 10px, color-mix(in oklab, var(--primary) 4%, transparent) 10px, color-mix(in oklab, var(--primary) 4%, transparent) 20px)";
-
-                    return (
-                      <TimelineTooltip
-                        body={zone.description}
-                        heading={zone.title}
-                        key={zone.id}
-                        side="right"
-                        timeRange={`${zone.startLabel} - ${zone.endLabel}`}
-                        touchMode={isTouchDevice}
-                        triggerClassName={cn(
-                          "absolute right-2 z-30 w-12 rounded-sm border border-dashed outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/65",
-                          zone.kind === "makruh"
-                            ? "border-destructive/70 bg-destructive/8 hover:bg-destructive/14"
-                            : "border-primary/45 bg-primary/8 hover:bg-primary/14",
-                          isActive ? "ring-1 ring-primary/35" : undefined,
-                        )}
-                        triggerStyle={{
-                          top: `${toPercent(zone.startHour)}%`,
-                          height: `${toPercent(zoneDuration)}%`,
-                          backgroundImage: hatch,
-                        }}
-                      >
-                        <span className="sr-only">
-                          {zone.title} {zone.startLabel} to {zone.endLabel}
-                        </span>
-                      </TimelineTooltip>
-                    );
-                  })}
-
                   <div
                     className="absolute left-0 right-0 z-40 border-t-2 border-dotted border-primary/95"
-                    style={{ top: `${toPercent(timeline.nowHour)}%` }}
+                    style={{ top: `${mapHourToPixels(timeline.nowHour, scaleSegments)}px` }}
                   >
                     <div className="absolute -left-1.5 -top-1.5 size-3 rounded-full bg-primary" />
-                    <div className="absolute -top-3 right-16 rounded bg-background/95 px-2 py-0.5 text-[11px] font-medium text-primary">
+                    <div className="absolute -top-3 right-2 rounded bg-background/95 px-2 py-0.5 text-[11px] font-medium text-primary">
                       {snapshot.nowLabel}
                     </div>
                   </div>
