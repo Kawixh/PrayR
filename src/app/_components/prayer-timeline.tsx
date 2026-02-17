@@ -622,13 +622,9 @@ export function PrayerTimeline({
           </div>
         </div>
 
-        <div className="mt-4 rounded-xl border border-border/75 bg-background/65 p-2 sm:p-3">
-          <div className="relative overflow-x-auto">
-            <div className="min-w-[680px]">
-              <div
-                className="relative"
-                style={{ height: `${timelineHeightPx}px` }}
-              >
+        <div className="mt-4 rounded-xl border border-border/75 bg-background/65 p-1.5 sm:p-2">
+          <div className="relative">
+            <div className="relative w-full" style={{ height: `${timelineHeightPx}px` }}>
                 <div className="absolute inset-y-0 left-0 w-14">
                   {hourMarkers.map((hour) => {
                     const topPx = mapHourToPixels(hour, scaleSegments);
@@ -658,7 +654,9 @@ export function PrayerTimeline({
                 </div>
 
                 <div className="absolute inset-y-0 left-14 right-0 rounded-lg border border-border/70 bg-card/60">
-                  {hourMarkers.map((hour) => (
+                  {hourMarkers
+                    .filter((hour) => hour !== 0)
+                    .map((hour) => (
                     <div
                       className={cn(
                         "absolute left-0 right-0 border-t",
@@ -697,7 +695,7 @@ export function PrayerTimeline({
                         timeRange={`${zone.startLabel} - ${zone.endLabel}`}
                         touchMode={isTouchDevice}
                         triggerClassName={cn(
-                          "absolute left-2 right-2 z-10 rounded-sm border border-dashed outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/65",
+                          "absolute left-1 right-1 z-10 rounded-sm border border-dashed outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/65",
                           zone.kind === "makruh"
                             ? "border-destructive/70 bg-destructive/7"
                             : "border-primary/40 bg-primary/7",
@@ -742,10 +740,10 @@ export function PrayerTimeline({
                         timeRange={`${block.startLabel} - ${block.endLabel}`}
                         touchMode={isTouchDevice}
                         triggerClassName={cn(
-                          "absolute left-2 right-2 z-20 overflow-hidden rounded-md border text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/65",
+                          "absolute left-1 right-1 z-20 overflow-hidden rounded-md border text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/65",
                           isActive
-                            ? "border-primary/55 bg-primary/10"
-                            : "border-border/70 bg-background/92 hover:border-primary/45 hover:bg-primary/8",
+                            ? "border-primary/55 bg-primary/12"
+                            : "border-border/70 bg-muted/35 hover:border-primary/45 hover:bg-primary/8",
                         )}
                         triggerStyle={{
                           top: `${topPx}px`,
@@ -755,7 +753,7 @@ export function PrayerTimeline({
                         <div
                           className={cn(
                             "flex items-start gap-2",
-                            compact ? "px-2 py-1" : "px-3 py-2",
+                            compact ? "px-2 py-1.5" : "px-2.5 py-2.5",
                           )}
                         >
                           <div className="min-w-0">
@@ -788,13 +786,12 @@ export function PrayerTimeline({
                     }}
                   >
                     <div className="absolute -left-1.5 -top-1.5 size-3 rounded-full bg-primary" />
-                    <div className="absolute -top-3 right-2 rounded bg-background/95 px-2 py-0.5 text-[11px] font-medium text-primary">
+                    <div className="absolute -top-3 left-2 rounded bg-background/95 px-2 py-0.5 text-[11px] font-medium text-primary sm:left-auto sm:right-2">
                       {snapshot.nowLabel}
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
           </div>
 
           <div className="mt-4 grid gap-2 rounded-lg border border-border/70 bg-card p-3 text-xs leading-5 sm:grid-cols-2 lg:grid-cols-4">
