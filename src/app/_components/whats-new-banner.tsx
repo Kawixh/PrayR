@@ -10,10 +10,11 @@ import { useState } from "react";
 
 const NEW_FEATURES = [
   "Timeline view",
-  "Hide adhkars",
+  "Added feature toggles in settings",
   "Simple settings",
+  "Resources tab",
   "Added makruh timings",
-  "Ramadan-ul-Mubarak banner with Sehar/Iftar timings",
+  "Ramadan-ul-Mubarak integrations",
 ] as const;
 
 export function WhatsNewBanner() {

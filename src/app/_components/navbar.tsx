@@ -101,19 +101,11 @@ export const Navbar = ({ featureFlags }: { featureFlags: FeatureFlags }) => {
     >
       <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
         <div
-          className="pointer-events-auto glass-panel rounded-2xl border-border/80 p-2 sm:p-2.5"
+          className="pointer-events-auto glass-panel max-h-[min(72svh,30rem)] overflow-y-auto rounded-2xl border-border/80 p-2 sm:p-2.5"
           ref={navPanelRef}
         >
-          <div className="flex flex-wrap items-stretch gap-2">
-            <div
-              className="grid min-w-0 flex-1 gap-2"
-              style={{
-                gridTemplateColumns: `repeat(${Math.max(
-                  visibleNavItems.length,
-                  1,
-                )}, minmax(0, 1fr))`,
-              }}
-            >
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+            <div className="grid min-w-0 gap-2 [grid-template-columns:repeat(auto-fit,minmax(min(12ch,100%),1fr))]">
               {visibleNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = item.matches(pathname);
@@ -122,7 +114,7 @@ export const Navbar = ({ featureFlags }: { featureFlags: FeatureFlags }) => {
                   <Button
                     asChild
                     className={cn(
-                      "min-h-10 h-auto rounded-xl px-2 py-2 whitespace-normal sm:px-3",
+                      "min-h-11 h-auto rounded-xl px-2.5 py-2 whitespace-normal sm:px-3",
                       isActive
                         ? "border-primary/35 bg-primary/16 text-foreground shadow-sm"
                         : "border-transparent bg-transparent text-muted-foreground hover:border-border/80 hover:bg-background/60 hover:text-foreground",
@@ -133,11 +125,11 @@ export const Navbar = ({ featureFlags }: { featureFlags: FeatureFlags }) => {
                   >
                     <Link
                       aria-current={isActive ? "page" : undefined}
-                      className="flex w-full flex-col items-center justify-center gap-1 text-center"
+                      className="flex w-full items-center justify-center gap-1.5 text-center leading-tight sm:flex-col sm:gap-1"
                       href={item.href}
                     >
-                      <Icon className="size-4" />
-                      <span className="text-xs leading-tight font-semibold tracking-normal [overflow-wrap:anywhere]">
+                      <Icon className="size-4 shrink-0" />
+                      <span className="text-[0.8125rem] leading-tight font-semibold tracking-normal [overflow-wrap:anywhere]">
                         {item.label}
                       </span>
                     </Link>
@@ -146,7 +138,9 @@ export const Navbar = ({ featureFlags }: { featureFlags: FeatureFlags }) => {
               })}
             </div>
 
-            <ModeToggle className="ml-auto self-center shrink-0 sm:ml-0" />
+            <div className="flex justify-end">
+              <ModeToggle className="shrink-0" />
+            </div>
           </div>
         </div>
       </div>

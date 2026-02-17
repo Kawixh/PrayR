@@ -1,4 +1,4 @@
-export const WHATS_NEW_BANNER_STORAGE_KEY = "prayer-whats-new-banner-v1-dismissed";
+export const WHATS_NEW_BANNER_STORAGE_KEY = "prayer-whats-new-banner-v2-dismissed";
 export const RAMADAN_BANNER_STORAGE_KEY = "prayer-ramadan-banner-dismissed";
 
 function hasWindow(): boolean {
