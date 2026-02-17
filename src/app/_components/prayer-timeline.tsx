@@ -48,6 +48,7 @@ type TimelineData = {
 const DAY_HOURS = 24;
 const PIXELS_PER_HOUR = 28;
 const TIMELINE_HEIGHT_PX = DAY_HOURS * PIXELS_PER_HOUR;
+const BLOCK_GAP_PX = 4;
 const SUNRISE_MAKRUH_MINUTES = 15;
 const SOLAR_NOON_MAKRUH_MINUTES = 10;
 const SUNSET_MAKRUH_MINUTES = 15;
@@ -356,19 +357,26 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
                     const isActive =
                       timeline.nowHour >= block.startHour &&
                       timeline.nowHour < block.endHour;
+                    const gapPercent = (BLOCK_GAP_PX / TIMELINE_HEIGHT_PX) * 100;
+                    const useGap = blockHeightPx > BLOCK_GAP_PX * 2 + 8;
+                    const topPercent =
+                      toPercent(block.startHour) + (useGap ? gapPercent : 0);
+                    const heightPercent =
+                      toPercent(blockDuration) - (useGap ? gapPercent * 2 : 0);
 
                     return (
                       <article
+                        title={`${block.title}: ${block.description}`}
                         className={cn(
-                          "absolute left-2 right-16 z-20 overflow-hidden rounded-md border",
+                          "absolute left-2 right-16 z-20 cursor-help overflow-hidden rounded-md border transition-colors",
                           isActive
                             ? "border-primary/55 bg-primary/10"
-                            : "border-border/70 bg-background/92",
+                            : "border-border/70 bg-background/92 hover:border-primary/45 hover:bg-primary/8",
                         )}
                         key={block.id}
                         style={{
-                          top: `${toPercent(block.startHour)}%`,
-                          height: `${toPercent(blockDuration)}%`,
+                          top: `${topPercent}%`,
+                          height: `${heightPercent}%`,
                         }}
                       >
                         <div className={cn("flex items-start gap-2", compact ? "px-2 py-1" : "px-3 py-2")}>
@@ -401,11 +409,12 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
                     return (
                       <aside
                         aria-label={`${zone.title}: ${zone.startLabel} - ${zone.endLabel}`}
+                        title={`${zone.title}: ${zone.description}`}
                         className={cn(
-                          "absolute right-2 z-30 w-12 rounded-sm border border-dashed",
+                          "absolute right-2 z-30 w-12 cursor-help rounded-sm border border-dashed transition-colors",
                           zone.kind === "makruh"
-                            ? "border-destructive/70 bg-destructive/8"
-                            : "border-primary/45 bg-primary/8",
+                            ? "border-destructive/70 bg-destructive/8 hover:bg-destructive/14"
+                            : "border-primary/45 bg-primary/8 hover:bg-primary/14",
                           isActive ? "ring-1 ring-primary/35" : undefined,
                         )}
                         key={zone.id}
