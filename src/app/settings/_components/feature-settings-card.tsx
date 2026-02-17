@@ -1,5 +1,6 @@
 "use client";
 
+import { resetBannerPreferencesToDefaults } from "@/app/_utils/banner-preferences";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -61,6 +62,7 @@ export function FeatureSettingsCard({ onFeatureFlagsChange }: FeatureSettingsCar
   };
 
   const resetToDefaults = () => {
+    resetBannerPreferencesToDefaults();
     applyOverrides({});
   };
 

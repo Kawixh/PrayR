@@ -7,6 +7,7 @@ import {
 
 const FEATURE_ENV_KEYS: Record<FeatureKey, string> = {
   prayerTimings: "NEXT_PUBLIC_FEATURE_PRAYER_TIMINGS",
+  sehrAndIftarTimes: "NEXT_PUBLIC_FEATURE_SEHR_IFTAR_TIMES",
   adhkars: "NEXT_PUBLIC_FEATURE_ADHKARS",
   adhkarOfTheDay: "NEXT_PUBLIC_FEATURE_ADHKAR_OF_THE_DAY",
   islamicCalendar: "NEXT_PUBLIC_FEATURE_ISLAMIC_CALENDAR",

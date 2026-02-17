@@ -18,6 +18,7 @@ import { DailyAdhkarCard } from "./daily-adhkar-card";
 import { CurrentPrayerStatusCard } from "./current-prayer-status-card";
 import { IslamicDateCalendarCard } from "./islamic-date-calendar-card";
 import { PrayerReminder } from "./prayer-reminder";
+import { RamadanMubarakBanner } from "./ramadan-mubarak-banner";
 import { PrayerTimeCard } from "./prayer-time-card";
 import { PrayerTimeline } from "./prayer-timeline";
 
@@ -35,11 +36,13 @@ type PrayerTimesCache = {
 };
 
 type PrayerSummaryItem = {
+  adhkarPrayerName?: string;
   makruh?: {
     label: string;
     range: string;
   };
   name: string;
+  subtitle?: string;
   time: string;
 };
 
@@ -339,14 +342,27 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
     return null;
   }
 
-  const summaryItems = [
-    { name: "Fajr", time: prayerDay.timings.Fajr },
+  const summaryItems: PrayerSummaryItem[] = [
+    { name: "Fajr", time: prayerDay.timings.Fajr, adhkarPrayerName: "Fajr" },
     { name: "Sunrise", time: prayerDay.timings.Sunrise },
-    { name: "Dhuhr", time: prayerDay.timings.Dhuhr },
-    { name: "Asr", time: prayerDay.timings.Asr },
-    { name: "Maghrib", time: prayerDay.timings.Maghrib },
-    { name: "Isha", time: prayerDay.timings.Isha },
-  ] as const;
+    { name: "Dhuhr", time: prayerDay.timings.Dhuhr, adhkarPrayerName: "Dhuhr" },
+    { name: "Asr", time: prayerDay.timings.Asr, adhkarPrayerName: "Asr" },
+    { name: "Maghrib", time: prayerDay.timings.Maghrib, adhkarPrayerName: "Maghrib" },
+    { name: "Isha", time: prayerDay.timings.Isha, adhkarPrayerName: "Isha" },
+  ];
+
+  if (featureFlags.sehrAndIftarTimes) {
+    summaryItems.unshift({
+      name: "Sehr",
+      subtitle: "Imsak",
+      time: prayerDay.timings.Imsak,
+    });
+    summaryItems.push({
+      name: "Iftar",
+      subtitle: "Maghrib",
+      time: prayerDay.timings.Maghrib,
+    });
+  }
 
   const makruhWindows = getMakruhWindows(prayerDay.timings, new Date());
   const sunriseMakruh = makruhWindows.find((windowItem) => windowItem.id === "sunrise");
@@ -391,6 +407,11 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
 
   return (
     <section className="space-y-5">
+      <RamadanMubarakBanner
+        dateInfo={prayerDay.date}
+        showSehrAndIftarTimes={featureFlags.sehrAndIftarTimes}
+        timings={prayerDay.timings}
+      />
       <PrayerReminder timings={prayerDay.timings} />
       {featureFlags.islamicCalendar ? (
         <IslamicDateCalendarCard dateInfo={prayerDay.date} />
@@ -421,6 +442,11 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
               <p className="mt-1 text-2xl font-semibold text-foreground">
                 {formatTo12Hour(item.time)}
               </p>
+              {item.subtitle ? (
+                <p className="mt-0.5 text-xs font-medium tracking-[0.08em] text-muted-foreground uppercase">
+                  {item.subtitle}
+                </p>
+              ) : null}
               {item.makruh ? (
                 <div className="mt-3 rounded-lg border border-amber-500/45 bg-amber-500/10 p-3">
                   <p className="flex items-center gap-2 text-base font-semibold text-amber-800 dark:text-amber-200">
@@ -432,14 +458,16 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
                   </p>
                 </div>
               ) : null}
-              {featureFlags.adhkars ? (
+              {featureFlags.adhkars && item.adhkarPrayerName ? (
                 <Button
                   asChild
                   className="mt-3 min-h-9 rounded-full px-3 py-2 text-sm"
                   size="sm"
                   variant="outline"
                 >
-                  <Link href={`/adhkars?prayer=${encodeURIComponent(item.name)}`}>
+                  <Link
+                    href={`/adhkars?prayer=${encodeURIComponent(item.adhkarPrayerName)}`}
+                  >
                     View Adhkars
                   </Link>
                 </Button>

@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { PrayerTimesWrapper } from "./_components/prayer-times-wrapper";
 import { SettingsCheck } from "./_components/settings-check";
+import { WhatsNewBanner } from "./_components/whats-new-banner";
 
 const siteUrl = getSiteUrl();
 
@@ -208,6 +209,8 @@ export default async function Page() {
   return (
     <>
       <div className="homepage-clean space-y-6">
+        <WhatsNewBanner />
+
         <section aria-labelledby="dashboard-heading" className="space-y-4">
           <h2
             className="text-2xl font-semibold sm:text-3xl"

@@ -1,5 +1,6 @@
 export const FEATURE_KEYS = [
   "prayerTimings",
+  "sehrAndIftarTimes",
   "adhkars",
   "adhkarOfTheDay",
   "islamicCalendar",
@@ -21,6 +22,12 @@ export const FEATURE_DEFINITIONS: Record<FeatureKey, FeatureDefinition> = {
     title: "Prayer Timings",
     description: "Daily prayer time dashboard, reminders, and timing cards.",
     defaultEnabled: true,
+  },
+  sehrAndIftarTimes: {
+    title: "Sehr & Iftar Times",
+    description: "Show Sehr (Imsak) and Iftar (Maghrib) times on the dashboard.",
+    defaultEnabled: true,
+    dependsOn: ["prayerTimings"],
   },
   adhkars: {
     title: "Adhkars",
