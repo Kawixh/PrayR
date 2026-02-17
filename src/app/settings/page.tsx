@@ -1,7 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import {
+  CardAction,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { readClientFeatureOverrides } from "@/features/client";
 import { type FeatureFlags } from "@/features/definitions";
 import { resolveFeatureFlags } from "@/features/resolve";
@@ -21,9 +28,7 @@ import {
   Search,
   Sparkles,
 } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   readPrayerDashboardViewFromStorage,
   type PrayerDashboardView,
@@ -195,7 +200,7 @@ async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
 
 function SuggestionsSkeleton({ withCode = false }: { withCode?: boolean }) {
   return (
-    <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-border/80 bg-popover p-1 shadow-lg">
+    <div className="bg-popover absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border p-1 shadow-md">
       {Array.from({ length: 4 }).map((_, index) => (
         <div
           className="flex items-start justify-between rounded-lg px-2.5 py-2"
@@ -215,7 +220,6 @@ function SuggestionsSkeleton({ withCode = false }: { withCode?: boolean }) {
 }
 
 export default function SettingsPage() {
-  const router = useRouter();
   const [settings, setSettings] = useState<PrayerSettingsState>(getInitialSettings);
   const [featureFlags, setFeatureFlags] = useState<FeatureFlags>(getInitialFeatureFlags);
   const [dashboardView, setDashboardView] = useState<PrayerDashboardView>(
@@ -253,6 +257,10 @@ export default function SettingsPage() {
   const [mockNotificationError, setMockNotificationError] = useState<
     string | null
   >(null);
+
+  useEffect(() => {
+    localStorage.setItem("prayerSettings", JSON.stringify(settings));
+  }, [settings]);
 
   useEffect(() => {
     const query = settings.cityName.trim();
@@ -545,56 +553,6 @@ export default function SettingsPage() {
     writePrayerDashboardViewToStorage(value);
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const city = settings.cityName.trim();
-    const country = settings.country.trim();
-
-    if (!city || !country) {
-      setComboValidation("invalid");
-      setComboWarning("City and country are required.");
-      return;
-    }
-
-    try {
-      setComboValidation("checking");
-      const params = new URLSearchParams({
-        city,
-        country,
-      });
-
-      if (settings.countryCode) {
-        params.set("countryCode", settings.countryCode);
-      }
-
-      const data = await fetchJson<ComboValidationResponse>(
-        `/api/places/validate?${params.toString()}`,
-      );
-
-      if (!data.valid) {
-        setComboValidation("invalid");
-        setComboWarning(
-          data.warning ?? "City and country combination does not match.",
-        );
-        return;
-      }
-
-      setComboValidation("valid");
-      setComboWarning(null);
-    } catch (error) {
-      setComboValidation("invalid");
-      setComboWarning(
-        error instanceof Error ? error.message : "Validation failed",
-      );
-      return;
-    }
-
-    localStorage.setItem("prayerSettings", JSON.stringify(settings));
-    writePrayerDashboardViewToStorage(dashboardView);
-    router.push("/");
-  };
-
   const requestDevNotificationPermission = async () => {
     setMockNotificationStatus(null);
     setMockNotificationError(null);
@@ -666,17 +624,26 @@ export default function SettingsPage() {
           : "Default";
 
   return (
-    <section className="space-y-4">
-      <header className="rounded-2xl border border-border/80 p-5 sm:p-6">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Settings</h1>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Update your location, prayer calculation, and display preferences.
-        </p>
-      </header>
+    <section className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl sm:text-3xl">Settings</CardTitle>
+          <CardDescription>
+            Update your location, prayer calculation, and display preferences. Changes
+            save automatically.
+          </CardDescription>
+        </CardHeader>
+      </Card>
 
       {featureFlags.prayerTimings ? (
-        <Card className="border-border/80 p-5 sm:p-6">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Prayer Timings</CardTitle>
+            <CardDescription>
+              Configure your location and viewing preferences for accurate daily timings.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-8">
             <SettingsSection
               description="Set your city and country for local prayer timings."
               title="Location"
@@ -689,7 +656,7 @@ export default function SettingsPage() {
                   <div className="relative">
                     <input
                       autoComplete="off"
-                      className="min-h-11 h-auto w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-base leading-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex min-h-10 w-full rounded-md border bg-background px-3 py-2.5 pr-10 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px]"
                       id="cityName"
                       name="cityName"
                       onBlur={() => {
@@ -715,7 +682,7 @@ export default function SettingsPage() {
                       type="text"
                       value={settings.cityName}
                     />
-                    <Search className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Search className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
                   </div>
 
                   <div className="min-h-5">
@@ -727,10 +694,10 @@ export default function SettingsPage() {
                   {cityFocused && cityLoading ? <SuggestionsSkeleton withCode /> : null}
 
                   {showCitySuggestions ? (
-                    <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-border bg-popover p-1 shadow-lg">
+                    <div className="bg-popover absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border p-1 shadow-md">
                       {citySuggestions.map((city) => (
                         <button
-                          className="flex w-full items-start justify-between rounded-md px-2.5 py-2 text-left transition-colors hover:bg-accent/50"
+                          className="hover:bg-accent hover:text-accent-foreground flex w-full items-start justify-between rounded-md px-2.5 py-2 text-left transition-colors"
                           key={city.geonameId}
                           onMouseDown={() => selectCitySuggestion(city)}
                           type="button"
@@ -761,7 +728,7 @@ export default function SettingsPage() {
                   <div className="relative">
                     <input
                       autoComplete="off"
-                      className="min-h-11 h-auto w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-base leading-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex min-h-10 w-full rounded-md border bg-background px-3 py-2.5 pr-10 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px]"
                       id="country"
                       name="country"
                       onBlur={() => {
@@ -783,7 +750,7 @@ export default function SettingsPage() {
                       type="text"
                       value={settings.country}
                     />
-                    <Sparkles className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Sparkles className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
                   </div>
 
                   {countryFocused && countryLoading ? (
@@ -805,17 +772,17 @@ export default function SettingsPage() {
                       <p className="text-sm text-destructive">{comboWarning}</p>
                     ) : null}
                     {comboValidation === "valid" ? (
-                      <p className="text-sm text-emerald-600 dark:text-emerald-300">
+                      <p className="text-sm text-primary">
                         City and country combination looks good.
                       </p>
                     ) : null}
                   </div>
 
                   {showCountrySuggestions ? (
-                    <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-border bg-popover p-1 shadow-lg">
+                    <div className="bg-popover absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border p-1 shadow-md">
                       {countrySuggestions.map((country) => (
                         <button
-                          className="flex w-full items-start justify-between rounded-md px-2.5 py-2 text-left transition-colors hover:bg-accent/50"
+                          className="hover:bg-accent hover:text-accent-foreground flex w-full items-start justify-between rounded-md px-2.5 py-2 text-left transition-colors"
                           key={country.countryCode}
                           onMouseDown={() => selectCountrySuggestion(country)}
                           type="button"
@@ -840,7 +807,6 @@ export default function SettingsPage() {
             >
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <Button
-                  className="h-10 sm:w-auto"
                   disabled={resolving !== null}
                   onClick={resolveFromGps}
                   size="sm"
@@ -851,7 +817,6 @@ export default function SettingsPage() {
                   {resolving === "gps" ? "Getting GPS..." : "Use GPS"}
                 </Button>
                 <Button
-                  className="h-10 sm:w-auto"
                   disabled={resolving !== null}
                   onClick={() => void resolveFromIp()}
                   size="sm"
@@ -863,7 +828,7 @@ export default function SettingsPage() {
                 </Button>
               </div>
               {locationStatus ? (
-                <p className="text-sm text-emerald-600 dark:text-emerald-300">{locationStatus}</p>
+                <p className="text-sm text-primary">{locationStatus}</p>
               ) : null}
               {locationError ? (
                 <p className="text-sm text-destructive">{locationError}</p>
@@ -886,7 +851,7 @@ export default function SettingsPage() {
                     }
                     value={settings.method || undefined}
                   >
-                    <SelectTrigger className="min-h-11 rounded-md">
+                    <SelectTrigger className="min-h-10">
                       <SelectValue placeholder="Select calculation method" />
                     </SelectTrigger>
                     <SelectContent className="max-h-72">
@@ -914,8 +879,8 @@ export default function SettingsPage() {
                           className={cn(
                             "flex cursor-pointer items-start justify-between gap-2 rounded-md border px-3 py-2.5 text-sm transition-colors",
                             selected
-                              ? "border-primary/40 bg-primary/10 text-foreground"
-                              : "border-input bg-background text-muted-foreground hover:border-primary/30",
+                              ? "border-primary bg-accent text-foreground"
+                              : "border-input text-muted-foreground hover:bg-accent",
                           )}
                           htmlFor={`school-${school.value}`}
                           key={school.value}
@@ -956,8 +921,8 @@ export default function SettingsPage() {
                       className={cn(
                         "flex cursor-pointer items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
                         selected
-                          ? "border-primary/40 bg-primary/10 text-foreground"
-                          : "border-input bg-background text-muted-foreground hover:border-primary/30",
+                          ? "border-primary bg-accent text-foreground"
+                          : "border-input text-muted-foreground hover:bg-accent",
                       )}
                       htmlFor={`dashboard-view-${option.value}`}
                       key={option.value}
@@ -982,56 +947,48 @@ export default function SettingsPage() {
                 })}
               </div>
             </SettingsSection>
-
-            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button asChild className="h-10" type="button" variant="outline">
-                <Link href="/">Cancel</Link>
-              </Button>
-              <Button className="h-10" type="submit">
-                Save settings
-              </Button>
-            </div>
-          </form>
+          </CardContent>
         </Card>
       ) : (
-        <Card className="border-border/80 p-5 sm:p-6">
-          <h2 className="text-lg font-semibold sm:text-xl">Prayer Timings Disabled</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Enable the Prayer Timings feature below to configure location, calculation,
-            and display options.
-          </p>
+        <Card>
+          <CardHeader>
+            <CardTitle>Prayer Timings Disabled</CardTitle>
+            <CardDescription>
+              Enable the Prayer Timings feature below to configure location, calculation,
+              and display options.
+            </CardDescription>
+          </CardHeader>
         </Card>
       )}
 
       <FeatureSettingsCard onFeatureFlagsChange={setFeatureFlags} />
 
       {DEV_MENU_ENABLED ? (
-        <Card className="border-border/80 p-5 sm:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="space-y-1">
-              <h2 className="text-lg font-semibold sm:text-xl">Dev Settings</h2>
-              <p className="text-sm text-muted-foreground">
-                Notification permission and test delivery helpers.
-              </p>
-            </div>
-            <Button
-              className="h-9 px-3"
-              onClick={() => setIsDevMenuExpanded((prev) => !prev)}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              {isDevMenuExpanded ? "Hide" : "Show"}
-            </Button>
-          </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Dev Settings</CardTitle>
+            <CardDescription>
+              Notification permission and test delivery helpers.
+            </CardDescription>
+            <CardAction>
+              <Button
+                onClick={() => setIsDevMenuExpanded((prev) => !prev)}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                {isDevMenuExpanded ? "Hide" : "Show"}
+              </Button>
+            </CardAction>
+          </CardHeader>
 
           {isDevMenuExpanded ? (
-            <div className="mt-4 space-y-3">
+            <CardContent className="space-y-3">
               <p
                 className={cn(
                   "text-sm font-medium",
                   notificationPermission === "granted"
-                    ? "text-emerald-600 dark:text-emerald-300"
+                    ? "text-primary"
                     : notificationPermission === "denied"
                       ? "text-destructive"
                       : "text-muted-foreground",
@@ -1042,7 +999,6 @@ export default function SettingsPage() {
 
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
-                  className="h-10 sm:w-auto"
                   disabled={notificationPermission === "unsupported"}
                   onClick={() => void requestDevNotificationPermission()}
                   size="sm"
@@ -1053,7 +1009,6 @@ export default function SettingsPage() {
                   Request permission
                 </Button>
                 <Button
-                  className="h-10 sm:w-auto"
                   disabled={
                     sendingMockNotification ||
                     notificationPermission === "unsupported"
@@ -1071,30 +1026,17 @@ export default function SettingsPage() {
               </div>
 
               {mockNotificationStatus ? (
-                <p className="text-sm text-emerald-600 dark:text-emerald-300">
+                <p className="text-sm text-primary">
                   {mockNotificationStatus}
                 </p>
               ) : null}
               {mockNotificationError ? (
                 <p className="text-sm text-destructive">{mockNotificationError}</p>
               ) : null}
-            </div>
+            </CardContent>
           ) : null}
         </Card>
       ) : null}
-
-      <Card className="border-border/80 p-5 sm:p-6">
-        <h2 className="text-lg font-semibold sm:text-xl">Site Metadata</h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Search and sharing metadata is managed in code and kept out of profile settings.
-          Update these files when needed.
-        </p>
-        <div className="mt-3 space-y-1 text-xs text-muted-foreground">
-          <p>`/Users/dark/Projects/kawish-projects/prayer-list/src/app/page.tsx`</p>
-          <p>`/Users/dark/Projects/kawish-projects/prayer-list/src/app/layout.tsx`</p>
-          <p>`/Users/dark/Projects/kawish-projects/prayer-list/src/app/sitemap.ts`</p>
-        </div>
-      </Card>
     </section>
   );
 }

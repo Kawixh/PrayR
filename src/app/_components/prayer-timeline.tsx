@@ -560,7 +560,8 @@ export function PrayerTimeline({
   const activeOpenZone = timeline.zones.find(
     (item) =>
       item.kind === "open" &&
-      timeline.nowHour >= item.startHour && timeline.nowHour < item.endHour,
+      timeline.nowHour >= item.startHour &&
+      timeline.nowHour < item.endHour,
   );
   const hourMarkers = Array.from(
     { length: DAY_HOURS + 1 },
@@ -605,8 +606,9 @@ export function PrayerTimeline({
             <div className="rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm">
               {activeMakruhZone ? (
                 <p>
-                  <span className="font-semibold">Current status:</span> Makruh time (
-                  {activeMakruhZone.startLabel} - {activeMakruhZone.endLabel})
+                  <span className="font-semibold">Current status:</span> Makruh
+                  time ({activeMakruhZone.startLabel} -{" "}
+                  {activeMakruhZone.endLabel})
                 </p>
               ) : activeBlock ? (
                 <p>
@@ -632,8 +634,8 @@ export function PrayerTimeline({
           Tap any timeline block to see more details.
         </div>
 
-        <div className="mt-4 rounded-xl border border-border/75 bg-background/65 p-1.5 sm:p-2">
-          <div className="relative">
+        <div className="my-10">
+          <div className="relative mb-10">
             <div
               className="relative w-full"
               style={{ height: `${timelineHeightPx}px` }}
@@ -656,7 +658,7 @@ export function PrayerTimeline({
                               : "translateY(-50%)",
                       }}
                     >
-                      {hour % 2 === 0 ? (
+                      {hour % 2 === 0 && hour < DAY_HOURS ? (
                         <span className="text-muted-foreground absolute left-0 text-[11px] font-medium">
                           {formatHourLabel(hour % DAY_HOURS)}
                         </span>
@@ -668,7 +670,7 @@ export function PrayerTimeline({
 
               <div className="absolute inset-y-0 left-14 right-0 rounded-lg border border-border/70 bg-card/60">
                 {hourMarkers
-                  .filter((hour) => hour !== 0)
+                  .filter((hour) => hour !== 0 && hour < DAY_HOURS)
                   .map((hour) => (
                     <div
                       className={cn(
