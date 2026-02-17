@@ -20,7 +20,7 @@ import {
 } from "@/features/definitions";
 import { resolveFeatureFlags } from "@/features/resolve";
 import { cn } from "@/lib/utils";
-import { RefreshCw } from "lucide-react";
+import { ChevronDown, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
@@ -29,67 +29,61 @@ function getDependencyTitles(featureKey: FeatureKey): string {
   return dependencies.map((dependency) => FEATURE_DEFINITIONS[dependency].title).join(", ");
 }
 
-function getParentTitle(featureKey: FeatureKey): string | null {
-  const parent = FEATURE_DEFINITIONS[featureKey].parent;
-  return parent ? FEATURE_DEFINITIONS[parent].title : null;
+function getSubFeatures(parent: FeatureKey): FeatureKey[] {
+  return FEATURE_KEYS.filter(
+    (featureKey) =>
+      FEATURE_DEFINITIONS[featureKey].tier === "sub" &&
+      FEATURE_DEFINITIONS[featureKey].parent === parent,
+  );
 }
 
-type FeatureToggleRowProps = {
+function isToggleBlocked(featureFlags: FeatureFlags, featureKey: FeatureKey): boolean {
+  const dependencies = FEATURE_DEFINITIONS[featureKey].dependsOn ?? [];
+  const hasDisabledDependency = dependencies.some((dependency) => !featureFlags[dependency]);
+  const isEnabled = featureFlags[featureKey];
+
+  return hasDisabledDependency && !isEnabled;
+}
+
+type FeatureSwitchProps = {
   featureFlags: FeatureFlags;
   featureKey: FeatureKey;
   isPending: boolean;
   onToggleFeature: (featureKey: FeatureKey) => void;
+  style: "main" | "sub";
 };
 
-function FeatureToggleRow({
+function FeatureSwitch({
   featureFlags,
   featureKey,
   isPending,
   onToggleFeature,
-}: FeatureToggleRowProps) {
+  style,
+}: FeatureSwitchProps) {
   const definition = FEATURE_DEFINITIONS[featureKey];
+  const blocked = isToggleBlocked(featureFlags, featureKey);
   const dependencies = definition.dependsOn ?? [];
   const isEnabled = featureFlags[featureKey];
-  const hasDisabledDependency = dependencies.some(
-    (dependency) => !featureFlags[dependency],
-  );
-  const toggleBlocked = hasDisabledDependency && !isEnabled;
-  const isSubFeature = definition.tier === "sub";
-  const parentTitle = isSubFeature ? getParentTitle(featureKey) : null;
 
   return (
     <article
       className={cn(
         "rounded-xl border p-3 sm:p-4",
-        isSubFeature ? "border-dashed bg-muted/30" : "border-solid bg-card/70",
+        style === "main" ? "border-border/80 bg-card/70" : "border-dashed bg-muted/35",
       )}
-      key={featureKey}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <p
-              className={cn(
-                "rounded-full border px-2 py-0.5 text-[11px] font-semibold tracking-[0.16em] uppercase",
-                isSubFeature
-                  ? "border-border/80 bg-background/75 text-muted-foreground"
-                  : "border-primary/30 bg-primary/10 text-primary",
-              )}
-            >
-              {isSubFeature ? "Sub Feature" : "Main Feature"}
-            </p>
-            {parentTitle ? (
-              <p className="text-xs text-muted-foreground">Parent: {parentTitle}</p>
-            ) : null}
-          </div>
-          <h3 className="text-sm font-semibold sm:text-base">{definition.title}</h3>
+          <h3 className={cn("font-semibold", style === "main" ? "text-base" : "text-sm")}>
+            {definition.title}
+          </h3>
           <p className="text-sm text-muted-foreground">{definition.description}</p>
           {dependencies.length > 0 ? (
             <p className="text-xs text-muted-foreground">
               Requires: {getDependencyTitles(featureKey)}
             </p>
           ) : null}
-          {toggleBlocked ? (
+          {blocked ? (
             <p className="text-xs text-primary">
               Enable {getDependencyTitles(featureKey)} first.
             </p>
@@ -99,7 +93,7 @@ function FeatureToggleRow({
         <Button
           aria-pressed={isEnabled}
           className="w-full sm:w-auto"
-          disabled={toggleBlocked || isPending}
+          disabled={blocked || isPending}
           onClick={() => onToggleFeature(featureKey)}
           size="sm"
           type="button"
@@ -125,9 +119,6 @@ export function FeatureSettingsCard({ onFeatureFlagsChange }: FeatureSettingsCar
   const mainFeatureKeys = FEATURE_KEYS.filter(
     (featureKey) => FEATURE_DEFINITIONS[featureKey].tier === "main",
   );
-  const subFeatureKeys = FEATURE_KEYS.filter(
-    (featureKey) => FEATURE_DEFINITIONS[featureKey].tier === "sub",
-  );
 
   useEffect(() => {
     onFeatureFlagsChange?.(featureFlags);
@@ -142,12 +133,10 @@ export function FeatureSettingsCard({ onFeatureFlagsChange }: FeatureSettingsCar
   };
 
   const toggleFeature = (featureKey: FeatureKey) => {
-    const nextOverrides = {
+    applyOverrides({
       ...overrides,
       [featureKey]: !featureFlags[featureKey],
-    };
-
-    applyOverrides(nextOverrides);
+    });
   };
 
   const resetToDefaults = () => {
@@ -158,9 +147,9 @@ export function FeatureSettingsCard({ onFeatureFlagsChange }: FeatureSettingsCar
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Feature Flags</CardTitle>
+        <CardTitle>Feature Settings</CardTitle>
         <CardDescription>
-          Turn app modules on or off. Hidden features are removed from navigation and routes.
+          Structured feature controls with parent features and collapsible sub features.
         </CardDescription>
         <CardAction>
           <Button
@@ -176,36 +165,55 @@ export function FeatureSettingsCard({ onFeatureFlagsChange }: FeatureSettingsCar
         </CardAction>
       </CardHeader>
 
-      <CardContent className="space-y-6">
-        <section className="space-y-2.5">
-          <h3 className="text-sm font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-            Main Features
-          </h3>
-          {mainFeatureKeys.map((featureKey) => (
-            <FeatureToggleRow
-              featureFlags={featureFlags}
-              featureKey={featureKey}
-              isPending={isPending}
-              key={featureKey}
-              onToggleFeature={toggleFeature}
-            />
-          ))}
-        </section>
+      <CardContent className="space-y-3">
+        {mainFeatureKeys.map((featureKey) => {
+          const subFeatures = getSubFeatures(featureKey);
+          const hasSubFeatures = subFeatures.length > 0;
 
-        <section className="space-y-2.5">
-          <h3 className="text-sm font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-            Sub Features
-          </h3>
-          {subFeatureKeys.map((featureKey) => (
-            <FeatureToggleRow
-              featureFlags={featureFlags}
-              featureKey={featureKey}
-              isPending={isPending}
-              key={featureKey}
-              onToggleFeature={toggleFeature}
-            />
-          ))}
-        </section>
+          return (
+            <section className="rounded-2xl border border-border/80 p-3 sm:p-4" key={featureKey}>
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                  Main Feature
+                </p>
+                {hasSubFeatures ? (
+                  <p className="text-xs text-muted-foreground">
+                    {subFeatures.length} sub feature{subFeatures.length === 1 ? "" : "s"}
+                  </p>
+                ) : null}
+              </div>
+
+              <FeatureSwitch
+                featureFlags={featureFlags}
+                featureKey={featureKey}
+                isPending={isPending}
+                onToggleFeature={toggleFeature}
+                style="main"
+              />
+
+              {hasSubFeatures ? (
+                <details className="group mt-3 rounded-xl border border-border/70 bg-background/55 p-3">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold">
+                    <span>Sub Features</span>
+                    <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <div className="mt-3 space-y-2.5">
+                    {subFeatures.map((subFeatureKey) => (
+                      <FeatureSwitch
+                        featureFlags={featureFlags}
+                        featureKey={subFeatureKey}
+                        isPending={isPending}
+                        key={subFeatureKey}
+                        onToggleFeature={toggleFeature}
+                        style="sub"
+                      />
+                    ))}
+                  </div>
+                </details>
+              ) : null}
+            </section>
+          );
+        })}
       </CardContent>
     </Card>
   );

@@ -1,6 +1,7 @@
 export const FEATURE_KEYS = [
   "prayerTimings",
   "resourcesTab",
+  "ramadanResourcesFaq",
   "sehrAndIftarTimes",
   "adhkars",
   "adhkarOfTheDay",
@@ -32,9 +33,15 @@ export const FEATURE_DEFINITIONS: Record<FeatureKey, FeatureDefinition> = {
     description:
       "Show the Resources tab in bottom navigation. The page remains reachable from home.",
     defaultEnabled: true,
+    tier: "main",
+  },
+  ramadanResourcesFaq: {
+    title: "Ramadan Resources FAQ",
+    description: "Show Ramadan and fasting common questions in the Resources page.",
+    defaultEnabled: true,
     tier: "sub",
-    parent: "prayerTimings",
-    dependsOn: ["prayerTimings"],
+    parent: "resourcesTab",
+    dependsOn: ["resourcesTab"],
   },
   sehrAndIftarTimes: {
     title: "Sehar & Iftar Times",

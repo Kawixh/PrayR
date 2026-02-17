@@ -1,3 +1,4 @@
+import { getServerFeatureFlags } from "@/features/server";
 import type { Metadata } from "next";
 
 const asimYouTubeResources = [
@@ -7,56 +8,51 @@ const asimYouTubeResources = [
     transcriptSummary: [
       "He explains that eating and drinking must stop when true Fajr begins.",
       "He also clarifies to stop immediately at Fajr entry, not after a custom buffer.",
+      "If you have a glass of water in your hand and the adhan is given you may drink",
+      "But to reach out after the adhan has started this is not permissible",
+    ],
+  },
+  {
+    title: "People say stop eating 15-20 min before Fajr (Imsak)",
+    url: "https://www.youtube.com/watch?v=j85GXuWLVNE",
+    transcriptSummary: [
+      "He emphasizes fasting starts at Fajr itself, not at an invented earlier cutoff.",
+      "On the contrary in the Hadith it says that between the sahoor of the Prophet ﷺ and the iqamah of the prayer not the adhan but the iqamah was approximately 100 verses or 50 verses meaning that the prophet used to eat and drink until the very very last second once the adhan of Fajr is given this is where we refrain",
+      "To give a buffer zone of 10 or 15 minutes this is baseless",
     ],
   },
   {
     title: "Dua before or after iftar?",
-    url: "https://www.youtube.com/watch?v=nFmL8JQI76w",
+    url: "https://www.youtube.com/watch?v=q5hXbbaENfo",
     transcriptSummary: [
-      "He explains that dua can be made before iftar while still fasting.",
-      "He states the known narrated iftar dua is said after breaking the fast.",
-    ],
-  },
-  {
-    title: "Is there a prescribed dua for suhoor?",
-    url: "https://www.youtube.com/watch?v=Lgpz1LJMx4M",
-    transcriptSummary: [
-      "He clarifies there is no specific authenticated dua fixed for suhoor.",
-      "He says intention to fast is in the heart and does not need a fixed phrase.",
+      "He states the known narrated iftar dua is said after breaking the fast, after eating and drinking something.",
     ],
   },
 ] as const;
 
-const asimWebsiteResources = [
+const ramadanFaqItems = [
   {
-    title: "First adhan or second adhan for fasting start?",
-    url: "https://www.assimalhakeem.net/if-ive-an-intention-of-fasting-do-i-have-to-stop-eating-or-drinking-when-i-hear-the-first-athan-of-fajr-or-should-i-wait-for-the-second-one/",
-    keyPoint:
-      "Start fasting at the adhan that indicates true Fajr, not a separate earlier cutoff.",
+    question: "Do I stop eating before Fajr because of Imsak?",
+    answer:
+      "No fixed early stop time is required. Fasting starts at Fajr (true dawn).",
   },
   {
-    title: "If I hear Fajr adhan while eating, what should I do?",
-    url: "https://www.assimalhakeem.net/would-like-to-clarify-if-i-have-heard-the-fajar-azan-do-i-have-to-stop-anything-immediately-even-if-there-is-a-little-food-in-my-mouth-or-water-in-my-hand/",
-    keyPoint:
-      "Stop once Fajr begins and avoid delaying the fast start beyond true dawn.",
+    question: "Can I keep eating if adhan starts while I am eating?",
+    answer: "Once true Fajr starts, stop eating and drinking immediately.",
   },
   {
-    title: "Can I pray Maghrib first and then break my fast?",
-    url: "https://www.assimalhakeem.net/question-sheikh-is-it-permissible-to-to-pray-maghreb-and-then-break-my-fast/",
-    keyPoint:
-      "Break fast at Maghrib entry without unnecessary delay, then continue worship.",
+    question: "When exactly should I open my fast?",
+    answer: "Open at Maghrib entry and avoid delaying iftar without reason.",
   },
   {
-    title: "Is there a dua specifically for iftar or suhoor?",
-    url: "https://www.assimalhakeem.net/is-there-a-duaa-to-be-said-at-the-time-of-iftar-what-about-the-suhur/",
-    keyPoint:
-      "No fixed suhoor dua is prescribed; iftar duas are addressed with authenticity notes.",
+    question: "Is there a fixed suhoor dua everyone must read?",
+    answer:
+      "No authenticated fixed suhoor dua is required; intention is in the heart.",
   },
   {
-    title: "Authentic iftar dua and when to say it",
-    url: "https://www.assimalhakeem.net/what-is-the-authentic-dua-to-read-at-iftar-it-should-be-read-before-breaking-the-fast-or-after-breaking-the-fast/",
-    keyPoint:
-      "Clarifies which iftar wording is authentic and that it is recited after breaking the fast.",
+    question: "Is there an iftar dua?",
+    answer:
+      "Yes, the known narrated wording is recited after breaking the fast.",
   },
 ] as const;
 
@@ -69,7 +65,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ResourcesPage() {
+export default async function ResourcesPage() {
+  const featureFlags = await getServerFeatureFlags();
+
   return (
     <section className="space-y-6">
       <header className="rounded-2xl border border-border/80 bg-card p-5 sm:p-6">
@@ -172,65 +170,70 @@ export default function ResourcesPage() {
           Sheikh Assim Al Hakeem Resources
         </h2>
 
-        <div className="mt-4 space-y-3">
-          <h3 className="text-sm font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-            YouTube
-          </h3>
-          <ul className="space-y-2">
-            {asimYouTubeResources.map((resource) => (
-              <li
-                className="rounded-xl border border-border/70 bg-background/60 p-3"
-                key={resource.url}
-              >
-                <a
-                  className="text-sm font-semibold underline decoration-border underline-offset-4 hover:text-primary sm:text-base"
-                  href={resource.url}
-                  rel="noreferrer noopener"
-                  target="_blank"
+        <div className="mt-4 grid gap-4">
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+              Videos
+            </h3>
+            <ul className="space-y-2">
+              {asimYouTubeResources.map((resource) => (
+                <li
+                  className="rounded-xl border border-border/70 bg-background/60 p-3"
+                  key={resource.url}
                 >
-                  {resource.title}
-                </a>
-                <div className="mt-2 space-y-1">
-                  <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-                    Transcript Summary
+                  <p className="mb-2 inline-flex rounded-full border border-border/80 bg-muted/55 px-2 py-0.5 text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                    YouTube
                   </p>
-                  <ul className="list-disc space-y-1 pl-5 text-sm leading-6 text-muted-foreground">
-                    {resource.transcriptSummary.map((point) => (
-                      <li key={point}>{point}</li>
-                    ))}
-                  </ul>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="mt-5 space-y-3">
-          <h3 className="text-sm font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-            Website
-          </h3>
-          <ul className="space-y-2">
-            {asimWebsiteResources.map((resource) => (
-              <li
-                className="rounded-xl border border-border/70 bg-background/60 p-3"
-                key={resource.url}
-              >
-                <a
-                  className="text-sm font-semibold underline decoration-border underline-offset-4 hover:text-primary sm:text-base"
-                  href={resource.url}
-                  rel="noreferrer noopener"
-                  target="_blank"
-                >
-                  {resource.title}
-                </a>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {resource.keyPoint}
-                </p>
-              </li>
-            ))}
-          </ul>
+                  <a
+                    className="text-sm font-semibold underline decoration-border underline-offset-4 hover:text-primary sm:text-base"
+                    href={resource.url}
+                    rel="noreferrer noopener"
+                    target="_blank"
+                  >
+                    {resource.title}
+                  </a>
+                  <div className="mt-2 space-y-1">
+                    <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                      Transcript Summary
+                    </p>
+                    <ul className="list-disc space-y-1 pl-5 text-sm leading-6 text-muted-foreground">
+                      {resource.transcriptSummary.map((point) => (
+                        <li key={point}>{point}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
+
+      {featureFlags.ramadanResourcesFaq ? (
+        <section className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5">
+          <h2 className="text-xl font-semibold sm:text-2xl">
+            Common Ramadan Questions
+          </h2>
+          <div className="mt-3 space-y-2.5">
+            {ramadanFaqItems.map((item) => (
+              <article
+                className="rounded-xl border border-border/70 bg-background/60 p-3"
+                key={item.question}
+              >
+                <p className="mb-2 inline-flex rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold tracking-[0.14em] text-primary uppercase">
+                  Ramadan Resources Feature
+                </p>
+                <h3 className="text-sm font-semibold sm:text-base">
+                  {item.question}
+                </h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground sm:text-base">
+                  {item.answer}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </section>
   );
 }

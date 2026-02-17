@@ -233,21 +233,6 @@ export default async function Page() {
       <div className="homepage-clean space-y-6">
         <WhatsNewBanner />
 
-        <section className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold sm:text-2xl">Resources</h2>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground sm:text-base">
-                Ramadan guidance, fasting timing references, and duas are available
-                here from the home screen.
-              </p>
-            </div>
-            <Button asChild className="min-h-10 rounded-full px-5 py-2.5" type="button">
-              <Link href="/resources">Open Resources</Link>
-            </Button>
-          </div>
-        </section>
-
         <section aria-labelledby="dashboard-heading" className="space-y-4">
           <h2
             className="text-2xl font-semibold sm:text-3xl"
@@ -321,6 +306,21 @@ export default async function Page() {
                 </p>
               </details>
             ))}
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold sm:text-2xl">Resources</h2>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground sm:text-base">
+                Ramadan guidance, fasting timing references, and duas are available
+                here from the home screen.
+              </p>
+            </div>
+            <Button asChild className="min-h-10 rounded-full px-5 py-2.5" type="button">
+              <Link href="/resources">Open Resources</Link>
+            </Button>
           </div>
         </section>
 
