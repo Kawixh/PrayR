@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 import { Dot } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { formatTo12Hour, parseTime24 } from "../_utils/time";
 import { getPrayerStatusSnapshot } from "../_utils/prayer-day";
+import { formatTo12Hour, parseTime24 } from "../_utils/time";
 
 type PrayerTimelineProps = {
   showAdhkarLinks: boolean;
@@ -70,12 +70,22 @@ type TimelineTooltipProps = {
 
 const DAY_HOURS = 24;
 const BASE_PX_PER_HOUR = 34;
+const ADAPTIVE_DAY_FACTOR = 2;
+const ADAPTIVE_NIGHT_DIVISOR = 2;
+const NIGHT_START_HOUR = 19;
+const NIGHT_END_HOUR = 4;
 const MIN_PRAYER_BLOCK_PX = 58;
 const BLOCK_GAP_PX = 4;
 const SUNRISE_MAKRUH_MINUTES = 15;
 const SOLAR_NOON_MAKRUH_MINUTES = 10;
 const SUNSET_MAKRUH_MINUTES = 15;
-const SUMMARY_PRAYERS: readonly PrayerName[] = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
+const SUMMARY_PRAYERS: readonly PrayerName[] = [
+  "Fajr",
+  "Dhuhr",
+  "Asr",
+  "Maghrib",
+  "Isha",
+];
 
 function toHourValue(time24: string): number | null {
   const parsed = parseTime24(time24);
@@ -115,7 +125,10 @@ type HourRange = {
   start: number;
 };
 
-function subtractRanges(baseRange: HourRange, rangesToSubtract: HourRange[]): HourRange[] {
+function subtractRanges(
+  baseRange: HourRange,
+  rangesToSubtract: HourRange[],
+): HourRange[] {
   let segments: HourRange[] = [baseRange];
 
   const orderedRanges = [...rangesToSubtract].sort(
@@ -158,10 +171,15 @@ function uniqueSorted(values: number[]): number[] {
   );
 }
 
-function buildScaleSegments(blocks: PrayerBlock[], scaleMode: ScaleMode): ScaleSegment[] {
+function buildScaleSegments(
+  blocks: PrayerBlock[],
+  scaleMode: ScaleMode,
+): ScaleSegment[] {
   const breakpoints = uniqueSorted([
     0,
     DAY_HOURS,
+    NIGHT_END_HOUR,
+    NIGHT_START_HOUR,
     ...blocks.flatMap((block) => [block.startHour, block.endHour]),
   ]);
 
@@ -178,16 +196,28 @@ function buildScaleSegments(blocks: PrayerBlock[], scaleMode: ScaleMode): ScaleS
     let pxPerHour = BASE_PX_PER_HOUR;
 
     if (scaleMode === "adaptive") {
+      const segmentMidpoint = (startHour + endHour) / 2;
+      const inNightBand =
+        segmentMidpoint >= NIGHT_START_HOUR || segmentMidpoint < NIGHT_END_HOUR;
+
+      pxPerHour = inNightBand
+        ? BASE_PX_PER_HOUR / ADAPTIVE_NIGHT_DIVISOR
+        : BASE_PX_PER_HOUR * ADAPTIVE_DAY_FACTOR;
+
       const owningBlock = blocks.find(
         (block) =>
-          startHour >= block.startHour - 1e-6 && endHour <= block.endHour + 1e-6,
+          startHour >= block.startHour - 1e-6 &&
+          endHour <= block.endHour + 1e-6,
       );
 
       if (owningBlock) {
         const blockDuration = owningBlock.endHour - owningBlock.startHour;
 
         if (blockDuration > 0) {
-          pxPerHour = Math.max(BASE_PX_PER_HOUR, MIN_PRAYER_BLOCK_PX / blockDuration);
+          pxPerHour = Math.max(
+            BASE_PX_PER_HOUR,
+            MIN_PRAYER_BLOCK_PX / blockDuration,
+          );
         }
       }
     }
@@ -222,7 +252,10 @@ function mapHourToPixels(hour: number, segments: ScaleSegment[]): number {
   return y;
 }
 
-function buildTimelineData(timings: PrayerTimings, now: Date): TimelineData | null {
+function buildTimelineData(
+  timings: PrayerTimings,
+  now: Date,
+): TimelineData | null {
   const fajrHour = toHourValue(timings.Fajr);
   const sunriseHour = toHourValue(timings.Sunrise);
   const dhuhrHour = toHourValue(timings.Dhuhr);
@@ -242,7 +275,9 @@ function buildTimelineData(timings: PrayerTimings, now: Date): TimelineData | nu
   }
 
   const sunriseMakruhEnd = clampHour(sunriseHour + SUNRISE_MAKRUH_MINUTES / 60);
-  const solarNoonMakruhStart = clampHour(dhuhrHour - SOLAR_NOON_MAKRUH_MINUTES / 60);
+  const solarNoonMakruhStart = clampHour(
+    dhuhrHour - SOLAR_NOON_MAKRUH_MINUTES / 60,
+  );
   const sunsetMakruhStart = clampHour(maghribHour - SUNSET_MAKRUH_MINUTES / 60);
 
   const ishaStartsTonight = ishaHour > maghribHour;
@@ -350,7 +385,8 @@ function buildTimelineData(timings: PrayerTimings, now: Date): TimelineData | nu
       id: "sunset-makruh",
       kind: "makruh" as const,
       title: "Makruh: Before Maghrib",
-      description: "Avoid voluntary prayer in the final minutes before Maghrib.",
+      description:
+        "Avoid voluntary prayer in the final minutes before Maghrib.",
       startHour: sunsetMakruhStart,
       endHour: maghribHour,
       startLabel: formatDecimalHour(sunsetMakruhStart),
@@ -435,7 +471,9 @@ function TimelineTooltip({
       <TooltipTrigger asChild>
         <button
           className={triggerClassName}
-          onClick={touchMode ? () => setOpen((previous) => !previous) : undefined}
+          onClick={
+            touchMode ? () => setOpen((previous) => !previous) : undefined
+          }
           style={triggerStyle}
           type="button"
         >
@@ -451,14 +489,19 @@ function TimelineTooltip({
         <p className="text-muted-foreground">{timeRange}</p>
         <p className="mt-1">{body}</p>
         {touchMode ? (
-          <p className="text-muted-foreground mt-1 text-[11px]">Tap again to close</p>
+          <p className="text-muted-foreground mt-1 text-[11px]">
+            Tap again to close
+          </p>
         ) : null}
       </TooltipContent>
     </Tooltip>
   );
 }
 
-export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps) {
+export function PrayerTimeline({
+  showAdhkarLinks,
+  timings,
+}: PrayerTimelineProps) {
   const [currentTime, setCurrentTime] = useState(() => new Date());
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [scaleMode, setScaleMode] = useState<ScaleMode>("adaptive");
@@ -508,16 +551,21 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
 
   const timelineHeightPx = mapHourToPixels(DAY_HOURS, scaleSegments);
   const activeBlock = timeline.blocks.find(
-    (item) => timeline.nowHour >= item.startHour && timeline.nowHour < item.endHour,
+    (item) =>
+      timeline.nowHour >= item.startHour && timeline.nowHour < item.endHour,
   );
   const activeZone = timeline.zones.find(
-    (item) => timeline.nowHour >= item.startHour && timeline.nowHour < item.endHour,
+    (item) =>
+      timeline.nowHour >= item.startHour && timeline.nowHour < item.endHour,
   );
-  const hourMarkers = Array.from({ length: DAY_HOURS + 1 }, (_, index) => index);
+  const hourMarkers = Array.from(
+    { length: DAY_HOURS + 1 },
+    (_, index) => index,
+  );
 
   return (
     <section className="space-y-4">
-      <div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5">
+      <div>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
             <h2 className="text-2xl leading-tight font-semibold sm:text-3xl">
@@ -525,7 +573,7 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
             </h2>
             <p className="text-muted-foreground text-sm leading-6">
               {scaleMode === "adaptive"
-                ? "Adaptive scale keeps short prayer windows readable."
+                ? "Adaptive: 7 PM to 4 AM is compressed (1 block = 1.5h), daytime is expanded."
                 : "Exact scale keeps each hour visually equal."}
             </p>
             <p className="text-sm leading-6">
@@ -556,16 +604,18 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
             <div className="rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm">
               {activeZone ? (
                 <p>
-                  <span className="font-semibold">{activeZone.title}</span>{" "}
-                  ({activeZone.startLabel} - {activeZone.endLabel})
+                  <span className="font-semibold">{activeZone.title}</span> (
+                  {activeZone.startLabel} - {activeZone.endLabel})
                 </p>
               ) : activeBlock ? (
                 <p>
-                  <span className="font-semibold">Active block:</span> {activeBlock.title}
+                  <span className="font-semibold">Active block:</span>{" "}
+                  {activeBlock.title}
                 </p>
               ) : (
                 <p>
-                  <span className="font-semibold">Next prayer:</span> {snapshot.nextPrayer.name}
+                  <span className="font-semibold">Next prayer:</span>{" "}
+                  {snapshot.nextPrayer.name}
                 </p>
               )}
             </div>
@@ -575,7 +625,10 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
         <div className="mt-4 rounded-xl border border-border/75 bg-background/65 p-2 sm:p-3">
           <div className="relative overflow-x-auto">
             <div className="min-w-[680px]">
-              <div className="relative" style={{ height: `${timelineHeightPx}px` }}>
+              <div
+                className="relative"
+                style={{ height: `${timelineHeightPx}px` }}
+              >
                 <div className="absolute inset-y-0 left-0 w-14">
                   {hourMarkers.map((hour) => {
                     const topPx = mapHourToPixels(hour, scaleSegments);
@@ -609,19 +662,27 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
                     <div
                       className={cn(
                         "absolute left-0 right-0 border-t",
-                        hour % 6 === 0 ? "border-border/70" : "border-border/35",
+                        hour % 6 === 0
+                          ? "border-border/70"
+                          : "border-border/35",
                       )}
                       key={`hour-grid-${hour}`}
-                      style={{ top: `${mapHourToPixels(hour, scaleSegments)}px` }}
+                      style={{
+                        top: `${mapHourToPixels(hour, scaleSegments)}px`,
+                      }}
                     />
                   ))}
 
                   {timeline.zones.map((zone) => {
-                    const topPx = mapHourToPixels(zone.startHour, scaleSegments);
+                    const topPx = mapHourToPixels(
+                      zone.startHour,
+                      scaleSegments,
+                    );
                     const rawHeightPx =
                       mapHourToPixels(zone.endHour, scaleSegments) - topPx;
                     const isActive =
-                      timeline.nowHour >= zone.startHour && timeline.nowHour < zone.endHour;
+                      timeline.nowHour >= zone.startHour &&
+                      timeline.nowHour < zone.endHour;
                     const hatch =
                       zone.kind === "makruh"
                         ? "repeating-linear-gradient(-35deg, color-mix(in oklab, var(--destructive) 28%, transparent) 0px, color-mix(in oklab, var(--destructive) 28%, transparent) 7px, color-mix(in oklab, var(--destructive) 6%, transparent) 7px, color-mix(in oklab, var(--destructive) 6%, transparent) 14px)"
@@ -656,7 +717,10 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
                   })}
 
                   {timeline.blocks.map((block) => {
-                    const rawTopPx = mapHourToPixels(block.startHour, scaleSegments);
+                    const rawTopPx = mapHourToPixels(
+                      block.startHour,
+                      scaleSegments,
+                    );
                     const rawHeightPx =
                       mapHourToPixels(block.endHour, scaleSegments) - rawTopPx;
                     const useGap = rawHeightPx > BLOCK_GAP_PX * 2 + 8;
@@ -695,7 +759,12 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
                           )}
                         >
                           <div className="min-w-0">
-                            <p className={cn("font-semibold", compact ? "text-xs" : "text-sm")}>
+                            <p
+                              className={cn(
+                                "font-semibold",
+                                compact ? "text-xs" : "text-sm",
+                              )}
+                            >
                               {block.title}
                             </p>
                             <p className="text-muted-foreground mt-0.5 text-xs leading-5">
@@ -714,7 +783,9 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
 
                   <div
                     className="absolute left-0 right-0 z-40 border-t-2 border-dotted border-primary/95"
-                    style={{ top: `${mapHourToPixels(timeline.nowHour, scaleSegments)}px` }}
+                    style={{
+                      top: `${mapHourToPixels(timeline.nowHour, scaleSegments)}px`,
+                    }}
                   >
                     <div className="absolute -left-1.5 -top-1.5 size-3 rounded-full bg-primary" />
                     <div className="absolute -top-3 right-2 rounded bg-background/95 px-2 py-0.5 text-[11px] font-medium text-primary">
@@ -728,8 +799,13 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
 
           <div className="mt-4 grid gap-2 rounded-lg border border-border/70 bg-card p-3 text-xs leading-5 sm:grid-cols-2 lg:grid-cols-4">
             {timeline.zones.map((zone) => (
-              <p className="text-muted-foreground" key={`zone-summary-${zone.id}`}>
-                <span className="font-semibold text-foreground">{zone.title}:</span>{" "}
+              <p
+                className="text-muted-foreground"
+                key={`zone-summary-${zone.id}`}
+              >
+                <span className="font-semibold text-foreground">
+                  {zone.title}:
+                </span>{" "}
                 {zone.startLabel} - {zone.endLabel}
                 {zone.kind === "open" ? " (voluntary prayer allowed)" : ""}
               </p>
@@ -740,7 +816,9 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
             <div className="mt-4 flex flex-wrap gap-2">
               {SUMMARY_PRAYERS.map((prayerName) => (
                 <Button asChild key={prayerName} size="sm" variant="outline">
-                  <Link href={`/adhkars?prayer=${encodeURIComponent(prayerName)}`}>
+                  <Link
+                    href={`/adhkars?prayer=${encodeURIComponent(prayerName)}`}
+                  >
                     <Dot className="size-4" />
                     {prayerName} Adhkar
                   </Link>
