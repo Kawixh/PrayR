@@ -87,7 +87,8 @@ const dashboardViewOptions: Array<{
   {
     value: "cards",
     label: "Current cards",
-    description: "Shows current state cards, previous/next prayer, and Makrooh windows.",
+    description:
+      "Shows current state cards, previous/next flow, and Makrooh warnings inside prayer times.",
   },
   {
     value: "timeline",

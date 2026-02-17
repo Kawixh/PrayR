@@ -4,7 +4,7 @@ import { type AlAdhanDayData, type AlAdhanTimingsResponse } from "@/backend/type
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { type FeatureFlags } from "@/features/definitions";
-import { AlertTriangle, Clock3 } from "lucide-react";
+import { AlertTriangle, Clock3, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
@@ -12,11 +12,11 @@ import {
   readPrayerDashboardViewFromStorage,
   type PrayerDashboardView,
 } from "../_utils/prayer-dashboard-view";
+import { getMakruhWindows } from "../_utils/prayer-day";
 import { formatTo12Hour, getLocalDayKey } from "../_utils/time";
 import { DailyAdhkarCard } from "./daily-adhkar-card";
 import { CurrentPrayerStatusCard } from "./current-prayer-status-card";
 import { IslamicDateCalendarCard } from "./islamic-date-calendar-card";
-import { MakruhWindowsCard } from "./makruh-windows-card";
 import { PrayerReminder } from "./prayer-reminder";
 import { PrayerTimeCard } from "./prayer-time-card";
 import { PrayerTimeline } from "./prayer-timeline";
@@ -32,6 +32,15 @@ type PrayerTimesCache = {
   dayKey: string;
   settingsKey: string;
   data: AlAdhanDayData;
+};
+
+type PrayerSummaryItem = {
+  makruh?: {
+    label: string;
+    range: string;
+  };
+  name: string;
+  time: string;
 };
 
 const SETTINGS_STORAGE_KEY = "prayerSettings";
@@ -337,7 +346,48 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
     { name: "Asr", time: prayerDay.timings.Asr },
     { name: "Maghrib", time: prayerDay.timings.Maghrib },
     { name: "Isha", time: prayerDay.timings.Isha },
-  ];
+  ] as const;
+
+  const makruhWindows = getMakruhWindows(prayerDay.timings, new Date());
+  const sunriseMakruh = makruhWindows.find((windowItem) => windowItem.id === "sunrise");
+  const solarNoonMakruh = makruhWindows.find((windowItem) => windowItem.id === "solarNoon");
+  const sunsetMakruh = makruhWindows.find((windowItem) => windowItem.id === "sunset");
+
+  const prayerSummaryItems: PrayerSummaryItem[] = summaryItems.map((item) => {
+    if (item.name === "Sunrise" && sunriseMakruh) {
+      return {
+        ...item,
+        makruh: {
+          label: "Makrooh Waqt (Sunrise)",
+          range: `${sunriseMakruh.startLabel} - ${sunriseMakruh.endLabel}`,
+        },
+      };
+    }
+
+    if (item.name === "Dhuhr" && solarNoonMakruh) {
+      return {
+        ...item,
+        makruh: {
+          label: "Makrooh Waqt (Before Dhuhr)",
+          range: `${solarNoonMakruh.startLabel} - ${solarNoonMakruh.endLabel}`,
+        },
+      };
+    }
+
+    if (item.name === "Maghrib" && sunsetMakruh) {
+      return {
+        ...item,
+        makruh: {
+          label: "Makrooh Waqt (Before Maghrib)",
+          range: `${sunsetMakruh.startLabel} - ${sunsetMakruh.endLabel}`,
+        },
+      };
+    }
+
+    return {
+      ...item,
+    };
+  });
 
   return (
     <section className="space-y-5">
@@ -350,30 +400,38 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
       {dashboardView === "timeline" ? (
         <PrayerTimeline showAdhkarLinks={featureFlags.adhkars} timings={prayerDay.timings} />
       ) : (
-        <>
-          <PrayerTimeCard showAdhkarLinks={featureFlags.adhkars} timings={prayerDay.timings} />
-          <MakruhWindowsCard timings={prayerDay.timings} />
-        </>
+        <PrayerTimeCard showAdhkarLinks={featureFlags.adhkars} timings={prayerDay.timings} />
       )}
 
       <Card className="glass-panel border-border/80 p-4 sm:p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-2xl leading-tight">All Prayer Times</h2>
+          <h2 className="font-display text-2xl leading-tight">Prayer Times</h2>
           <p className="text-sm text-muted-foreground">
             12-hour format • View: {dashboardView === "timeline" ? "Timeline" : "Cards"}
           </p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {summaryItems.map((item) => (
+          {prayerSummaryItems.map((item) => (
             <div
               className="rounded-xl border border-border/80 bg-background/50 p-3"
               key={item.name}
             >
-              <p className="text-sm text-muted-foreground">{item.name}</p>
-              <p className="mt-1 text-xl font-semibold text-foreground">
+              <p className="text-base text-muted-foreground">{item.name}</p>
+              <p className="mt-1 text-2xl font-semibold text-foreground">
                 {formatTo12Hour(item.time)}
               </p>
+              {item.makruh ? (
+                <div className="mt-3 rounded-lg border border-amber-500/45 bg-amber-500/10 p-3">
+                  <p className="flex items-center gap-2 text-base font-semibold text-amber-800 dark:text-amber-200">
+                    <TriangleAlert className="size-4" />
+                    {item.makruh.label}
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-amber-900 dark:text-amber-100">
+                    {item.makruh.range}
+                  </p>
+                </div>
+              ) : null}
               {featureFlags.adhkars ? (
                 <Button
                   asChild

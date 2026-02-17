@@ -135,48 +135,29 @@ export function PrayerTimeCard({ showAdhkarLinks, timings }: PrayerTimeCardProps
 
   const untilNextPrayer = formatMinutesBetween(currentTime, snapshot.nextPrayer.date);
   const sincePreviousPrayer = formatMinutesBetween(snapshot.previousPrayer.date, currentTime);
+  const upcomingMakruhBeforeNextPrayer =
+    snapshot.upcomingMakruh &&
+    snapshot.upcomingMakruh.start.getTime() > currentTime.getTime() &&
+    snapshot.upcomingMakruh.start.getTime() <= snapshot.nextPrayer.date.getTime()
+      ? snapshot.upcomingMakruh
+      : null;
 
   return (
     <section className="space-y-4">
-      <Card className="glass-panel border-border/80 p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="soft-chip inline-flex">Current Time</p>
-            <p className="mt-2 font-display text-3xl leading-tight sm:text-4xl">
-              {snapshot.nowLabel}
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-border/75 bg-background/55 px-3 py-2">
-            {snapshot.activeMakruh ? (
-              <>
-                <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
-                  {snapshot.activeMakruh.title}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {snapshot.activeMakruh.startLabel} - {snapshot.activeMakruh.endLabel}
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="text-sm font-semibold text-foreground">
-                  Next prayer: {snapshot.nextPrayer.name}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Starts in {untilNextPrayer}
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-      </Card>
-
       <div className="grid w-full gap-4 lg:grid-cols-2">
         {snapshot.activeMakruh ? (
           <PrayerPanel
-            description={`${snapshot.activeMakruh.startLabel} - ${snapshot.activeMakruh.endLabel}. ${snapshot.activeMakruh.details}`}
+            description={`${snapshot.activeMakruh.startLabel} - ${snapshot.activeMakruh.endLabel}. Ends in ${formatMinutesBetween(currentTime, snapshot.activeMakruh.end)}. Next prayer ${snapshot.nextPrayer.name} at ${snapshot.nextPrayer.time12}.`}
             headline="Makrooh Waqt"
             title="Current State"
+            tone="makruh"
+            showAdhkarLink={false}
+          />
+        ) : upcomingMakruhBeforeNextPrayer ? (
+          <PrayerPanel
+            description={`${upcomingMakruhBeforeNextPrayer.startLabel} - ${upcomingMakruhBeforeNextPrayer.endLabel}. Starts in ${formatMinutesBetween(currentTime, upcomingMakruhBeforeNextPrayer.start)}. Next prayer ${snapshot.nextPrayer.name} at ${snapshot.nextPrayer.time12}.`}
+            headline={upcomingMakruhBeforeNextPrayer.title.replace("Makrooh Waqt: ", "")}
+            title="Next Event"
             tone="makruh"
             showAdhkarLink={false}
           />
@@ -187,7 +168,7 @@ export function PrayerTimeCard({ showAdhkarLinks, timings }: PrayerTimeCardProps
             highlight
             prayerName={snapshot.nextPrayer.name}
             showAdhkarLink={showAdhkarLinks}
-            title="Next Prayer"
+            title="Next Event"
           />
         )}
 
@@ -199,18 +180,6 @@ export function PrayerTimeCard({ showAdhkarLinks, timings }: PrayerTimeCardProps
           title="Previous Prayer"
         />
       </div>
-
-      {snapshot.upcomingMakruh ? (
-        <Card className="glass-panel border-amber-500/35 bg-amber-500/10 p-4">
-          <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
-            Upcoming Makrooh Waqt
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {snapshot.upcomingMakruh.title.replace("Makrooh Waqt: ", "")}:{" "}
-            {snapshot.upcomingMakruh.startLabel} - {snapshot.upcomingMakruh.endLabel}
-          </p>
-        </Card>
-      ) : null}
     </section>
   );
 }
