@@ -60,7 +60,6 @@ type ScaleSegment = {
 type TimelineTooltipProps = {
   body: string;
   heading: string;
-  side: "top" | "bottom" | "left" | "right";
   timeRange: string;
   touchMode: boolean;
   triggerClassName: string;
@@ -440,7 +439,6 @@ function buildTimelineData(
 function TimelineTooltip({
   body,
   heading,
-  side,
   timeRange,
   touchMode,
   triggerClassName,
@@ -482,7 +480,6 @@ function TimelineTooltip({
       </TooltipTrigger>
       <TooltipContent
         className="max-w-64 border border-border/70 bg-popover px-3 py-2 text-xs leading-5 text-popover-foreground shadow-lg"
-        side={side}
         sideOffset={8}
       >
         <p className="font-semibold">{heading}</p>
@@ -624,39 +621,42 @@ export function PrayerTimeline({
 
         <div className="mt-4 rounded-xl border border-border/75 bg-background/65 p-1.5 sm:p-2">
           <div className="relative">
-            <div className="relative w-full" style={{ height: `${timelineHeightPx}px` }}>
-                <div className="absolute inset-y-0 left-0 w-14">
-                  {hourMarkers.map((hour) => {
-                    const topPx = mapHourToPixels(hour, scaleSegments);
+            <div
+              className="relative w-full"
+              style={{ height: `${timelineHeightPx}px` }}
+            >
+              <div className="absolute inset-y-0 left-0 w-14">
+                {hourMarkers.map((hour) => {
+                  const topPx = mapHourToPixels(hour, scaleSegments);
 
-                    return (
-                      <div
-                        className="absolute left-0 right-0"
-                        key={`hour-label-${hour}`}
-                        style={{
-                          top: `${topPx}px`,
-                          transform:
-                            hour === 0
-                              ? "translateY(0)"
-                              : hour === DAY_HOURS
-                                ? "translateY(-100%)"
-                                : "translateY(-50%)",
-                        }}
-                      >
-                        {hour % 2 === 0 ? (
-                          <span className="text-muted-foreground absolute left-0 text-[11px] font-medium">
-                            {formatHourLabel(hour % DAY_HOURS)}
-                          </span>
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </div>
+                  return (
+                    <div
+                      className="absolute left-0 right-0"
+                      key={`hour-label-${hour}`}
+                      style={{
+                        top: `${topPx}px`,
+                        transform:
+                          hour === 0
+                            ? "translateY(0)"
+                            : hour === DAY_HOURS
+                              ? "translateY(-100%)"
+                              : "translateY(-50%)",
+                      }}
+                    >
+                      {hour % 2 === 0 ? (
+                        <span className="text-muted-foreground absolute left-0 text-[11px] font-medium">
+                          {formatHourLabel(hour % DAY_HOURS)}
+                        </span>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
 
-                <div className="absolute inset-y-0 left-14 right-0 rounded-lg border border-border/70 bg-card/60">
-                  {hourMarkers
-                    .filter((hour) => hour !== 0)
-                    .map((hour) => (
+              <div className="absolute inset-y-0 left-14 right-0 rounded-lg border border-border/70 bg-card/60">
+                {hourMarkers
+                  .filter((hour) => hour !== 0)
+                  .map((hour) => (
                     <div
                       className={cn(
                         "absolute left-0 right-0 border-t",
@@ -671,127 +671,122 @@ export function PrayerTimeline({
                     />
                   ))}
 
-                  {timeline.zones.map((zone) => {
-                    const topPx = mapHourToPixels(
-                      zone.startHour,
-                      scaleSegments,
-                    );
-                    const rawHeightPx =
-                      mapHourToPixels(zone.endHour, scaleSegments) - topPx;
-                    const isActive =
-                      timeline.nowHour >= zone.startHour &&
-                      timeline.nowHour < zone.endHour;
-                    const hatch =
-                      zone.kind === "makruh"
-                        ? "repeating-linear-gradient(-35deg, color-mix(in oklab, var(--destructive) 28%, transparent) 0px, color-mix(in oklab, var(--destructive) 28%, transparent) 7px, color-mix(in oklab, var(--destructive) 6%, transparent) 7px, color-mix(in oklab, var(--destructive) 6%, transparent) 14px)"
-                        : "repeating-linear-gradient(-35deg, color-mix(in oklab, var(--primary) 15%, transparent) 0px, color-mix(in oklab, var(--primary) 15%, transparent) 10px, color-mix(in oklab, var(--primary) 4%, transparent) 10px, color-mix(in oklab, var(--primary) 4%, transparent) 20px)";
+                {timeline.zones.map((zone) => {
+                  const topPx = mapHourToPixels(zone.startHour, scaleSegments);
+                  const rawHeightPx =
+                    mapHourToPixels(zone.endHour, scaleSegments) - topPx;
+                  const isActive =
+                    timeline.nowHour >= zone.startHour &&
+                    timeline.nowHour < zone.endHour;
+                  const hatch =
+                    zone.kind === "makruh"
+                      ? "repeating-linear-gradient(-35deg, color-mix(in oklab, var(--destructive) 28%, transparent) 0px, color-mix(in oklab, var(--destructive) 28%, transparent) 7px, color-mix(in oklab, var(--destructive) 6%, transparent) 7px, color-mix(in oklab, var(--destructive) 6%, transparent) 14px)"
+                      : "repeating-linear-gradient(-35deg, color-mix(in oklab, var(--primary) 15%, transparent) 0px, color-mix(in oklab, var(--primary) 15%, transparent) 10px, color-mix(in oklab, var(--primary) 4%, transparent) 10px, color-mix(in oklab, var(--primary) 4%, transparent) 20px)";
 
-                    return (
-                      <TimelineTooltip
-                        body={zone.description}
-                        heading={zone.title}
-                        key={zone.id}
-                        side="right"
-                        timeRange={`${zone.startLabel} - ${zone.endLabel}`}
-                        touchMode={isTouchDevice}
-                        triggerClassName={cn(
-                          "absolute left-1 right-1 z-10 rounded-sm border border-dashed outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/65",
-                          zone.kind === "makruh"
-                            ? "border-destructive/70 bg-destructive/7"
-                            : "border-primary/40 bg-primary/7",
-                          isActive ? "ring-1 ring-primary/35" : undefined,
+                  return (
+                    <TimelineTooltip
+                      body={zone.description}
+                      heading={zone.title}
+                      key={zone.id}
+                      timeRange={`${zone.startLabel} - ${zone.endLabel}`}
+                      touchMode={isTouchDevice}
+                      triggerClassName={cn(
+                        "absolute left-1 right-1 z-10 rounded-sm border border-dashed outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/65",
+                        zone.kind === "makruh"
+                          ? "border-destructive/70 bg-destructive/7"
+                          : "border-primary/40 bg-primary/7",
+                        isActive ? "ring-1 ring-primary/35" : undefined,
+                      )}
+                      triggerStyle={{
+                        top: `${topPx}px`,
+                        height: `${Math.max(rawHeightPx, 4)}px`,
+                        backgroundImage: hatch,
+                      }}
+                    >
+                      <span className="sr-only">
+                        {zone.title} {zone.startLabel} to {zone.endLabel}
+                      </span>
+                    </TimelineTooltip>
+                  );
+                })}
+
+                {timeline.blocks.map((block) => {
+                  const rawTopPx = mapHourToPixels(
+                    block.startHour,
+                    scaleSegments,
+                  );
+                  const rawHeightPx =
+                    mapHourToPixels(block.endHour, scaleSegments) - rawTopPx;
+                  const useGap = rawHeightPx > BLOCK_GAP_PX * 2 + 8;
+                  const topPx = rawTopPx + (useGap ? BLOCK_GAP_PX : 0);
+                  const heightPx =
+                    rawHeightPx - (useGap ? BLOCK_GAP_PX * 2 : 0);
+                  const compact = heightPx < 42;
+                  const showDescription = heightPx >= 78;
+                  const isActive =
+                    timeline.nowHour >= block.startHour &&
+                    timeline.nowHour < block.endHour;
+
+                  return (
+                    <TimelineTooltip
+                      body={block.description}
+                      heading={block.title}
+                      key={block.id}
+                      timeRange={`${block.startLabel} - ${block.endLabel}`}
+                      touchMode={isTouchDevice}
+                      triggerClassName={cn(
+                        "absolute left-1 right-1 z-20 overflow-hidden rounded-md border text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/65",
+                        isActive
+                          ? "border-primary/55 bg-primary/12"
+                          : "border-border/70 bg-muted/35 hover:border-primary/45 hover:bg-primary/8",
+                      )}
+                      triggerStyle={{
+                        top: `${topPx}px`,
+                        height: `${Math.max(heightPx, 8)}px`,
+                      }}
+                    >
+                      <div
+                        className={cn(
+                          "flex items-start gap-2",
+                          compact ? "px-2 py-1.5" : "px-2.5 py-2.5",
                         )}
-                        triggerStyle={{
-                          top: `${topPx}px`,
-                          height: `${Math.max(rawHeightPx, 4)}px`,
-                          backgroundImage: hatch,
-                        }}
                       >
-                        <span className="sr-only">
-                          {zone.title} {zone.startLabel} to {zone.endLabel}
-                        </span>
-                      </TimelineTooltip>
-                    );
-                  })}
-
-                  {timeline.blocks.map((block) => {
-                    const rawTopPx = mapHourToPixels(
-                      block.startHour,
-                      scaleSegments,
-                    );
-                    const rawHeightPx =
-                      mapHourToPixels(block.endHour, scaleSegments) - rawTopPx;
-                    const useGap = rawHeightPx > BLOCK_GAP_PX * 2 + 8;
-                    const topPx = rawTopPx + (useGap ? BLOCK_GAP_PX : 0);
-                    const heightPx =
-                      rawHeightPx - (useGap ? BLOCK_GAP_PX * 2 : 0);
-                    const compact = heightPx < 42;
-                    const showDescription = heightPx >= 78;
-                    const isActive =
-                      timeline.nowHour >= block.startHour &&
-                      timeline.nowHour < block.endHour;
-
-                    return (
-                      <TimelineTooltip
-                        body={block.description}
-                        heading={block.title}
-                        key={block.id}
-                        side="left"
-                        timeRange={`${block.startLabel} - ${block.endLabel}`}
-                        touchMode={isTouchDevice}
-                        triggerClassName={cn(
-                          "absolute left-1 right-1 z-20 overflow-hidden rounded-md border text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/65",
-                          isActive
-                            ? "border-primary/55 bg-primary/12"
-                            : "border-border/70 bg-muted/35 hover:border-primary/45 hover:bg-primary/8",
-                        )}
-                        triggerStyle={{
-                          top: `${topPx}px`,
-                          height: `${Math.max(heightPx, 8)}px`,
-                        }}
-                      >
-                        <div
-                          className={cn(
-                            "flex items-start gap-2",
-                            compact ? "px-2 py-1.5" : "px-2.5 py-2.5",
-                          )}
-                        >
-                          <div className="min-w-0">
-                            <p
-                              className={cn(
-                                "font-semibold",
-                                compact ? "text-xs" : "text-sm",
-                              )}
-                            >
-                              {block.title}
+                        <div className="min-w-0">
+                          <p
+                            className={cn(
+                              "font-semibold",
+                              compact ? "text-xs" : "text-sm",
+                            )}
+                          >
+                            {block.title}
+                          </p>
+                          <p className="text-muted-foreground mt-0.5 text-xs leading-5">
+                            {block.startLabel} - {block.endLabel}
+                          </p>
+                          {showDescription ? (
+                            <p className="text-muted-foreground mt-1 text-xs leading-5">
+                              {block.description}
                             </p>
-                            <p className="text-muted-foreground mt-0.5 text-xs leading-5">
-                              {block.startLabel} - {block.endLabel}
-                            </p>
-                            {showDescription ? (
-                              <p className="text-muted-foreground mt-1 text-xs leading-5">
-                                {block.description}
-                              </p>
-                            ) : null}
-                          </div>
+                          ) : null}
                         </div>
-                      </TimelineTooltip>
-                    );
-                  })}
+                      </div>
+                    </TimelineTooltip>
+                  );
+                })}
 
-                  <div
-                    className="absolute left-0 right-0 z-40 border-t-2 border-dotted border-primary/95"
-                    style={{
-                      top: `${mapHourToPixels(timeline.nowHour, scaleSegments)}px`,
-                    }}
-                  >
-                    <div className="absolute -left-1.5 -top-1.5 size-3 rounded-full bg-primary" />
-                    <div className="absolute -top-3 left-2 rounded bg-background/95 px-2 py-0.5 text-[11px] font-medium text-primary sm:left-auto sm:right-2">
-                      {snapshot.nowLabel}
-                    </div>
+                <div
+                  className="absolute left-0 right-0 z-40 border-t-2 border-dotted border-primary/95"
+                  style={{
+                    top: `${mapHourToPixels(timeline.nowHour, scaleSegments)}px`,
+                  }}
+                >
+                  <div className="absolute -left-1.5 -top-1.5 size-3 rounded-full bg-primary" />
+                  <div className="absolute -top-3 left-2 rounded bg-background/95 px-2 py-0.5 text-[11px] font-medium text-primary sm:left-auto sm:right-2">
+                    {snapshot.nowLabel}
                   </div>
                 </div>
               </div>
+            </div>
           </div>
 
           <div className="mt-4 grid gap-2 rounded-lg border border-border/70 bg-card p-3 text-xs leading-5 sm:grid-cols-2 lg:grid-cols-4">
