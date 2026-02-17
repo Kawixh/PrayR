@@ -551,8 +551,15 @@ export function PrayerTimeline({
     (item) =>
       timeline.nowHour >= item.startHour && timeline.nowHour < item.endHour,
   );
-  const activeZone = timeline.zones.find(
+  const activeMakruhZone = timeline.zones.find(
     (item) =>
+      item.kind === "makruh" &&
+      timeline.nowHour >= item.startHour &&
+      timeline.nowHour < item.endHour,
+  );
+  const activeOpenZone = timeline.zones.find(
+    (item) =>
+      item.kind === "open" &&
       timeline.nowHour >= item.startHour && timeline.nowHour < item.endHour,
   );
   const hourMarkers = Array.from(
@@ -570,11 +577,8 @@ export function PrayerTimeline({
             </h2>
             <p className="text-muted-foreground text-sm leading-6">
               {scaleMode === "adaptive"
-                ? "Adaptive: 7 PM to 4 AM is compressed (1 block = 1.5h), daytime is expanded."
-                : "Exact scale keeps each hour visually equal."}
-            </p>
-            <p className="text-sm leading-6">
-              <span className="font-semibold">Now:</span> {snapshot.nowLabel}
+                ? "Adaptive view gives daytime prayer windows more visual space."
+                : "Exact 24h keeps each hour the same height."}
             </p>
           </div>
 
@@ -599,15 +603,20 @@ export function PrayerTimeline({
             </div>
 
             <div className="rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm">
-              {activeZone ? (
+              {activeMakruhZone ? (
                 <p>
-                  <span className="font-semibold">{activeZone.title}</span> (
-                  {activeZone.startLabel} - {activeZone.endLabel})
+                  <span className="font-semibold">Current status:</span> Makruh time (
+                  {activeMakruhZone.startLabel} - {activeMakruhZone.endLabel})
                 </p>
               ) : activeBlock ? (
                 <p>
-                  <span className="font-semibold">Active block:</span>{" "}
-                  {activeBlock.title}
+                  <span className="font-semibold">Current prayer:</span>{" "}
+                  {activeBlock.prayerName}
+                </p>
+              ) : activeOpenZone ? (
+                <p>
+                  <span className="font-semibold">Current status:</span>{" "}
+                  {activeOpenZone.title}
                 </p>
               ) : (
                 <p>
@@ -617,6 +626,10 @@ export function PrayerTimeline({
               )}
             </div>
           </div>
+        </div>
+
+        <div className="mt-3 rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-xs text-muted-foreground sm:hidden">
+          Tap any timeline block to see more details.
         </div>
 
         <div className="mt-4 rounded-xl border border-border/75 bg-background/65 p-1.5 sm:p-2">
@@ -787,21 +800,6 @@ export function PrayerTimeline({
                 </div>
               </div>
             </div>
-          </div>
-
-          <div className="mt-4 grid gap-2 rounded-lg border border-border/70 bg-card p-3 text-xs leading-5 sm:grid-cols-2 lg:grid-cols-4">
-            {timeline.zones.map((zone) => (
-              <p
-                className="text-muted-foreground"
-                key={`zone-summary-${zone.id}`}
-              >
-                <span className="font-semibold text-foreground">
-                  {zone.title}:
-                </span>{" "}
-                {zone.startLabel} - {zone.endLabel}
-                {zone.kind === "open" ? " (voluntary prayer allowed)" : ""}
-              </p>
-            ))}
           </div>
 
           {showAdhkarLinks ? (

@@ -57,6 +57,15 @@ const PRAYER_ORDER: readonly PrayerName[] = [
   "Isha",
 ] as const;
 
+type DailyPrayerMarkers = {
+  asr: Date;
+  dhuhr: Date;
+  fajr: Date;
+  isha: Date;
+  maghrib: Date;
+  sunrise: Date;
+};
+
 function addMinutes(date: Date, minutes: number): Date {
   return new Date(date.getTime() + minutes * 60 * 1000);
 }
@@ -74,6 +83,64 @@ function formatClockWithoutSeconds(date: Date): string {
     hour: "numeric",
     minute: "2-digit",
   }).format(date);
+}
+
+function getDailyPrayerMarkers(
+  timings: PrayerTimings,
+  now: Date,
+): DailyPrayerMarkers | null {
+  const fajr = prayerTimeToDate(timings.Fajr, now);
+  const sunrise = prayerTimeToDate(timings.Sunrise, now);
+  const dhuhr = prayerTimeToDate(timings.Dhuhr, now);
+  const asr = prayerTimeToDate(timings.Asr, now);
+  const maghrib = prayerTimeToDate(timings.Maghrib, now);
+  const isha = prayerTimeToDate(timings.Isha, now);
+
+  if (!fajr || !sunrise || !dhuhr || !asr || !maghrib || !isha) {
+    return null;
+  }
+
+  return {
+    fajr,
+    sunrise,
+    dhuhr,
+    asr,
+    maghrib,
+    isha,
+  };
+}
+
+export function getCurrentPrayerName(
+  timings: PrayerTimings,
+  now = new Date(),
+): PrayerName | null {
+  const markers = getDailyPrayerMarkers(timings, now);
+
+  if (!markers) {
+    return null;
+  }
+
+  if (now >= markers.fajr && now < markers.sunrise) {
+    return "Fajr";
+  }
+
+  if (now >= markers.dhuhr && now < markers.asr) {
+    return "Dhuhr";
+  }
+
+  if (now >= markers.asr && now < markers.maghrib) {
+    return "Asr";
+  }
+
+  if (now >= markers.maghrib && now < markers.isha) {
+    return "Maghrib";
+  }
+
+  if (now >= markers.isha || now < markers.fajr) {
+    return "Isha";
+  }
+
+  return null;
 }
 
 function toPrayerEvents(timings: PrayerTimings, now: Date): PrayerEvent[] {

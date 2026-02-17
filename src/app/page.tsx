@@ -1,45 +1,11 @@
-import { Separator } from "@/components/ui/separator";
 import { getServerFeatureFlags } from "@/features/server";
 import { getSiteUrl } from "@/lib/site-url";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { CitySeoSummary } from "./_components/city-seo-summary";
 import { PrayerTimesWrapper } from "./_components/prayer-times-wrapper";
 import { SettingsCheck } from "./_components/settings-check";
 
 const siteUrl = getSiteUrl();
-
-const prayerMeaningItems = [
-  {
-    name: "Fajr",
-    meaning:
-      "The dawn prayer that starts before sunrise and begins your daily prayer schedule.",
-  },
-  {
-    name: "Sunrise",
-    meaning:
-      "Marks the end of Fajr time. It is shown so you clearly know the morning transition.",
-  },
-  {
-    name: "Dhuhr",
-    meaning:
-      "The midday prayer after the sun passes its highest point in the sky.",
-  },
-  {
-    name: "Asr",
-    meaning:
-      "The afternoon prayer. Its time changes based on the school setting you choose.",
-  },
-  {
-    name: "Maghrib",
-    meaning:
-      "The sunset prayer that begins right after the sun sets below the horizon.",
-  },
-  {
-    name: "Isha",
-    meaning: "The night prayer and the final required prayer of the day.",
-  },
-] as const;
 
 const settingMeaningItems = [
   {
@@ -259,36 +225,6 @@ export default async function Page() {
         </section>
 
         <section
-          aria-labelledby="prayer-meaning-heading"
-          className="space-y-4 rounded-2xl border border-border/80 bg-card p-5 sm:p-6"
-        >
-          <h2
-            className="text-2xl font-semibold sm:text-3xl"
-            id="prayer-meaning-heading"
-          >
-            What Each Prayer Means
-          </h2>
-          <p className="text-muted-foreground text-sm leading-6 sm:text-base">
-            Quick definitions for each prayer name.
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {prayerMeaningItems.map((item) => (
-              <article
-                className="rounded-lg border border-border/70 bg-background px-4 py-3"
-                key={item.name}
-              >
-                <h3 className="text-base leading-tight font-semibold">
-                  {item.name}
-                </h3>
-                <p className="text-muted-foreground mt-2 text-sm leading-6">
-                  {item.meaning}
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section
           aria-labelledby="settings-meaning-heading"
           className="space-y-4 rounded-2xl border border-border/80 bg-card p-5 sm:p-6"
         >
@@ -348,29 +284,6 @@ export default async function Page() {
           </div>
         </section>
 
-        <section
-          aria-labelledby="homepage-seo-heading"
-          className="space-y-4 rounded-2xl border border-border/80 bg-card p-5 sm:p-6"
-        >
-          <h2
-            className="text-2xl font-semibold sm:text-3xl"
-            id="homepage-seo-heading"
-          >
-            SEO and Search Summary
-          </h2>
-          <p className="text-muted-foreground text-sm leading-6 sm:text-base">
-            PrayR helps Muslims check accurate daily prayer times by city and
-            country, with clear explanations for Fajr, Sunrise, Dhuhr, Asr,
-            Maghrib, and Isha.
-          </p>
-          <CitySeoSummary />
-          <Separator />
-          <p className="text-muted-foreground text-sm leading-6 sm:text-base">
-            Search topics covered: prayer times by city, today&apos;s Fajr time,
-            Dhuhr time, Asr time, Maghrib time, Isha time, salah timetable,
-            Islamic prayer schedule, and prayer time settings.
-          </p>
-        </section>
       </div>
 
       <script

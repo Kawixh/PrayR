@@ -1084,10 +1084,10 @@ export default function SettingsPage() {
       ) : null}
 
       <Card className="border-border/80 p-5 sm:p-6">
-        <h2 className="text-lg font-semibold sm:text-xl">SEO Settings</h2>
+        <h2 className="text-lg font-semibold sm:text-xl">Site Metadata</h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          SEO configuration is managed in code and kept out of profile settings.
-          Update these files when you need SEO changes.
+          Search and sharing metadata is managed in code and kept out of profile settings.
+          Update these files when needed.
         </p>
         <div className="mt-3 space-y-1 text-xs text-muted-foreground">
           <p>`/Users/dark/Projects/kawish-projects/prayer-list/src/app/page.tsx`</p>

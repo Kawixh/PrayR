@@ -14,6 +14,7 @@ import {
 } from "../_utils/prayer-dashboard-view";
 import { formatTo12Hour, getLocalDayKey } from "../_utils/time";
 import { DailyAdhkarCard } from "./daily-adhkar-card";
+import { CurrentPrayerStatusCard } from "./current-prayer-status-card";
 import { IslamicDateCalendarCard } from "./islamic-date-calendar-card";
 import { MakruhWindowsCard } from "./makruh-windows-card";
 import { PrayerReminder } from "./prayer-reminder";
@@ -344,6 +345,7 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
       {featureFlags.islamicCalendar ? (
         <IslamicDateCalendarCard dateInfo={prayerDay.date} />
       ) : null}
+      <CurrentPrayerStatusCard timings={prayerDay.timings} />
       {featureFlags.adhkars && featureFlags.adhkarOfTheDay ? <DailyAdhkarCard /> : null}
       {dashboardView === "timeline" ? (
         <PrayerTimeline showAdhkarLinks={featureFlags.adhkars} timings={prayerDay.timings} />
