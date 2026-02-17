@@ -38,9 +38,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const timings = await getAdhanTime(city, country, method, school);
-
-    return NextResponse.json({ timings });
+    const payload = await getAdhanTime(city, country, method, school);
+    return NextResponse.json(payload);
   } catch (error) {
     console.error("Failed to fetch prayer times:", error);
 

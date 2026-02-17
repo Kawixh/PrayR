@@ -1,16 +1,24 @@
 "use client";
 
-import { PrayerTimings } from "@/backend/types";
+import { type AlAdhanDayData, type AlAdhanTimingsResponse } from "@/backend/types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { type FeatureFlags } from "@/features/definitions";
 import { AlertTriangle, Clock3 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import {
+  PRAYER_DASHBOARD_VIEW_STORAGE_KEY,
+  readPrayerDashboardViewFromStorage,
+  type PrayerDashboardView,
+} from "../_utils/prayer-dashboard-view";
 import { formatTo12Hour, getLocalDayKey } from "../_utils/time";
 import { DailyAdhkarCard } from "./daily-adhkar-card";
+import { IslamicDateCalendarCard } from "./islamic-date-calendar-card";
+import { MakruhWindowsCard } from "./makruh-windows-card";
 import { PrayerReminder } from "./prayer-reminder";
 import { PrayerTimeCard } from "./prayer-time-card";
+import { PrayerTimeline } from "./prayer-timeline";
 
 type PrayerSettings = {
   cityName: string;
@@ -22,11 +30,11 @@ type PrayerSettings = {
 type PrayerTimesCache = {
   dayKey: string;
   settingsKey: string;
-  timings: PrayerTimings;
+  data: AlAdhanDayData;
 };
 
 const SETTINGS_STORAGE_KEY = "prayerSettings";
-const CACHE_STORAGE_KEY = "prayerTimesCacheV1";
+const CACHE_STORAGE_KEY = "prayerTimesCacheV2";
 
 function normalizeSettings(raw: unknown): PrayerSettings | null {
   if (!raw || typeof raw !== "object") {
@@ -96,13 +104,19 @@ function readPrayerCache(): PrayerTimesCache | null {
     if (
       typeof parsed.dayKey === "string" &&
       typeof parsed.settingsKey === "string" &&
-      parsed.timings &&
-      typeof parsed.timings === "object"
+      parsed.data &&
+      typeof parsed.data === "object" &&
+      parsed.data.timings &&
+      typeof parsed.data.timings === "object" &&
+      parsed.data.date &&
+      typeof parsed.data.date === "object" &&
+      parsed.data.meta &&
+      typeof parsed.data.meta === "object"
     ) {
       return {
         dayKey: parsed.dayKey,
         settingsKey: parsed.settingsKey,
-        timings: parsed.timings as PrayerTimings,
+        data: parsed.data as AlAdhanDayData,
       };
     }
   } catch {
@@ -118,7 +132,7 @@ function writePrayerCache(cache: PrayerTimesCache): void {
 
 async function fetchPrayerTimesFromApi(
   settings: PrayerSettings,
-): Promise<PrayerTimings> {
+): Promise<AlAdhanDayData> {
   const params = new URLSearchParams({
     city: settings.cityName,
     country: settings.country,
@@ -131,18 +145,44 @@ async function fetchPrayerTimesFromApi(
     cache: "no-store",
   });
 
+  const data = (await response.json()) as
+    | (AlAdhanTimingsResponse & { error?: string })
+    | { error?: string };
+
   if (!response.ok) {
-    throw new Error("Failed to fetch prayer times");
+    throw new Error(data.error ?? "Failed to fetch prayer times.");
   }
 
-  const data = (await response.json()) as { timings: PrayerTimings };
-  return data.timings;
+  if (!("data" in data) || !data.data || typeof data.data !== "object") {
+    throw new Error(data.error ?? "Failed to parse prayer times payload.");
+  }
+
+  return data.data;
 }
 
 export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlags }) {
-  const [timings, setTimings] = useState<PrayerTimings | null>(null);
+  const [prayerDay, setPrayerDay] = useState<AlAdhanDayData | null>(null);
+  const [dashboardView, setDashboardView] = useState<PrayerDashboardView>(
+    readPrayerDashboardViewFromStorage,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key !== PRAYER_DASHBOARD_VIEW_STORAGE_KEY) {
+        return;
+      }
+
+      setDashboardView(readPrayerDashboardViewFromStorage());
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -165,7 +205,7 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
 
         if (cached?.dayKey === dayKey && cached.settingsKey === settingsKey) {
           if (active) {
-            setTimings(cached.timings);
+            setPrayerDay(cached.data);
             setError(null);
             setLoading(false);
           }
@@ -173,19 +213,19 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
           return;
         }
 
-        const prayerTimes = await fetchPrayerTimesFromApi(settings);
+        const dayData = await fetchPrayerTimesFromApi(settings);
 
         if (!active) {
           return;
         }
 
-        setTimings(prayerTimes);
+        setPrayerDay(dayData);
         setError(null);
 
         writePrayerCache({
           dayKey,
           settingsKey,
-          timings: prayerTimes,
+          data: dayData,
         });
       } catch (fetchError) {
         console.error("Error fetching prayer times:", fetchError);
@@ -285,29 +325,41 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
     );
   }
 
-  if (!timings) {
+  if (!prayerDay) {
     return null;
   }
 
   const summaryItems = [
-    { name: "Fajr", time: timings.Fajr },
-    { name: "Sunrise", time: timings.Sunrise },
-    { name: "Dhuhr", time: timings.Dhuhr },
-    { name: "Asr", time: timings.Asr },
-    { name: "Maghrib", time: timings.Maghrib },
-    { name: "Isha", time: timings.Isha },
+    { name: "Fajr", time: prayerDay.timings.Fajr },
+    { name: "Sunrise", time: prayerDay.timings.Sunrise },
+    { name: "Dhuhr", time: prayerDay.timings.Dhuhr },
+    { name: "Asr", time: prayerDay.timings.Asr },
+    { name: "Maghrib", time: prayerDay.timings.Maghrib },
+    { name: "Isha", time: prayerDay.timings.Isha },
   ];
 
   return (
     <section className="space-y-5">
-      <PrayerReminder timings={timings} />
+      <PrayerReminder timings={prayerDay.timings} />
+      {featureFlags.islamicCalendar ? (
+        <IslamicDateCalendarCard dateInfo={prayerDay.date} />
+      ) : null}
       {featureFlags.adhkars && featureFlags.adhkarOfTheDay ? <DailyAdhkarCard /> : null}
-      <PrayerTimeCard showAdhkarLinks={featureFlags.adhkars} timings={timings} />
+      {dashboardView === "timeline" ? (
+        <PrayerTimeline showAdhkarLinks={featureFlags.adhkars} timings={prayerDay.timings} />
+      ) : (
+        <>
+          <PrayerTimeCard showAdhkarLinks={featureFlags.adhkars} timings={prayerDay.timings} />
+          <MakruhWindowsCard timings={prayerDay.timings} />
+        </>
+      )}
 
       <Card className="glass-panel border-border/80 p-4 sm:p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-2xl leading-tight">All Prayer Times</h2>
-          <p className="text-sm text-muted-foreground">12-hour format</p>
+          <p className="text-sm text-muted-foreground">
+            12-hour format • View: {dashboardView === "timeline" ? "Timeline" : "Cards"}
+          </p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

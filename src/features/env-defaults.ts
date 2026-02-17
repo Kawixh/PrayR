@@ -9,6 +9,7 @@ const FEATURE_ENV_KEYS: Record<FeatureKey, string> = {
   prayerTimings: "NEXT_PUBLIC_FEATURE_PRAYER_TIMINGS",
   adhkars: "NEXT_PUBLIC_FEATURE_ADHKARS",
   adhkarOfTheDay: "NEXT_PUBLIC_FEATURE_ADHKAR_OF_THE_DAY",
+  islamicCalendar: "NEXT_PUBLIC_FEATURE_ISLAMIC_CALENDAR",
 };
 
 function parseFeatureBoolean(value: string | undefined): boolean | undefined {

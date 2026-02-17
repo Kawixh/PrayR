@@ -2,6 +2,7 @@ export const FEATURE_KEYS = [
   "prayerTimings",
   "adhkars",
   "adhkarOfTheDay",
+  "islamicCalendar",
 ] as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
@@ -31,6 +32,12 @@ export const FEATURE_DEFINITIONS: Record<FeatureKey, FeatureDefinition> = {
     description: "Daily highlighted adhkar card on the prayer dashboard.",
     defaultEnabled: true,
     dependsOn: ["adhkars"],
+  },
+  islamicCalendar: {
+    title: "Islamic Calendar",
+    description: "Current Hijri date and Islamic month calendar on the dashboard.",
+    defaultEnabled: true,
+    dependsOn: ["prayerTimings"],
   },
 };
 

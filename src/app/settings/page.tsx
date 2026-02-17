@@ -25,6 +25,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import {
+  readPrayerDashboardViewFromStorage,
+  type PrayerDashboardView,
+  writePrayerDashboardViewToStorage,
+} from "../_utils/prayer-dashboard-view";
+import {
   getLocalNotificationPermission,
   type LocalNotificationPermission,
   showLocalNotification,
@@ -66,6 +71,23 @@ const calculationMethods = [
 const schools = [
   { value: "0", label: "Shafi (general Sunni school)" },
   { value: "1", label: "Hanafi" },
+];
+
+const dashboardViewOptions: Array<{
+  description: string;
+  label: string;
+  value: PrayerDashboardView;
+}> = [
+  {
+    value: "cards",
+    label: "Current cards",
+    description: "Shows current state cards, previous/next prayer, and Makrooh windows.",
+  },
+  {
+    value: "timeline",
+    label: "Vertical timeline",
+    description: "Shows full day events in a vertical timeline with prayers and Makrooh blocks.",
+  },
 ];
 
 type PrayerSettingsState = {
@@ -150,6 +172,10 @@ function getInitialFeatureFlags(): FeatureFlags {
   return resolveFeatureFlags(overrides);
 }
 
+function getInitialDashboardView(): PrayerDashboardView {
+  return readPrayerDashboardViewFromStorage();
+}
+
 async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(url, {
     method: "GET",
@@ -191,6 +217,9 @@ export default function SettingsPage() {
   const router = useRouter();
   const [settings, setSettings] = useState<PrayerSettingsState>(getInitialSettings);
   const [featureFlags, setFeatureFlags] = useState<FeatureFlags>(getInitialFeatureFlags);
+  const [dashboardView, setDashboardView] = useState<PrayerDashboardView>(
+    getInitialDashboardView,
+  );
   const [citySuggestions, setCitySuggestions] = useState<CitySuggestion[]>([]);
   const [countrySuggestions, setCountrySuggestions] = useState<
     CountrySuggestion[]
@@ -510,6 +539,11 @@ export default function SettingsPage() {
     setCountryFocused(false);
   };
 
+  const changeDashboardView = (value: PrayerDashboardView) => {
+    setDashboardView(value);
+    writePrayerDashboardViewToStorage(value);
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -556,6 +590,7 @@ export default function SettingsPage() {
     }
 
     localStorage.setItem("prayerSettings", JSON.stringify(settings));
+    writePrayerDashboardViewToStorage(dashboardView);
     router.push("/");
   };
 
@@ -900,6 +935,44 @@ export default function SettingsPage() {
                       }
                       type="radio"
                       value={school.value}
+                    />
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-foreground">Prayer dashboard view</p>
+            <div className="grid gap-2 md:grid-cols-2">
+              {dashboardViewOptions.map((option) => {
+                const selected = dashboardView === option.value;
+
+                return (
+                  <label
+                    className={cn(
+                      "flex cursor-pointer items-start justify-between gap-3 rounded-xl border px-3 py-2.5 text-sm transition-colors",
+                      selected
+                        ? "border-primary/40 bg-primary/15 text-foreground"
+                        : "border-border/80 bg-background/70 text-muted-foreground hover:border-border",
+                    )}
+                    htmlFor={`dashboard-view-${option.value}`}
+                    key={option.value}
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground">{option.label}</p>
+                      <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">
+                        {option.description}
+                      </p>
+                    </div>
+                    <input
+                      checked={selected}
+                      className="sr-only"
+                      id={`dashboard-view-${option.value}`}
+                      name="dashboardView"
+                      onChange={() => changeDashboardView(option.value)}
+                      type="radio"
+                      value={option.value}
                     />
                   </label>
                 );

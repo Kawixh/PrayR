@@ -1,11 +1,11 @@
-import { ApiResponse } from "./types";
+import { type AlAdhanTimingsResponse } from "./types";
 
 export const getAdhanTime = async (
   city: string,
   country: string,
   method: number,
-  school: number
-) => {
+  school: number,
+): Promise<AlAdhanTimingsResponse> => {
   const searchParams = new URLSearchParams({
     city,
     country,
@@ -22,6 +22,6 @@ export const getAdhanTime = async (
     throw new Error(`Prayer API request failed with status ${response.status}`);
   }
 
-  const data: ApiResponse = await response.json();
-  return data.data.timings;
+  const data = (await response.json()) as AlAdhanTimingsResponse;
+  return data;
 };

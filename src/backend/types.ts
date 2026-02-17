@@ -12,81 +12,81 @@ export type PrayerTimings = {
   Lastthird: string;
 };
 
-export type Weekday = {
+export type AlAdhanWeekday = {
   en: string;
   ar: string;
 };
 
-export type Month = {
+export type AlAdhanHijriMonth = {
   number: number;
   en: string;
   ar: string;
   days: number;
 };
 
-export type Designation = {
+export type AlAdhanDesignation = {
   abbreviated: string;
   expanded: string;
 };
 
-export type Hijri = {
+export type AlAdhanHijri = {
   date: string;
   format: string;
   day: string;
-  weekday: Weekday;
-  month: Month;
+  weekday: AlAdhanWeekday;
+  month: AlAdhanHijriMonth;
   year: string;
-  designation: Designation;
-  holidays: any[]; // You might want to define a more specific type if you know the structure of holidays
-  adjustedHolidays: any[]; // You might want to define a more specific type if you know the structure of adjustedHolidays
+  designation: AlAdhanDesignation;
+  holidays: unknown[];
+  adjustedHolidays: string[];
   method: string;
 };
 
-export type GregorianWeekday = {
+export type AlAdhanGregorianWeekday = {
   en: string;
 };
 
-export type GregorianMonth = {
+export type AlAdhanGregorianMonth = {
   number: number;
   en: string;
 };
 
-export type Gregorian = {
+export type AlAdhanGregorian = {
   date: string;
   format: string;
   day: string;
-  weekday: GregorianWeekday;
-  month: GregorianMonth;
+  weekday: AlAdhanGregorianWeekday;
+  month: AlAdhanGregorianMonth;
   year: string;
-  designation: Designation;
+  designation: AlAdhanDesignation;
   lunarSighting: boolean;
 };
 
-export type DateInfo = {
+export type AlAdhanDateInfo = {
   readable: string;
   timestamp: string;
-  hijri: Hijri;
-  gregorian: Gregorian;
+  hijri: AlAdhanHijri;
+  gregorian: AlAdhanGregorian;
 };
 
-export type MethodParams = {
+export type AlAdhanMethodParams = {
   Fajr: number;
   Isha: number;
 };
 
-export type MethodLocation = {
+export type AlAdhanMethodLocation = {
   latitude: number;
   longitude: number;
 };
 
-export type Method = {
+export type AlAdhanMethod = {
   id: number;
   name: string;
-  params: MethodParams;
-  location: MethodLocation;
+  params: AlAdhanMethodParams;
+  location: AlAdhanMethodLocation;
 };
 
-export type Offset = {
+export type AlAdhanOffset = {
   Imsak: number;
   Fajr: number;
   Sunrise: number;
@@ -98,25 +98,42 @@ export type Offset = {
   Midnight: number;
 };
 
-export type Meta = {
+export type AlAdhanMeta = {
   latitude: number;
   longitude: number;
   timezone: string;
-  method: Method;
+  method: AlAdhanMethod;
   latitudeAdjustmentMethod: string;
   midnightMode: string;
   school: string;
-  offset: Offset;
+  offset: AlAdhanOffset;
 };
 
-export type Data = {
+export type AlAdhanDayData = {
   timings: PrayerTimings;
-  date: DateInfo;
-  meta: Meta;
+  date: AlAdhanDateInfo;
+  meta: AlAdhanMeta;
 };
 
-export type ApiResponse = {
+export type AlAdhanTimingsResponse = {
   code: number;
   status: string;
-  data: Data;
+  data: AlAdhanDayData;
 };
+
+// Backward-compatible aliases for existing imports.
+export type Weekday = AlAdhanWeekday;
+export type Month = AlAdhanHijriMonth;
+export type Designation = AlAdhanDesignation;
+export type Hijri = AlAdhanHijri;
+export type GregorianWeekday = AlAdhanGregorianWeekday;
+export type GregorianMonth = AlAdhanGregorianMonth;
+export type Gregorian = AlAdhanGregorian;
+export type DateInfo = AlAdhanDateInfo;
+export type MethodParams = AlAdhanMethodParams;
+export type MethodLocation = AlAdhanMethodLocation;
+export type Method = AlAdhanMethod;
+export type Offset = AlAdhanOffset;
+export type Meta = AlAdhanMeta;
+export type Data = AlAdhanDayData;
+export type ApiResponse = AlAdhanTimingsResponse;
