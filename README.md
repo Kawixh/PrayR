@@ -1,100 +1,232 @@
 # PrayR
 
-PrayR is a modern prayer times web app for Muslims who want a clean daily salah flow without clutter.  
-It gives accurate prayer times by city and country, helpful Islamic context, and a smooth mobile first experience.
+PrayR is a mobile-first Muslim prayer companion built with Next.js 16 App Router. It provides daily prayer timings, adhkar access, Ramadan-focused resources, feature flags, and PWA support in a clean UI optimized for accessibility and small screens.
 
-## What this project is
+## Overview
 
-1. A Next.js 16 app built with React 19, TypeScript 5, Tailwind CSS v4, and shadcn ui.
-2. A daily Muslim companion focused on prayer timing, adhkar, reminders, and settings that actually matter.
-3. A PWA ready product that can be installed on phone home screens.
+PrayR focuses on a practical daily flow:
 
-## What it does
+1. Set city, country, method, and school.
+2. View accurate Fajr, Sunrise, Dhuhr, Asr, Maghrib, and Isha timings.
+3. Track current prayer status, timeline/cards view, and makruh windows.
+4. Access adhkar and Ramadan fasting guidance.
+5. Install as a PWA and optionally use browser notifications.
 
-1. Shows daily Fajr Sunrise Dhuhr Asr Maghrib and Isha timings.
-2. Supports multiple trusted calculation methods and school selection.
-3. Gives current prayer status and day timeline view.
-4. Includes makruh window guidance.
-5. Includes adhkar browsing and daily adhkar feeds.
-6. Supports city and country search with validation and geo lookup helpers.
-7. Supports local browser notifications for prayer reminders.
-8. Adds SEO metadata plus JSON LD schema for search visibility.
+## Full Feature List
 
-## Who it is for
+### Prayer Dashboard
 
-1. Muslims who want reliable daily salah timings in a simple UI.
-2. Students and developers building modern Islamic utility products.
-3. Teams that want a strong base for SEO friendly faith and lifestyle apps.
+1. Daily prayer times by city and country.
+2. Current prayer status card.
+3. Timeline view and cards view.
+4. Makruh windows card and indicators.
+5. Sehar (Fajr) and Iftar (Maghrib) highlight card.
+6. Optional Islamic date/calendar card.
+7. Prayer-linked adhkar entry points.
+8. Local caching for daily prayer payloads in browser storage.
+9. Defensive loading and error states.
 
-## Current feature set
+### Settings
 
-1. Prayer dashboard with cards and timeline modes.
-2. Prayer times API route with city country method and school params.
-3. Settings page with location method school reminder and feature controls.
-4. Adhkar categories route daily adhkar route and category detail route.
-5. Place suggest validate reverse geocode and IP based location routes.
-6. Theme support for light dark and system mode.
-7. PWA manifest icons install banner and social share images.
-8. Sitemap robots and structured metadata for technical SEO.
+1. City and country inputs with autocomplete.
+2. Country-aware city suggestions.
+3. City-country validation before final use.
+4. GPS-based reverse geocoding helper.
+5. IP-based location resolution fallback (multi-provider).
+6. Full calculation method selection list.
+7. School selection (Shafi/Hanafi).
+8. Dashboard view preference (cards/timeline).
+9. Feature toggles persisted to localStorage + cookie.
+10. Dev panel for notification permission and test notification.
 
-## Tech stack
+### Adhkars
 
-1. Next.js 16 App Router
-2. React 19
-3. TypeScript 5
-4. Tailwind CSS v4
-5. shadcn ui plus Radix UI
-6. PostHog analytics
+1. Adhkar categories listing.
+2. Category detail by ID.
+3. Daily adhkar endpoint with deterministic day seed.
+4. Prayer-aware category recommendation.
+5. Language-aware adhkar loading.
+6. Adhkar library page with canonical route `/adhkars`.
+7. Permanent redirect alias from `/adkars` to `/adhkars`.
 
-## Local setup
+### Resources
 
-1. Install dependencies
+1. Dedicated `/resources` page with Ramadan fasting guidance.
+2. Start/end fasting explanation (Fajr and Maghrib mapping).
+3. Dua section and reference material.
+4. Linked external educational resources.
+5. Feature-flagged Ramadan FAQ section.
+6. Resources tab in bottom navigation (feature-flag controlled).
 
-```bash
-pnpm install
-```
+### UX, Accessibility, and UI
 
-2. Create env file
+1. Mobile-first bottom navbar.
+2. Responsive navbar behavior for small screens and large text sizes.
+3. Theme switcher with dark, light, and system support.
+4. Animated theme transition with reduced-motion fallback.
+5. What’s New banner with dismiss persistence.
+6. Install prompt banner for Android/iOS PWA flows.
+7. Safe-area aware layout and viewport configuration.
+
+### PWA and Runtime
+
+1. Web app manifest (`/manifest.webmanifest`).
+2. Service worker registration (`/sw.js`).
+3. Installability UX on supported devices.
+4. App icons for standard and maskable variants.
+5. Standalone launch support.
+
+### SEO and Metadata
+
+1. Metadata for root and route-level pages.
+2. Open Graph and Twitter card images via `next/og`.
+3. JSON-LD for WebSite, Organization, FAQPage, SoftwareApplication, and WebPage.
+4. Dynamic `robots.txt` with `/api/` disallow.
+5. Dynamic `sitemap.xml` with feature-aware URLs.
+6. Canonicals and alternates on key pages.
+
+### Feature Flag System
+
+Supported flags:
+
+1. `prayerTimings`
+2. `resourcesTab`
+3. `ramadanResourcesFaq`
+4. `sehrAndIftarTimes`
+5. `adhkars`
+6. `adhkarOfTheDay`
+7. `islamicCalendar`
+
+System behavior:
+
+1. Defaults come from env vars with fallback to code defaults.
+2. Flags can be overridden in browser storage and cookie.
+3. Dependency graph is enforced at resolution time.
+4. Server and request contexts both resolve flags consistently.
+
+## API Endpoints
+
+Prayer times:
+
+1. `GET /api/prayer-times?city=&country=&method=&school=`
+
+Adhkar:
+
+1. `GET /api/adhkar/categories`
+2. `GET /api/adhkar/category/[id]?language=en|ar`
+3. `GET /api/adhkar/daily?dayKey=YYYY-MM-DD&language=en|ar&prayer=...`
+
+Places:
+
+1. `GET /api/places/suggest?kind=city|country&q=&countryCode=`
+2. `GET /api/places/validate?city=&country=&countryCode=`
+3. `GET /api/places/reverse?lat=&lng=`
+4. `GET /api/places/from-ip`
+
+## Tech Stack
+
+### Core
+
+1. Next.js `16.0.10` (App Router, Turbopack build pipeline)
+2. React `19.2.3`
+3. React DOM `19.2.3`
+4. TypeScript `^5`
+
+### UI and Styling
+
+1. Tailwind CSS `^4`
+2. shadcn/ui component patterns
+3. Radix UI primitives
+4. `class-variance-authority`, `clsx`, `tailwind-merge`
+5. `lucide-react` icons
+6. `tw-animate-css`
+7. Google fonts via `next/font` (Manrope, Fraunces)
+
+### Data, Analytics, and Utilities
+
+1. PostHog (`posthog-js`, `posthog-js/react`)
+2. External prayer timing backend integration through server route layer
+3. GeoNames-backed place lookup/validation utilities
+
+### Tooling
+
+1. ESLint `^9` + `eslint-config-next`
+2. PostCSS with `@tailwindcss/postcss`
+3. pnpm lockfile and scripts
+
+## Project Structure
+
+1. `src/app` - App Router pages, metadata routes, API routes, and page components.
+2. `src/app/_components` - App-specific UI blocks (dashboard, navbar, banners, cards).
+3. `src/components` - shared UI and theme infrastructure.
+4. `src/components/ui` - shadcn-style primitive components.
+5. `src/features` - feature flag definitions, parsing, and resolution.
+6. `src/backend` - server utilities for prayer times and adhkar.
+7. `src/lib` - shared helpers and domain utilities.
+8. `public` - icons, service worker assets, and static files.
+
+## Environment Variables
+
+Copy `.env.example` to `.env.local`:
 
 ```bash
 cp .env.example .env.local
 ```
 
-3. Set required values in `.env.local`
+Current env keys:
 
 ```env
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-GEONAMES_USERNAME=your_geonames_username
+NEXT_PUBLIC_SITE_URL=https://prayr.kawish.dev
+NEXT_PUBLIC_FEATURE_PRAYER_TIMINGS=1
+NEXT_PUBLIC_FEATURE_RESOURCES_TAB=1
+NEXT_PUBLIC_FEATURE_RAMADAN_RESOURCES_FAQ=1
+NEXT_PUBLIC_FEATURE_SEHR_IFTAR_TIMES=1
+NEXT_PUBLIC_FEATURE_ADHKARS=1
+NEXT_PUBLIC_FEATURE_ADHKAR_OF_THE_DAY=1
+NEXT_PUBLIC_FEATURE_ISLAMIC_CALENDAR=1
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+GEONAMES_USERNAME=
+NEXT_PUBLIC_POSTHOG_KEY=
 ```
 
-4. Run dev server
+Notes:
+
+1. `GEONAMES_USERNAME` is required for place lookup endpoints.
+2. `NEXT_PUBLIC_POSTHOG_KEY` enables analytics initialization.
+3. Feature flags can be set with `1/0`, `true/false`, `yes/no`, or `on/off`.
+
+## Local Development
+
+Install and run:
 
 ```bash
+pnpm install
 pnpm dev
 ```
 
-5. Open `http://localhost:3000`
+Open [http://localhost:3000](http://localhost:3000).
 
 ## Scripts
 
-1. `pnpm dev` runs local dev server.
-2. `pnpm build` creates production build.
-3. `pnpm start` runs production server.
-4. `pnpm lint` runs ESLint.
+1. `pnpm dev` - start local dev server.
+2. `pnpm build` - create production build.
+3. `pnpm start` - run production server.
+4. `pnpm lint` - run ESLint.
 
-## Feature ideas you can add next
+## Build and Deployment Notes
 
-1. Multi city watchlist for people who travel often.
-2. Qibla direction with compass calibration.
-3. Ramzan mode with suhoor and iftar helpers.
-4. Mosque iqamah schedule sync and manual offsets.
-5. Widget and lock screen support for mobile apps.
-6. User accounts and cloud sync for settings and streaks.
-7. Offline cached prayer data for low network areas.
-8. More language packs for global reach and SEO long tail.
-9. Programmatic city landing pages for local prayer keyword ranking.
-10. AI assistant for fiqh aware prayer and adhkar guidance.
+1. This app uses App Router metadata APIs for manifest, robots, and sitemap generation.
+2. Feature flags can affect route behavior and visibility (for example adhkar and resources sections).
+3. Service worker registration is client-side in root layout client.
+4. Route handlers implement validation and return explicit status codes for invalid inputs.
 
-## LinkedIn description under 2000 letters
+## Product Positioning
 
-I built PrayR a modern Muslim prayer times app with Next.js 16 React 19 TypeScript 5 Tailwind v4 and shadcn ui. It gives accurate daily salah times by city and country for Fajr Sunrise Dhuhr Asr Maghrib and Isha. Users can choose trusted calculation methods and school preferences so timings match local practice. The app has a clean prayer dashboard with timeline view current prayer state makruh windows adhkar library daily adhkar and local prayer reminders. It also supports smart place search city country validation and IP based location fallback. On the product side it is PWA ready with install banner mobile icons and theme support. On the growth side it is built with strong technical SEO including sitemap robots metadata Open Graph Twitter cards and JSON LD schema like FAQ WebSite Organization WebPage and SoftwareApplication. This project is for Muslims who want a simple reliable daily prayer companion and for teams building scalable faith tech products with strong UX and search visibility.
+PrayR is designed as a production-ready foundation for prayer-time and Islamic daily-practice applications that need:
+
+1. Modern React/Next architecture.
+2. Mobile-first and PWA behavior.
+3. SEO-safe route architecture.
+4. Feature-flag controlled rollout paths.
+5. Extensible API route boundaries for location, timings, and adhkar data.
