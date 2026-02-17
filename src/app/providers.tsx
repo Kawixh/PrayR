@@ -3,6 +3,7 @@
 
 import { useEffect } from "react";
 
+import { TooltipProvider } from "@/components/ui/tooltip";
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider } from "posthog-js/react";
 
@@ -16,5 +17,9 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  return <PHProvider client={posthog}>{children}</PHProvider>;
+  return (
+    <TooltipProvider>
+      <PHProvider client={posthog}>{children}</PHProvider>
+    </TooltipProvider>
+  );
 }

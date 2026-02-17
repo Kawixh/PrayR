@@ -2,6 +2,11 @@
 
 import { type PrayerTimings } from "@/backend/types";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Dot } from "lucide-react";
 import Link from "next/link";
@@ -43,6 +48,17 @@ type TimelineData = {
   nowHour: number;
   blocks: PrayerBlock[];
   zones: TimelineZone[];
+};
+
+type TimelineTooltipProps = {
+  body: string;
+  heading: string;
+  side: "left" | "right";
+  timeRange: string;
+  touchMode: boolean;
+  triggerClassName: string;
+  triggerStyle?: React.CSSProperties;
+  children: React.ReactNode;
 };
 
 const DAY_HOURS = 24;
@@ -238,8 +254,66 @@ function buildTimelineData(timings: PrayerTimings, now: Date): TimelineData | nu
   };
 }
 
+function TimelineTooltip({
+  body,
+  heading,
+  side,
+  timeRange,
+  touchMode,
+  triggerClassName,
+  triggerStyle,
+  children,
+}: TimelineTooltipProps) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!touchMode || !open) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setOpen(false);
+    }, 2600);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [open, touchMode]);
+
+  return (
+    <Tooltip
+      onOpenChange={touchMode ? setOpen : undefined}
+      open={touchMode ? open : undefined}
+    >
+      <TooltipTrigger asChild>
+        <button
+          className={triggerClassName}
+          onClick={touchMode ? () => setOpen((previous) => !previous) : undefined}
+          style={triggerStyle}
+          type="button"
+        >
+          {children}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        className="max-w-64 border border-border/70 bg-popover px-3 py-2 text-xs leading-5 text-popover-foreground shadow-lg"
+        side={side}
+        sideOffset={8}
+      >
+        <p className="font-semibold">{heading}</p>
+        <p className="text-muted-foreground">{timeRange}</p>
+        <p className="mt-1">{body}</p>
+        {touchMode ? (
+          <p className="text-muted-foreground mt-1 text-[11px]">Tap again to close</p>
+        ) : null}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps) {
   const [currentTime, setCurrentTime] = useState(() => new Date());
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
 
   useEffect(() => {
     const timerId = window.setInterval(() => {
@@ -248,6 +322,21 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
 
     return () => {
       window.clearInterval(timerId);
+    };
+  }, []);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(hover: none), (pointer: coarse)");
+
+    const syncTouchMode = () => {
+      setIsTouchDevice(mediaQuery.matches);
+    };
+
+    syncTouchMode();
+
+    mediaQuery.addEventListener("change", syncTouchMode);
+    return () => {
+      mediaQuery.removeEventListener("change", syncTouchMode);
     };
   }, []);
 
@@ -365,16 +454,20 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
                       toPercent(blockDuration) - (useGap ? gapPercent * 2 : 0);
 
                     return (
-                      <article
-                        title={`${block.title}: ${block.description}`}
-                        className={cn(
-                          "absolute left-2 right-16 z-20 cursor-help overflow-hidden rounded-md border transition-colors",
+                      <TimelineTooltip
+                        body={block.description}
+                        heading={block.title}
+                        key={block.id}
+                        side="left"
+                        timeRange={`${block.startLabel} - ${block.endLabel}`}
+                        touchMode={isTouchDevice}
+                        triggerClassName={cn(
+                          "absolute left-2 right-16 z-20 overflow-hidden rounded-md border text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/65",
                           isActive
                             ? "border-primary/55 bg-primary/10"
                             : "border-border/70 bg-background/92 hover:border-primary/45 hover:bg-primary/8",
                         )}
-                        key={block.id}
-                        style={{
+                        triggerStyle={{
                           top: `${topPercent}%`,
                           height: `${heightPercent}%`,
                         }}
@@ -394,7 +487,7 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
                             ) : null}
                           </div>
                         </div>
-                      </article>
+                      </TimelineTooltip>
                     );
                   })}
 
@@ -407,23 +500,30 @@ export function PrayerTimeline({ showAdhkarLinks, timings }: PrayerTimelineProps
                       : "repeating-linear-gradient(-35deg, color-mix(in oklab, var(--primary) 16%, transparent) 0px, color-mix(in oklab, var(--primary) 16%, transparent) 10px, color-mix(in oklab, var(--primary) 4%, transparent) 10px, color-mix(in oklab, var(--primary) 4%, transparent) 20px)";
 
                     return (
-                      <aside
-                        aria-label={`${zone.title}: ${zone.startLabel} - ${zone.endLabel}`}
-                        title={`${zone.title}: ${zone.description}`}
-                        className={cn(
-                          "absolute right-2 z-30 w-12 cursor-help rounded-sm border border-dashed transition-colors",
+                      <TimelineTooltip
+                        body={zone.description}
+                        heading={zone.title}
+                        key={zone.id}
+                        side="right"
+                        timeRange={`${zone.startLabel} - ${zone.endLabel}`}
+                        touchMode={isTouchDevice}
+                        triggerClassName={cn(
+                          "absolute right-2 z-30 w-12 rounded-sm border border-dashed outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/65",
                           zone.kind === "makruh"
                             ? "border-destructive/70 bg-destructive/8 hover:bg-destructive/14"
                             : "border-primary/45 bg-primary/8 hover:bg-primary/14",
                           isActive ? "ring-1 ring-primary/35" : undefined,
                         )}
-                        key={zone.id}
-                        style={{
+                        triggerStyle={{
                           top: `${toPercent(zone.startHour)}%`,
                           height: `${toPercent(zoneDuration)}%`,
                           backgroundImage: hatch,
                         }}
-                      />
+                      >
+                        <span className="sr-only">
+                          {zone.title} {zone.startLabel} to {zone.endLabel}
+                        </span>
+                      </TimelineTooltip>
                     );
                   })}
 

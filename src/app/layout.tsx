@@ -1,6 +1,7 @@
 import { PostHogProvider } from "@/app/providers";
 import RootLayoutClient from "@/components/root-layout-client";
 import { ThemeProvider } from "@/components/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { getServerFeatureFlags } from "@/features/server";
 import { getSiteUrl } from "@/lib/site-url";
 import type { Metadata, Viewport } from "next";
@@ -214,17 +215,19 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <div className="app-canvas">
-              <div className="mx-auto flex min-h-svh w-full max-w-5xl flex-col gap-4 px-4 pb-[calc(var(--bottom-nav-reserve,8rem)+env(safe-area-inset-bottom))] pt-4 sm:px-6 lg:px-8">
-                <PwaInstallBanner />
+            <TooltipProvider delayDuration={120}>
+              <div className="app-canvas">
+                <div className="mx-auto flex min-h-svh w-full max-w-5xl flex-col gap-4 px-4 pb-[calc(var(--bottom-nav-reserve,8rem)+env(safe-area-inset-bottom))] pt-4 sm:px-6 lg:px-8">
+                  <PwaInstallBanner />
 
-                <RootLayoutClient>
-                  <main className="flex-1 space-y-6">{children}</main>
-                </RootLayoutClient>
+                  <RootLayoutClient>
+                    <main className="flex-1 space-y-6">{children}</main>
+                  </RootLayoutClient>
 
-                <Navbar featureFlags={featureFlags} />
+                  <Navbar featureFlags={featureFlags} />
+                </div>
               </div>
-            </div>
+            </TooltipProvider>
           </ThemeProvider>
         </PostHogProvider>
       </body>
