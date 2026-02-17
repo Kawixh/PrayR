@@ -48,7 +48,7 @@ export function RamadanMubarakBanner({
   }
 
   const hijriDateLabel = `${dateInfo.hijri.day} ${dateInfo.hijri.month.en} ${dateInfo.hijri.year} AH`;
-  const seharTime = formatTo12Hour(timings.Imsak);
+  const seharTime = formatTo12Hour(timings.Fajr);
   const iftarTime = formatTo12Hour(timings.Maghrib);
 
   return (
@@ -81,7 +81,7 @@ export function RamadanMubarakBanner({
               Sehar
             </p>
             <p className="mt-1 text-xl font-semibold">{seharTime}</p>
-            <p className="text-xs text-muted-foreground">Imsak</p>
+            <p className="text-xs text-muted-foreground">Fajr</p>
           </article>
 
           <article className="rounded-lg border border-border/70 bg-background/65 px-3 py-2">

@@ -355,8 +355,8 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
   if (featureFlags.sehrAndIftarTimes) {
     summaryItems.unshift({
       name: "Sehar",
-      subtitle: "Imsak",
-      time: prayerDay.timings.Imsak,
+      subtitle: "Fajr",
+      time: prayerDay.timings.Fajr,
     });
     summaryItems.push({
       name: "Iftar",
@@ -423,11 +423,7 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
       <CurrentPrayerStatusCard timings={prayerDay.timings} />
       {featureFlags.adhkars && featureFlags.adhkarOfTheDay ? <DailyAdhkarCard /> : null}
       {dashboardView === "timeline" ? (
-        <PrayerTimeline
-          showAdhkarLinks={featureFlags.adhkars}
-          showSeharAndIftarTimes={featureFlags.sehrAndIftarInTimeline}
-          timings={prayerDay.timings}
-        />
+        <PrayerTimeline showAdhkarLinks={featureFlags.adhkars} timings={prayerDay.timings} />
       ) : (
         <PrayerTimeCard showAdhkarLinks={featureFlags.adhkars} timings={prayerDay.timings} />
       )}

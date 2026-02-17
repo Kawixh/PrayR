@@ -15,7 +15,6 @@ import { getPrayerStatusSnapshot } from "../_utils/prayer-day";
 import { formatTo12Hour, parseTime24 } from "../_utils/time";
 
 type PrayerTimelineProps = {
-  showSeharAndIftarTimes: boolean;
   showAdhkarLinks: boolean;
   timings: PrayerTimings;
 };
@@ -497,7 +496,6 @@ function TimelineTooltip({
 }
 
 export function PrayerTimeline({
-  showSeharAndIftarTimes,
   showAdhkarLinks,
   timings,
 }: PrayerTimelineProps) {
@@ -636,26 +634,6 @@ export function PrayerTimeline({
           Tap any timeline block to see more details.
         </div>
 
-        {showSeharAndIftarTimes ? (
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            <article className="rounded-lg border border-primary/30 bg-primary/7 px-3 py-2.5">
-              <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-                Sehar
-              </p>
-              <p className="mt-1 text-lg font-semibold">{formatTo12Hour(timings.Imsak)}</p>
-              <p className="text-xs text-muted-foreground">Imsak</p>
-            </article>
-
-            <article className="rounded-lg border border-primary/30 bg-primary/7 px-3 py-2.5">
-              <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-                Iftar
-              </p>
-              <p className="mt-1 text-lg font-semibold">{formatTo12Hour(timings.Maghrib)}</p>
-              <p className="text-xs text-muted-foreground">Maghrib</p>
-            </article>
-          </div>
-        ) : null}
-
         <div className="my-10">
           <div className="relative mb-10">
             <div
@@ -763,7 +741,6 @@ export function PrayerTimeline({
                   const isActive =
                     timeline.nowHour >= block.startHour &&
                     timeline.nowHour < block.endHour;
-
                   return (
                     <TimelineTooltip
                       body={block.description}

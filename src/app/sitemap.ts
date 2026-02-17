@@ -15,6 +15,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "hourly",
       priority: 1,
     },
+    {
+      url: `${siteUrl}/resources`,
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
   ];
 
   if (featureFlags.adhkars) {

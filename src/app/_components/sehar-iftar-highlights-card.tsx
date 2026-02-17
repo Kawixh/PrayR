@@ -29,8 +29,8 @@ export function SeharIftarHighlightsCard({
             <p className="text-sm font-semibold">Sehar</p>
             <MoonStar className="size-4 text-primary" />
           </div>
-          <p className="mt-2 text-2xl font-semibold">{formatTo12Hour(timings.Imsak)}</p>
-          <p className="text-xs tracking-[0.1em] text-muted-foreground uppercase">Imsak</p>
+          <p className="mt-2 text-2xl font-semibold">{formatTo12Hour(timings.Fajr)}</p>
+          <p className="text-xs tracking-[0.1em] text-muted-foreground uppercase">Fajr</p>
         </article>
 
         <article className="rounded-lg border border-border/80 bg-background/75 px-3 py-3">

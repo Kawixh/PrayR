@@ -4,7 +4,13 @@ import { type FeatureFlags, type FeatureKey } from "@/features/definitions";
 import { ModeToggle } from "@/components/theme-manager";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { BookOpenText, Home, type LucideIcon, Settings } from "lucide-react";
+import {
+  BookOpenText,
+  Home,
+  type LucideIcon,
+  NotebookTabs,
+  Settings,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef } from "react";
@@ -31,6 +37,13 @@ const navItems: NavItem[] = [
     icon: BookOpenText,
     matches: (pathname: string) => pathname.startsWith("/adhkars"),
     featureKey: "adhkars",
+  },
+  {
+    href: "/resources",
+    label: "Resources",
+    icon: NotebookTabs,
+    matches: (pathname: string) => pathname.startsWith("/resources"),
+    featureKey: "resourcesTab",
   },
   {
     href: "/settings",

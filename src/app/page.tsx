@@ -1,7 +1,9 @@
 import { getServerFeatureFlags } from "@/features/server";
 import { getSiteUrl } from "@/lib/site-url";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { PrayerTimesWrapper } from "./_components/prayer-times-wrapper";
 import { SettingsCheck } from "./_components/settings-check";
 import { WhatsNewBanner } from "./_components/whats-new-banner";
@@ -38,7 +40,32 @@ const settingMeaningItems = [
 
 const faqEntries = [
   {
-    question: "What prayer times does PrayR show?",
+    question: "When does fasting start each day?",
+    answer:
+      "Fasting starts at Fajr (true dawn). PrayR shows Sehar at Fajr and does not enforce a separate earlier cutoff.",
+  },
+  {
+    question: "When should I break my fast?",
+    answer:
+      "Break the fast at Maghrib (sunset). PrayR maps Iftar to Maghrib time.",
+  },
+  {
+    question: "Is there a specific dua for Sehar before fasting?",
+    answer:
+      "There is no authenticated fixed dua required for Sehar. Intention to fast is made in the heart before Fajr.",
+  },
+  {
+    question: "When is the iftar dua recited?",
+    answer:
+      "The known narrated iftar dua is recited after breaking the fast.",
+  },
+  {
+    question: "What if my local adhan timing differs by a few minutes?",
+    answer:
+      "Local masjid schedules may vary by method or local timetable. You can adjust city, method, and school in settings to match your local standard.",
+  },
+  {
+    question: "What prayer timings does PrayR show?",
     answer:
       "PrayR shows Fajr, Sunrise, Dhuhr, Asr, Maghrib, and Isha for your selected location.",
   },
@@ -51,11 +78,6 @@ const faqEntries = [
     question: "What is the difference between method and school?",
     answer:
       "Method controls the calculation standard, while school controls fiqh rules that mainly affect Asr timing.",
-  },
-  {
-    question: "Why are my mosque times slightly different?",
-    answer:
-      "Local mosques may use different calculation rules, manual offsets, or iqamah schedules. Check settings to match your local standard.",
   },
   {
     question: "Does this app use my GPS location?",
@@ -210,6 +232,21 @@ export default async function Page() {
     <>
       <div className="homepage-clean space-y-6">
         <WhatsNewBanner />
+
+        <section className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold sm:text-2xl">Resources</h2>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground sm:text-base">
+                Ramadan guidance, fasting timing references, and duas are available
+                here from the home screen.
+              </p>
+            </div>
+            <Button asChild className="min-h-10 rounded-full px-5 py-2.5" type="button">
+              <Link href="/resources">Open Resources</Link>
+            </Button>
+          </div>
+        </section>
 
         <section aria-labelledby="dashboard-heading" className="space-y-4">
           <h2

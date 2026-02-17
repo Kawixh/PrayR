@@ -1,7 +1,7 @@
 export const FEATURE_KEYS = [
   "prayerTimings",
+  "resourcesTab",
   "sehrAndIftarTimes",
-  "sehrAndIftarInTimeline",
   "adhkars",
   "adhkarOfTheDay",
   "islamicCalendar",
@@ -27,21 +27,22 @@ export const FEATURE_DEFINITIONS: Record<FeatureKey, FeatureDefinition> = {
     defaultEnabled: true,
     tier: "main",
   },
+  resourcesTab: {
+    title: "Resources Tab",
+    description:
+      "Show the Resources tab in bottom navigation. The page remains reachable from home.",
+    defaultEnabled: true,
+    tier: "sub",
+    parent: "prayerTimings",
+    dependsOn: ["prayerTimings"],
+  },
   sehrAndIftarTimes: {
     title: "Sehar & Iftar Times",
     description:
-      "Show Sehar (Imsak) and Iftar (Maghrib) times prominently on the dashboard.",
+      "Show Sehar (Fajr) and Iftar (Maghrib) times prominently on the dashboard.",
     defaultEnabled: true,
     tier: "main",
     dependsOn: ["prayerTimings"],
-  },
-  sehrAndIftarInTimeline: {
-    title: "Sehar & Iftar in Timeline",
-    description: "Show Sehar and Iftar highlights inside the timeline view header.",
-    defaultEnabled: true,
-    tier: "sub",
-    parent: "sehrAndIftarTimes",
-    dependsOn: ["sehrAndIftarTimes"],
   },
   adhkars: {
     title: "Adhkars",
