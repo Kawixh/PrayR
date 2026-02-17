@@ -35,6 +35,7 @@ import {
   showLocalNotification,
 } from "../_utils/local-notifications";
 import { FeatureSettingsCard } from "./_components/feature-settings-card";
+import { SettingsSection } from "./_components/settings-section";
 
 const calculationMethods = [
   { value: "0", label: "Jafari / Shia Ithna-Ashari" },
@@ -665,371 +666,367 @@ export default function SettingsPage() {
           : "Default";
 
   return (
-    <section className="space-y-5">
-      <header className="glass-panel rounded-3xl p-5 sm:p-6">
-        <p className="soft-chip inline-flex">Profile</p>
-        <h1 className="mt-3 font-display text-3xl sm:text-4xl">App Settings</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          {featureFlags.prayerTimings
-            ? "Search city and country with GeoNames autocomplete, or optionally use your GPS/IP location for faster setup. GPS resolves to city-level names."
-            : "Prayer timings is currently disabled. Enable it in Feature Control to edit location and calculation settings."}
+    <section className="space-y-4">
+      <header className="rounded-2xl border border-border/80 p-5 sm:p-6">
+        <h1 className="text-2xl font-semibold sm:text-3xl">Settings</h1>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          Update your location, prayer calculation, and display preferences.
         </p>
       </header>
 
       {featureFlags.prayerTimings ? (
-        <Card className="glass-panel border-border/80 p-5 sm:p-6">
-        <div className="mb-5 rounded-2xl border border-border/70 bg-background/45 p-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0">
-              <p className="font-display text-2xl">Quick location setup</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Optional: GPS now prioritizes the nearest city (not local area),
-                and IP lookup falls back across providers for better reliability.
-              </p>
-            </div>
-            <div className="flex w-full flex-col gap-2 lg:w-auto">
-              <Button
-                className="min-h-10 w-full rounded-full px-4 py-2.5 text-center [overflow-wrap:anywhere] lg:w-auto"
-                disabled={resolving !== null}
-                onClick={resolveFromGps}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
-                <LocateFixed className="size-4" />
-                {resolving === "gps" ? "Getting GPS..." : "Use GPS"}
-              </Button>
-              <Button
-                className="min-h-10 w-full rounded-full px-4 py-2.5 text-center [overflow-wrap:anywhere] lg:w-auto"
-                disabled={resolving !== null}
-                onClick={() => void resolveFromIp()}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
-                <MapPin className="size-4" />
-                {resolving === "ip" ? "Checking IP..." : "Use IP"}
-              </Button>
-            </div>
-          </div>
-
-          {locationStatus ? (
-            <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-300">
-              {locationStatus}
-            </p>
-          ) : null}
-          {locationError ? (
-            <p className="mt-2 text-sm text-destructive">{locationError}</p>
-          ) : null}
-        </div>
-
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="grid gap-5 md:grid-cols-2">
-            <div className="relative space-y-2">
-              <label className="text-sm font-medium text-foreground" htmlFor="cityName">
-                City
-              </label>
-              <div className="relative">
-                <input
-                  autoComplete="off"
-                  className="min-h-11 h-auto w-full rounded-xl border border-border/85 bg-background/80 px-3 py-3 pr-10 text-base leading-normal shadow-sm transition-colors focus-visible:border-primary focus-visible:outline-none"
-                  id="cityName"
-                  name="cityName"
-                  onBlur={() => {
-                    window.setTimeout(() => setCityFocused(false), 120);
-                  }}
-                  onChange={(event) => {
-                    setCityInteracted(true);
-                    setLocationOptionsChanged(true);
-                    setSettings((prev) => ({
-                      ...prev,
-                      cityName: event.target.value,
-                    }));
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && citySuggestions.length > 0) {
-                      event.preventDefault();
-                      selectCitySuggestion(citySuggestions[0]);
-                    }
-                  }}
-                  onFocus={() => setCityFocused(true)}
-                  placeholder="Start typing your city..."
-                  required
-                  type="text"
-                  value={settings.cityName}
-                />
-                <Search className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              </div>
-
-              <div className="min-h-5">
-                {citySearchError ? (
-                  <p className="text-sm text-destructive">{citySearchError}</p>
-                ) : null}
-              </div>
-
-              {cityFocused && cityLoading ? <SuggestionsSkeleton withCode /> : null}
-
-              {showCitySuggestions ? (
-                <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-border/80 bg-popover p-1 shadow-lg">
-                  {citySuggestions.map((city) => (
-                    <button
-                      className="flex w-full items-start justify-between rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-accent/50"
-                      key={city.geonameId}
-                      onMouseDown={() => selectCitySuggestion(city)}
-                      type="button"
-                    >
-                      <div className="min-w-0">
-                        <p className="break-words text-sm leading-snug font-medium">
-                          {city.name}
-                        </p>
-                        <p className="break-words text-sm text-muted-foreground">
-                          {[city.adminName1, city.countryName]
-                            .filter(Boolean)
-                            .join(", ")}
-                        </p>
-                      </div>
-                      <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                        {city.countryCode}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-
-            <div className="relative space-y-2">
-              <label className="text-sm font-medium text-foreground" htmlFor="country">
-                Country
-              </label>
-              <div className="relative">
-                <input
-                  autoComplete="off"
-                  className="min-h-11 h-auto w-full rounded-xl border border-border/85 bg-background/80 px-3 py-3 pr-10 text-base leading-normal shadow-sm transition-colors focus-visible:border-primary focus-visible:outline-none"
-                  id="country"
-                  name="country"
-                  onBlur={() => {
-                    window.setTimeout(() => setCountryFocused(false), 120);
-                  }}
-                  onChange={(event) => {
-                    setCountryInteracted(true);
-                    setLocationOptionsChanged(true);
-                    setSettings((prev) => ({
-                      ...prev,
-                      cityName: "",
-                      country: event.target.value,
-                      countryCode: "",
-                    }));
-                  }}
-                  onFocus={() => setCountryFocused(true)}
-                  placeholder="Start typing your country..."
-                  required
-                  type="text"
-                  value={settings.country}
-                />
-                <Sparkles className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              </div>
-
-              {countryFocused && countryLoading ? (
-                <SuggestionsSkeleton withCode />
-              ) : null}
-
-              <div className="min-h-5">
-                {countrySearchError ? (
-                  <p className="text-sm text-destructive">{countrySearchError}</p>
-                ) : null}
-              </div>
-              <div className="min-h-5">
-                {comboValidation === "checking" ? (
-                  <p className="text-sm text-muted-foreground">
-                    Checking city/country combination...
-                  </p>
-                ) : null}
-                {comboWarning ? (
-                  <p className="text-sm text-destructive">{comboWarning}</p>
-                ) : null}
-                {comboValidation === "valid" ? (
-                  <p className="text-sm text-emerald-600 dark:text-emerald-300">
-                    City and country combination looks good.
-                  </p>
-                ) : null}
-              </div>
-
-              {showCountrySuggestions ? (
-                <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-border/80 bg-popover p-1 shadow-lg">
-                  {countrySuggestions.map((country) => (
-                    <button
-                      className="flex w-full items-start justify-between rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-accent/50"
-                      key={country.countryCode}
-                      onMouseDown={() => selectCountrySuggestion(country)}
-                      type="button"
-                    >
-                      <span className="break-words text-sm leading-snug font-medium">
-                        {country.countryName}
-                      </span>
-                      <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                        {country.countryCode}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground" htmlFor="method">
-              Calculation Method
-            </label>
-            <Select
-              key={settings.method}
-              onValueChange={(value) =>
-                setSettings((prev) => ({ ...prev, method: value }))
-              }
-              value={settings.method || undefined}
+        <Card className="border-border/80 p-5 sm:p-6">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <SettingsSection
+              description="Set your city and country for local prayer timings."
+              title="Location"
             >
-              <SelectTrigger className="min-h-11 rounded-xl border-border/85 bg-background/80">
-                <SelectValue placeholder="Select calculation method" />
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                {calculationMethods.map((method) => (
-                  <SelectItem
-                    className="h-auto whitespace-normal py-2 leading-snug"
-                    key={method.value}
-                    value={method.value}
-                  >
-                    {method.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-foreground">School</p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {schools.map((school) => {
-                const selected = settings.school === school.value;
-
-                return (
-                  <label
-                    className={cn(
-                      "flex cursor-pointer items-start justify-between gap-2 rounded-xl border px-3 py-2.5 text-sm transition-colors",
-                      selected
-                        ? "border-primary/40 bg-primary/15 text-foreground"
-                        : "border-border/80 bg-background/70 text-muted-foreground hover:border-border",
-                    )}
-                    htmlFor={`school-${school.value}`}
-                    key={school.value}
-                  >
-                    <span>{school.label}</span>
+              <div className="grid gap-5 md:grid-cols-2">
+                <div className="relative space-y-2">
+                  <label className="text-sm font-medium text-foreground" htmlFor="cityName">
+                    City
+                  </label>
+                  <div className="relative">
                     <input
-                      checked={selected}
-                      className="sr-only"
-                      id={`school-${school.value}`}
-                      name="school"
-                      onChange={(event) =>
+                      autoComplete="off"
+                      className="min-h-11 h-auto w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-base leading-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      id="cityName"
+                      name="cityName"
+                      onBlur={() => {
+                        window.setTimeout(() => setCityFocused(false), 120);
+                      }}
+                      onChange={(event) => {
+                        setCityInteracted(true);
+                        setLocationOptionsChanged(true);
                         setSettings((prev) => ({
                           ...prev,
-                          school: event.target.value,
-                        }))
-                      }
-                      type="radio"
-                      value={school.value}
+                          cityName: event.target.value,
+                        }));
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && citySuggestions.length > 0) {
+                          event.preventDefault();
+                          selectCitySuggestion(citySuggestions[0]);
+                        }
+                      }}
+                      onFocus={() => setCityFocused(true)}
+                      placeholder="Start typing your city..."
+                      required
+                      type="text"
+                      value={settings.cityName}
                     />
-                  </label>
-                );
-              })}
-            </div>
-          </div>
+                    <Search className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  </div>
 
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-foreground">Prayer dashboard view</p>
-            <div className="grid gap-2 md:grid-cols-2">
-              {dashboardViewOptions.map((option) => {
-                const selected = dashboardView === option.value;
+                  <div className="min-h-5">
+                    {citySearchError ? (
+                      <p className="text-sm text-destructive">{citySearchError}</p>
+                    ) : null}
+                  </div>
 
-                return (
-                  <label
-                    className={cn(
-                      "flex cursor-pointer items-start justify-between gap-3 rounded-xl border px-3 py-2.5 text-sm transition-colors",
-                      selected
-                        ? "border-primary/40 bg-primary/15 text-foreground"
-                        : "border-border/80 bg-background/70 text-muted-foreground hover:border-border",
-                    )}
-                    htmlFor={`dashboard-view-${option.value}`}
-                    key={option.value}
-                  >
-                    <div className="min-w-0">
-                      <p className="font-medium text-foreground">{option.label}</p>
-                      <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">
-                        {option.description}
-                      </p>
+                  {cityFocused && cityLoading ? <SuggestionsSkeleton withCode /> : null}
+
+                  {showCitySuggestions ? (
+                    <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-border bg-popover p-1 shadow-lg">
+                      {citySuggestions.map((city) => (
+                        <button
+                          className="flex w-full items-start justify-between rounded-md px-2.5 py-2 text-left transition-colors hover:bg-accent/50"
+                          key={city.geonameId}
+                          onMouseDown={() => selectCitySuggestion(city)}
+                          type="button"
+                        >
+                          <div className="min-w-0">
+                            <p className="break-words text-sm leading-snug font-medium">
+                              {city.name}
+                            </p>
+                            <p className="break-words text-sm text-muted-foreground">
+                              {[city.adminName1, city.countryName]
+                                .filter(Boolean)
+                                .join(", ")}
+                            </p>
+                          </div>
+                          <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                            {city.countryCode}
+                          </span>
+                        </button>
+                      ))}
                     </div>
-                    <input
-                      checked={selected}
-                      className="sr-only"
-                      id={`dashboard-view-${option.value}`}
-                      name="dashboardView"
-                      onChange={() => changeDashboardView(option.value)}
-                      type="radio"
-                      value={option.value}
-                    />
-                  </label>
-                );
-              })}
-            </div>
-          </div>
+                  ) : null}
+                </div>
 
-          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <Button
-              asChild
-              className="min-h-10 rounded-full border-border/85 px-5 py-2.5"
-              type="button"
-              variant="outline"
+                <div className="relative space-y-2">
+                  <label className="text-sm font-medium text-foreground" htmlFor="country">
+                    Country
+                  </label>
+                  <div className="relative">
+                    <input
+                      autoComplete="off"
+                      className="min-h-11 h-auto w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-base leading-normal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      id="country"
+                      name="country"
+                      onBlur={() => {
+                        window.setTimeout(() => setCountryFocused(false), 120);
+                      }}
+                      onChange={(event) => {
+                        setCountryInteracted(true);
+                        setLocationOptionsChanged(true);
+                        setSettings((prev) => ({
+                          ...prev,
+                          cityName: "",
+                          country: event.target.value,
+                          countryCode: "",
+                        }));
+                      }}
+                      onFocus={() => setCountryFocused(true)}
+                      placeholder="Start typing your country..."
+                      required
+                      type="text"
+                      value={settings.country}
+                    />
+                    <Sparkles className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  </div>
+
+                  {countryFocused && countryLoading ? (
+                    <SuggestionsSkeleton withCode />
+                  ) : null}
+
+                  <div className="min-h-5">
+                    {countrySearchError ? (
+                      <p className="text-sm text-destructive">{countrySearchError}</p>
+                    ) : null}
+                  </div>
+                  <div className="min-h-5">
+                    {comboValidation === "checking" ? (
+                      <p className="text-sm text-muted-foreground">
+                        Checking city/country combination...
+                      </p>
+                    ) : null}
+                    {comboWarning ? (
+                      <p className="text-sm text-destructive">{comboWarning}</p>
+                    ) : null}
+                    {comboValidation === "valid" ? (
+                      <p className="text-sm text-emerald-600 dark:text-emerald-300">
+                        City and country combination looks good.
+                      </p>
+                    ) : null}
+                  </div>
+
+                  {showCountrySuggestions ? (
+                    <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-border bg-popover p-1 shadow-lg">
+                      {countrySuggestions.map((country) => (
+                        <button
+                          className="flex w-full items-start justify-between rounded-md px-2.5 py-2 text-left transition-colors hover:bg-accent/50"
+                          key={country.countryCode}
+                          onMouseDown={() => selectCountrySuggestion(country)}
+                          type="button"
+                        >
+                          <span className="break-words text-sm leading-snug font-medium">
+                            {country.countryName}
+                          </span>
+                          <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                            {country.countryCode}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </SettingsSection>
+
+            <SettingsSection
+              description="Quickly fill location fields using your device location or IP."
+              title="Use GPS or IP Address"
             >
-              <Link href="/">Cancel</Link>
-            </Button>
-            <Button className="min-h-10 rounded-full px-6 py-2.5" type="submit">
-              Save settings
-            </Button>
-          </div>
-        </form>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Button
+                  className="h-10 sm:w-auto"
+                  disabled={resolving !== null}
+                  onClick={resolveFromGps}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <LocateFixed className="size-4" />
+                  {resolving === "gps" ? "Getting GPS..." : "Use GPS"}
+                </Button>
+                <Button
+                  className="h-10 sm:w-auto"
+                  disabled={resolving !== null}
+                  onClick={() => void resolveFromIp()}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <MapPin className="size-4" />
+                  {resolving === "ip" ? "Checking IP..." : "Use IP"}
+                </Button>
+              </div>
+              {locationStatus ? (
+                <p className="text-sm text-emerald-600 dark:text-emerald-300">{locationStatus}</p>
+              ) : null}
+              {locationError ? (
+                <p className="text-sm text-destructive">{locationError}</p>
+              ) : null}
+            </SettingsSection>
+
+            <SettingsSection
+              description="Choose your method and school for accurate local prayer boundaries."
+              title="Calculation"
+            >
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground" htmlFor="method">
+                    Calculation Method
+                  </label>
+                  <Select
+                    key={settings.method}
+                    onValueChange={(value) =>
+                      setSettings((prev) => ({ ...prev, method: value }))
+                    }
+                    value={settings.method || undefined}
+                  >
+                    <SelectTrigger className="min-h-11 rounded-md">
+                      <SelectValue placeholder="Select calculation method" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {calculationMethods.map((method) => (
+                        <SelectItem
+                          className="h-auto whitespace-normal py-2 leading-snug"
+                          key={method.value}
+                          value={method.value}
+                        >
+                          {method.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-foreground">School</p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {schools.map((school) => {
+                      const selected = settings.school === school.value;
+
+                      return (
+                        <label
+                          className={cn(
+                            "flex cursor-pointer items-start justify-between gap-2 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                            selected
+                              ? "border-primary/40 bg-primary/10 text-foreground"
+                              : "border-input bg-background text-muted-foreground hover:border-primary/30",
+                          )}
+                          htmlFor={`school-${school.value}`}
+                          key={school.value}
+                        >
+                          <span>{school.label}</span>
+                          <input
+                            checked={selected}
+                            className="sr-only"
+                            id={`school-${school.value}`}
+                            name="school"
+                            onChange={(event) =>
+                              setSettings((prev) => ({
+                                ...prev,
+                                school: event.target.value,
+                              }))
+                            }
+                            type="radio"
+                            value={school.value}
+                          />
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </SettingsSection>
+
+            <SettingsSection
+              description="Select how prayer data is presented on the home dashboard."
+              title="Display"
+            >
+              <div className="grid gap-2 md:grid-cols-2">
+                {dashboardViewOptions.map((option) => {
+                  const selected = dashboardView === option.value;
+
+                  return (
+                    <label
+                      className={cn(
+                        "flex cursor-pointer items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                        selected
+                          ? "border-primary/40 bg-primary/10 text-foreground"
+                          : "border-input bg-background text-muted-foreground hover:border-primary/30",
+                      )}
+                      htmlFor={`dashboard-view-${option.value}`}
+                      key={option.value}
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground">{option.label}</p>
+                        <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">
+                          {option.description}
+                        </p>
+                      </div>
+                      <input
+                        checked={selected}
+                        className="sr-only"
+                        id={`dashboard-view-${option.value}`}
+                        name="dashboardView"
+                        onChange={() => changeDashboardView(option.value)}
+                        type="radio"
+                        value={option.value}
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+            </SettingsSection>
+
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button asChild className="h-10" type="button" variant="outline">
+                <Link href="/">Cancel</Link>
+              </Button>
+              <Button className="h-10" type="submit">
+                Save settings
+              </Button>
+            </div>
+          </form>
         </Card>
       ) : (
-        <Card className="glass-panel border-border/80 p-5 sm:p-6">
-          <h2 className="font-display text-2xl sm:text-3xl">Prayer timings disabled</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Enable the Prayer Timings feature below to unlock city, country, calculation
-            method, and school settings.
+        <Card className="border-border/80 p-5 sm:p-6">
+          <h2 className="text-lg font-semibold sm:text-xl">Prayer Timings Disabled</h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            Enable the Prayer Timings feature below to configure location, calculation,
+            and display options.
           </p>
         </Card>
       )}
 
       <FeatureSettingsCard onFeatureFlagsChange={setFeatureFlags} />
 
-      {DEV_MENU_ENABLED && featureFlags.prayerTimings ? (
-        <Card className="glass-panel border-border/80 p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="soft-chip inline-flex">Developer</p>
-              <h2 className="mt-3 font-display text-2xl">Dev menu</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Collapsed by default. Expand to run device notification tests.
+      {DEV_MENU_ENABLED ? (
+        <Card className="border-border/80 p-5 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold sm:text-xl">Dev Settings</h2>
+              <p className="text-sm text-muted-foreground">
+                Notification permission and test delivery helpers.
               </p>
             </div>
             <Button
-              className="min-h-9 rounded-full px-4 py-2"
+              className="h-9 px-3"
               onClick={() => setIsDevMenuExpanded((prev) => !prev)}
               size="sm"
               type="button"
               variant="outline"
             >
-              {isDevMenuExpanded ? "Minimize" : "Expand"}
+              {isDevMenuExpanded ? "Hide" : "Show"}
             </Button>
           </div>
 
           {isDevMenuExpanded ? (
-            <div className="mt-4">
+            <div className="mt-4 space-y-3">
               <p
                 className={cn(
                   "text-sm font-medium",
@@ -1043,9 +1040,9 @@ export default function SettingsPage() {
                 Permission: {notificationPermissionLabel}
               </p>
 
-              <div className="mt-3 flex w-full flex-col gap-2 lg:w-auto">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
-                  className="min-h-10 w-full rounded-full px-4 py-2.5 text-center [overflow-wrap:anywhere] lg:w-auto"
+                  className="h-10 sm:w-auto"
                   disabled={notificationPermission === "unsupported"}
                   onClick={() => void requestDevNotificationPermission()}
                   size="sm"
@@ -1056,7 +1053,7 @@ export default function SettingsPage() {
                   Request permission
                 </Button>
                 <Button
-                  className="min-h-10 w-full rounded-full px-4 py-2.5 text-center [overflow-wrap:anywhere] lg:w-auto"
+                  className="h-10 sm:w-auto"
                   disabled={
                     sendingMockNotification ||
                     notificationPermission === "unsupported"
@@ -1074,19 +1071,30 @@ export default function SettingsPage() {
               </div>
 
               {mockNotificationStatus ? (
-                <p className="mt-3 text-sm text-emerald-600 dark:text-emerald-300">
+                <p className="text-sm text-emerald-600 dark:text-emerald-300">
                   {mockNotificationStatus}
                 </p>
               ) : null}
               {mockNotificationError ? (
-                <p className="mt-3 text-sm text-destructive">
-                  {mockNotificationError}
-                </p>
+                <p className="text-sm text-destructive">{mockNotificationError}</p>
               ) : null}
             </div>
           ) : null}
         </Card>
       ) : null}
+
+      <Card className="border-border/80 p-5 sm:p-6">
+        <h2 className="text-lg font-semibold sm:text-xl">SEO Settings</h2>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          SEO configuration is managed in code and kept out of profile settings.
+          Update these files when you need SEO changes.
+        </p>
+        <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+          <p>`/Users/dark/Projects/kawish-projects/prayer-list/src/app/page.tsx`</p>
+          <p>`/Users/dark/Projects/kawish-projects/prayer-list/src/app/layout.tsx`</p>
+          <p>`/Users/dark/Projects/kawish-projects/prayer-list/src/app/sitemap.ts`</p>
+        </div>
+      </Card>
     </section>
   );
 }

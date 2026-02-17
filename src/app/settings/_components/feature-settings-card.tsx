@@ -12,7 +12,7 @@ import {
 } from "@/features/definitions";
 import { resolveFeatureFlags } from "@/features/resolve";
 import { cn } from "@/lib/utils";
-import { RefreshCw, SlidersHorizontal } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
@@ -58,21 +58,16 @@ export function FeatureSettingsCard({ onFeatureFlagsChange }: FeatureSettingsCar
   };
 
   return (
-    <Card className="glass-panel border-border/80 p-5 sm:p-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div className="min-w-0">
-          <p className="soft-chip inline-flex">Feature Control</p>
-          <h2 className="mt-3 text-balance font-display text-2xl sm:text-3xl">
-            Enable or disable app features
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Changes apply immediately and hidden features are removed from navigation and
-            feature routes.
+    <Card className="border-border/80 p-5 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold sm:text-xl">Feature Flags</h2>
+          <p className="text-sm text-muted-foreground">
+            Turn app modules on or off. Hidden features are removed from navigation and routes.
           </p>
         </div>
-
         <Button
-          className="min-h-10 rounded-full px-4 py-2.5 md:w-auto"
+          className="h-9 px-3"
           disabled={isPending}
           onClick={resetToDefaults}
           size="sm"
@@ -84,7 +79,7 @@ export function FeatureSettingsCard({ onFeatureFlagsChange }: FeatureSettingsCar
         </Button>
       </div>
 
-      <div className="mt-5 space-y-3">
+      <div className="mt-4 space-y-2.5">
         {FEATURE_KEYS.map((featureKey) => {
           const definition = FEATURE_DEFINITIONS[featureKey];
           const dependencies = definition.dependsOn ?? [];
@@ -95,27 +90,18 @@ export function FeatureSettingsCard({ onFeatureFlagsChange }: FeatureSettingsCar
           const toggleBlocked = hasDisabledDependency && !isEnabled;
 
           return (
-            <article
-              className="rounded-2xl border border-border/75 bg-background/55 p-4 sm:p-5"
-              key={featureKey}
-            >
-              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div className="min-w-0">
-                  <h3 className="text-balance text-base leading-tight font-semibold sm:text-lg">
-                    {definition.title}
-                  </h3>
-                  <p className="mt-1 break-words text-sm leading-6 text-muted-foreground sm:text-base">
-                    {definition.description}
-                  </p>
-
+            <article className="rounded-lg border border-border/70 p-3 sm:p-4" key={featureKey}>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold sm:text-base">{definition.title}</h3>
+                  <p className="text-sm text-muted-foreground">{definition.description}</p>
                   {dependencies.length > 0 ? (
-                    <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Requires: {getDependencyTitles(featureKey)}
                     </p>
                   ) : null}
-
                   {toggleBlocked ? (
-                    <p className="mt-1 break-words text-xs leading-5 text-amber-700 dark:text-amber-300">
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
                       Enable {getDependencyTitles(featureKey)} first.
                     </p>
                   ) : null}
@@ -124,10 +110,8 @@ export function FeatureSettingsCard({ onFeatureFlagsChange }: FeatureSettingsCar
                 <Button
                   aria-pressed={isEnabled}
                   className={cn(
-                    "min-h-10 w-full rounded-full px-4 py-2.5 text-sm md:min-w-36 md:w-auto",
-                    isEnabled
-                      ? "border-emerald-500/35 bg-emerald-500/15 text-foreground hover:bg-emerald-500/20"
-                      : undefined,
+                    "h-9 w-full sm:w-auto",
+                    isEnabled ? "border-primary/40 bg-primary/10 hover:bg-primary/15" : undefined,
                   )}
                   disabled={toggleBlocked || isPending}
                   onClick={() => toggleFeature(featureKey)}
@@ -135,8 +119,7 @@ export function FeatureSettingsCard({ onFeatureFlagsChange }: FeatureSettingsCar
                   type="button"
                   variant="outline"
                 >
-                  <SlidersHorizontal className="size-4" />
-                  {isEnabled ? "Enabled" : "Disabled"}
+                  {isEnabled ? "On" : "Off"}
                 </Button>
               </div>
             </article>
