@@ -56,26 +56,10 @@ const themeInitScript = `
         ? storedTheme
         : (prefersDark ? "dark" : "light");
     const isDark = resolvedTheme === "dark";
-    const backgroundColor = isDark ? "#10232a" : "#e9f9f7";
 
     root.classList.toggle("dark", isDark);
     root.classList.toggle("light", !isDark);
     root.style.colorScheme = isDark ? "dark" : "light";
-    root.style.backgroundColor = backgroundColor;
-
-    const applyBodyBackground = () => {
-      if (document.body) {
-        document.body.style.backgroundColor = backgroundColor;
-      }
-    };
-
-    applyBodyBackground();
-
-    if (!document.body) {
-      document.addEventListener("DOMContentLoaded", applyBodyBackground, {
-        once: true,
-      });
-    }
   } catch {}
 })();
 `;
