@@ -1,5 +1,5 @@
 const DEVELOPMENT_SITE_URL = "http://localhost:3000";
-const PRODUCTION_SITE_URL_FALLBACK = "https://prayr.kawish.dev";
+const PRODUCTION_SITE_URL_FALLBACK = "https://prayr.help";
 
 function normalizeUrl(rawUrl: string): string {
   const withProtocol =

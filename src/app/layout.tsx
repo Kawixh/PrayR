@@ -1,9 +1,16 @@
 import { PostHogProvider } from "@/app/providers";
+import { JsonLdScript } from "@/components/seo/json-ld-script";
 import RootLayoutClient from "@/components/root-layout-client";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { getServerFeatureFlags } from "@/features/server";
-import { getSiteUrl } from "@/lib/site-url";
+import {
+  getLanguageMetaTags,
+  getPageAlternates,
+  getSiteBaseUrl,
+  SITE_LOCALE,
+  SITE_NAME,
+} from "@/lib/seo/site";
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import { Navbar } from "./_components/navbar";
@@ -20,16 +27,16 @@ const displayFont = Fraunces({
   subsets: ["latin"],
 });
 
-const siteUrl = getSiteUrl();
+const siteUrl = getSiteBaseUrl();
 
 const websiteJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "PrayR",
+  name: SITE_NAME,
   url: siteUrl,
   description:
     "Accurate daily Muslim prayer times by city and country with configurable calculation methods.",
-  inLanguage: "en",
+  inLanguage: SITE_LOCALE,
   potentialAction: {
     "@type": "SearchAction",
     target: `${siteUrl}/?q={search_term_string}`,
@@ -40,7 +47,7 @@ const websiteJsonLd = {
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "PrayR",
+  name: SITE_NAME,
   url: siteUrl,
   logo: `${siteUrl}/icon-512.png`,
 };
@@ -66,12 +73,13 @@ const themeInitScript = `
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  alternates: getPageAlternates("/"),
   title: {
-    default: "PrayR Prayer Times",
-    template: "%s | PrayR",
+    default: `${SITE_NAME} Prayer Times`,
+    template: `%s | ${SITE_NAME}`,
   },
   manifest: "/manifest.webmanifest",
-  applicationName: "PrayR",
+  applicationName: SITE_NAME,
   description:
     "Get accurate daily prayer times by city and country, with trusted Islamic calculation methods and school preferences.",
   keywords: [
@@ -87,13 +95,13 @@ export const metadata: Metadata = {
     "isha",
   ],
   category: "Religion & Spirituality",
-  creator: "PrayR",
-  publisher: "PrayR",
-  authors: [{ name: "PrayR Team" }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  authors: [{ name: `${SITE_NAME} Team` }],
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "PrayR",
+    title: SITE_NAME,
   },
   formatDetection: {
     telephone: false,
@@ -120,9 +128,9 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    siteName: "PrayR",
+    siteName: SITE_NAME,
     locale: "en_US",
-    title: "PrayR Prayer Times",
+    title: `${SITE_NAME} Prayer Times`,
     description:
       "Get accurate daily prayer times by city and country, with trusted Islamic calculation methods and school preferences.",
     images: [
@@ -136,7 +144,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PrayR Prayer Times",
+    title: `${SITE_NAME} Prayer Times`,
     description:
       "Get accurate daily prayer times by city and country, with trusted Islamic calculation methods and school preferences.",
     images: ["/twitter-image"],
@@ -145,7 +153,7 @@ export const metadata: Metadata = {
     "msapplication-config": "/browserconfig.xml",
     "msapplication-TileColor": "#6db7ba",
     "mobile-web-app-capable": "yes",
-    "content-language": "en-US",
+    ...getLanguageMetaTags(),
   },
 };
 
@@ -170,8 +178,10 @@ export default async function RootLayout({
   const featureFlags = await getServerFeatureFlags();
 
   return (
-    <html lang="en-US" suppressHydrationWarning>
+    <html lang={SITE_LOCALE} suppressHydrationWarning>
       <head>
+        <meta content={SITE_LOCALE} httpEquiv="content-language" />
+        <meta content={SITE_LOCALE} name="language" />
         <script
           dangerouslySetInnerHTML={{ __html: themeInitScript }}
           suppressHydrationWarning
@@ -181,18 +191,8 @@ export default async function RootLayout({
         className={`${bodyFont.variable} ${displayFont.variable} font-sans antialiased`}
       >
         <PostHogProvider>
-          <script
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
-            suppressHydrationWarning
-            type="application/ld+json"
-          />
-          <script
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify(organizationJsonLd),
-            }}
-            suppressHydrationWarning
-            type="application/ld+json"
-          />
+          <JsonLdScript data={websiteJsonLd} id="website-jsonld" />
+          <JsonLdScript data={organizationJsonLd} id="organization-jsonld" />
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

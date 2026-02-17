@@ -3,8 +3,15 @@ import {
   getAdhkarSourceUrl,
   getRecommendedCategoryIdsForPrayer,
 } from "@/backend/adhkar";
+import { JsonLdScript } from "@/components/seo/json-ld-script";
 import { getServerFeatureFlags } from "@/features/server";
 import { PRAYER_WITH_ADHKAR, PrayerWithAdhkar } from "@/lib/adhkar";
+import {
+  getCanonicalUrl,
+  getPageAlternates,
+  SITE_LOCALE,
+  SITE_NAME,
+} from "@/lib/seo/site";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AdhkarBrowser } from "./_components/adhkar-browser";
@@ -58,12 +65,18 @@ export const metadata: Metadata = {
   title: "Adhkars Library",
   description:
     "Read daily adhkar with source-preserved Arabic text and source-provided translation wording.",
-  alternates: {
-    canonical: "/adhkars",
-  },
+  keywords: [
+    "daily adhkar",
+    "morning adhkar",
+    "evening adhkar",
+    "islamic duas",
+    "prayer adhkar library",
+  ],
+  alternates: getPageAlternates("/adhkars"),
   openGraph: {
     type: "website",
-    siteName: "PrayR",
+    siteName: SITE_NAME,
+    locale: "en_US",
     title: "Adhkars Library",
     description:
       "Read daily adhkar with source-preserved Arabic text and source-provided translation wording.",
@@ -115,14 +128,57 @@ export default async function AdhkarsPage({ searchParams }: AdhkarsPageProps) {
   const fallbackCategoryId =
     recommendedCategoryIds[0] ?? categories[0]?.id ?? null;
   const initialCategoryId = categoryExists ? requestedCategoryId : fallbackCategoryId;
+  const adhkarsCanonicalUrl = getCanonicalUrl("/adhkars");
+  const adhkarsCollectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Adhkars Library",
+    description:
+      "Read daily adhkar with source-preserved Arabic text and source-provided translation wording.",
+    inLanguage: SITE_LOCALE,
+    url: adhkarsCanonicalUrl,
+    mainEntity: {
+      "@type": "ItemList",
+      itemListOrder: "https://schema.org/ItemListUnordered",
+      numberOfItems: categories.length,
+      itemListElement: categories.slice(0, 20).map((category, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: category.title,
+        item: `${adhkarsCanonicalUrl}?category=${category.id}`,
+      })),
+    },
+  };
+  const adhkarsBreadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: getCanonicalUrl("/"),
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Adhkars",
+        item: adhkarsCanonicalUrl,
+      },
+    ],
+  };
 
   return (
-    <AdhkarBrowser
-      categories={categories}
-      initialCategoryId={initialCategoryId}
-      prayer={requestedPrayer}
-      recommendedCategoryIds={recommendedCategoryIds}
-      sourceUrl={getAdhkarSourceUrl()}
-    />
+    <>
+      <AdhkarBrowser
+        categories={categories}
+        initialCategoryId={initialCategoryId}
+        prayer={requestedPrayer}
+        recommendedCategoryIds={recommendedCategoryIds}
+        sourceUrl={getAdhkarSourceUrl()}
+      />
+      <JsonLdScript data={adhkarsCollectionJsonLd} id="adhkars-collection-jsonld" />
+      <JsonLdScript data={adhkarsBreadcrumbJsonLd} id="adhkars-breadcrumb-jsonld" />
+    </>
   );
 }

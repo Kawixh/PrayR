@@ -3,21 +3,41 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export function SettingsCheck({ children }: { children: React.ReactNode }) {
+type SettingsCheckProps = {
+  allowMissingSettings?: boolean;
+  children: React.ReactNode;
+};
+
+export function SettingsCheck({
+  allowMissingSettings = false,
+  children,
+}: SettingsCheckProps) {
   const router = useRouter();
 
   useEffect(() => {
+    if (allowMissingSettings) {
+      return;
+    }
+
     const savedSettings = localStorage.getItem("prayerSettings");
     if (!savedSettings) {
       router.push("/settings");
       return;
     }
 
-    const { cityName, country } = JSON.parse(savedSettings);
-    if (!cityName || !country) {
+    try {
+      const parsed = JSON.parse(savedSettings) as {
+        cityName?: string;
+        country?: string;
+      };
+
+      if (!parsed.cityName || !parsed.country) {
+        router.push("/settings");
+      }
+    } catch {
       router.push("/settings");
     }
-  }, [router]);
+  }, [allowMissingSettings, router]);
 
   return <>{children}</>;
 }

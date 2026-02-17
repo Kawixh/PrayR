@@ -1,6 +1,14 @@
 import { getServerFeatureFlags } from "@/features/server";
-import { getSiteUrl } from "@/lib/site-url";
+import { JsonLdScript } from "@/components/seo/json-ld-script";
+import { resolveGooglebotHomepageResult } from "@/lib/googlebot-homepage";
+import {
+  getCanonicalUrl,
+  getPageAlternates,
+  getSiteBaseUrl,
+  SITE_LOCALE,
+} from "@/lib/seo/site";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -8,7 +16,7 @@ import { PrayerTimesWrapper } from "./_components/prayer-times-wrapper";
 import { SettingsCheck } from "./_components/settings-check";
 import { WhatsNewBanner } from "./_components/whats-new-banner";
 
-const siteUrl = getSiteUrl();
+const siteUrl = getSiteBaseUrl();
 
 const settingMeaningItems = [
   {
@@ -154,8 +162,8 @@ const webPageJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebPage",
   name: "Prayer Times and Daily Salah Guide",
-  url: siteUrl,
-  inLanguage: "en-US",
+  url: getCanonicalUrl("/"),
+  inLanguage: SITE_LOCALE,
   description:
     "Simple daily prayer times dashboard with clear explanations for each prayer and setting.",
 };
@@ -174,13 +182,7 @@ export const metadata: Metadata = {
     "isha prayer time",
     "muslim prayer schedule",
   ],
-  alternates: {
-    canonical: "/",
-    languages: {
-      "en-US": "/",
-      "x-default": "/",
-    },
-  },
+  alternates: getPageAlternates("/"),
   openGraph: {
     type: "website",
     siteName: "PrayR",
@@ -219,6 +221,13 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const featureFlags = await getServerFeatureFlags();
+  const requestHeaders = await headers();
+  const googlebotHomepageResult = featureFlags.prayerTimings
+    ? await resolveGooglebotHomepageResult(requestHeaders)
+    : {
+        initialPrayerDay: null,
+        shouldSkipSettingsRedirect: false,
+      };
 
   if (!featureFlags.prayerTimings) {
     if (featureFlags.adhkars) {
@@ -244,8 +253,13 @@ export default async function Page() {
             Daily prayer schedule, timeline, and reminders based on your saved
             location and preferences.
           </p>
-          <SettingsCheck>
-            <PrayerTimesWrapper featureFlags={featureFlags} />
+          <SettingsCheck
+            allowMissingSettings={googlebotHomepageResult.shouldSkipSettingsRedirect}
+          >
+            <PrayerTimesWrapper
+              featureFlags={featureFlags}
+              initialPrayerDay={googlebotHomepageResult.initialPrayerDay}
+            />
           </SettingsCheck>
         </section>
 
@@ -326,25 +340,12 @@ export default async function Page() {
 
       </div>
 
-      <script
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(webPageJsonLd),
-        }}
-        suppressHydrationWarning
-        type="application/ld+json"
+      <JsonLdScript data={webPageJsonLd} id="homepage-webpage-jsonld" />
+      <JsonLdScript
+        data={softwareApplicationJsonLd}
+        id="homepage-software-application-jsonld"
       />
-      <script
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(softwareApplicationJsonLd),
-        }}
-        suppressHydrationWarning
-        type="application/ld+json"
-      />
-      <script
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-        suppressHydrationWarning
-        type="application/ld+json"
-      />
+      <JsonLdScript data={faqJsonLd} id="homepage-faq-jsonld" />
     </>
   );
 }

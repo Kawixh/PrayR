@@ -1,8 +1,6 @@
 import { resolveFeatureFlags } from "@/features/resolve";
-import { getSiteUrl } from "@/lib/site-url";
+import { getCanonicalUrl, getLanguageAlternates } from "@/lib/seo/site";
 import type { MetadataRoute } from "next";
-
-const siteUrl = getSiteUrl();
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
@@ -10,25 +8,34 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const entries: MetadataRoute.Sitemap = [
     {
-      url: `${siteUrl}/`,
+      url: getCanonicalUrl("/"),
       lastModified,
       changeFrequency: "hourly",
       priority: 1,
+      alternates: {
+        languages: getLanguageAlternates("/"),
+      },
     },
     {
-      url: `${siteUrl}/resources`,
+      url: getCanonicalUrl("/resources"),
       lastModified,
       changeFrequency: "weekly",
       priority: 0.7,
+      alternates: {
+        languages: getLanguageAlternates("/resources"),
+      },
     },
   ];
 
   if (featureFlags.adhkars) {
     entries.push({
-      url: `${siteUrl}/adhkars`,
+      url: getCanonicalUrl("/adhkars"),
       lastModified,
       changeFrequency: "daily",
       priority: 0.8,
+      alternates: {
+        languages: getLanguageAlternates("/adhkars"),
+      },
     });
   }
 

@@ -1,12 +1,11 @@
+import { getPageAlternates } from "@/lib/seo/site";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "Offline Mode",
   description: "Offline fallback screen for PrayR.",
-  alternates: {
-    canonical: "/fallback",
-  },
+  alternates: getPageAlternates("/fallback"),
   robots: {
     index: false,
     follow: false,

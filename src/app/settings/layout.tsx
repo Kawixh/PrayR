@@ -1,3 +1,4 @@
+import { getPageAlternates } from "@/lib/seo/site";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
@@ -5,9 +6,7 @@ export const metadata: Metadata = {
   title: "Prayer Settings",
   description:
     "Configure your city, country, calculation method, and school for accurate daily prayer times.",
-  alternates: {
-    canonical: "/settings",
-  },
+  alternates: getPageAlternates("/settings"),
   robots: {
     index: false,
     follow: false,

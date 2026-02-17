@@ -174,12 +174,20 @@ async function fetchPrayerTimesFromApi(
   return data.data;
 }
 
-export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlags }) {
-  const [prayerDay, setPrayerDay] = useState<AlAdhanDayData | null>(null);
+type PrayerTimesWrapperProps = {
+  featureFlags: FeatureFlags;
+  initialPrayerDay?: AlAdhanDayData | null;
+};
+
+export function PrayerTimesWrapper({
+  featureFlags,
+  initialPrayerDay = null,
+}: PrayerTimesWrapperProps) {
+  const [prayerDay, setPrayerDay] = useState<AlAdhanDayData | null>(initialPrayerDay);
   const [dashboardView, setDashboardView] = useState<PrayerDashboardView>(
     readPrayerDashboardViewFromStorage,
   );
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => initialPrayerDay === null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -199,6 +207,16 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
   }, []);
 
   useEffect(() => {
+    if (!initialPrayerDay) {
+      return;
+    }
+
+    setPrayerDay(initialPrayerDay);
+    setError(null);
+    setLoading(false);
+  }, [initialPrayerDay]);
+
+  useEffect(() => {
     let active = true;
 
     const getPrayerTimes = async () => {
@@ -207,6 +225,11 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
 
         if (!settings) {
           if (active) {
+            if (initialPrayerDay) {
+              setPrayerDay(initialPrayerDay);
+              setError(null);
+            }
+
             setLoading(false);
           }
 
@@ -259,7 +282,7 @@ export function PrayerTimesWrapper({ featureFlags }: { featureFlags: FeatureFlag
     return () => {
       active = false;
     };
-  }, []);
+  }, [initialPrayerDay]);
 
   if (loading) {
     return (

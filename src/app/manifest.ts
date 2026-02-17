@@ -1,3 +1,4 @@
+import { SITE_LOCALE } from "@/lib/seo/site";
 import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
@@ -7,6 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description:
       "Accurate daily prayer times by city and country with configurable calculation methods.",
     id: "/",
+    lang: SITE_LOCALE,
+    dir: "ltr",
     start_url: "/",
     scope: "/",
     display: "standalone",
