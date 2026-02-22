@@ -7,7 +7,12 @@ import { cn } from "@/lib/utils";
 import { Clock3, Sparkles, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { getPrayerStatusSnapshot, type PrayerName } from "../_utils/prayer-day";
+import {
+  getCurrentPrayerName,
+  getMakruhWindows,
+  type PrayerName,
+} from "../_utils/prayer-day";
+import { formatTo12Hour, prayerTimeToDate } from "../_utils/time";
 
 type PrayerTimeCardProps = {
   showAdhkarLinks: boolean;
@@ -24,22 +29,13 @@ type PrayerPanelProps = {
   tone?: "default" | "makruh";
 };
 
-function formatMinutesBetween(startDate: Date, endDate: Date): string {
-  const minutes = Math.max(0, Math.ceil((endDate.getTime() - startDate.getTime()) / 60_000));
+const SUNRISE_MAKRUH_MINUTES = 15;
+const SOLAR_NOON_MAKRUH_MINUTES = 10;
 
-  if (minutes < 60) {
-    return `${minutes}m`;
-  }
-
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-
-  if (remainingMinutes === 0) {
-    return `${hours}h`;
-  }
-
-  return `${hours}h ${remainingMinutes}m`;
-}
+type DayWindow = {
+  end: Date;
+  start: Date;
+};
 
 function PrayerPanel({
   description,
@@ -86,7 +82,9 @@ function PrayerPanel({
           <p className="text-balance font-display text-3xl leading-tight sm:text-4xl">
             {headline}
           </p>
-          <p className="text-sm leading-6 text-muted-foreground sm:text-base">{description}</p>
+          <p className="text-sm leading-6 text-muted-foreground sm:text-base">
+            {description}
+          </p>
         </div>
 
         {showAdhkarLink && prayerName ? (
@@ -111,7 +109,10 @@ function PrayerPanel({
   );
 }
 
-export function PrayerTimeCard({ showAdhkarLinks, timings }: PrayerTimeCardProps) {
+export function PrayerTimeCard({
+  showAdhkarLinks,
+  timings,
+}: PrayerTimeCardProps) {
   const [currentTime, setCurrentTime] = useState(() => new Date());
 
   useEffect(() => {
@@ -124,60 +125,167 @@ export function PrayerTimeCard({ showAdhkarLinks, timings }: PrayerTimeCardProps
     };
   }, []);
 
-  const snapshot = useMemo(
-    () => getPrayerStatusSnapshot(timings, currentTime),
+  const currentPrayer = useMemo(
+    () => getCurrentPrayerName(timings, currentTime),
     [currentTime, timings],
   );
 
-  if (!snapshot) {
+  const windows = useMemo(() => {
+    const fajr = prayerTimeToDate(timings.Fajr, currentTime);
+    const sunrise = prayerTimeToDate(timings.Sunrise, currentTime);
+    const dhuhr = prayerTimeToDate(timings.Dhuhr, currentTime);
+    const asr = prayerTimeToDate(timings.Asr, currentTime);
+    const maghrib = prayerTimeToDate(timings.Maghrib, currentTime);
+    const isha = prayerTimeToDate(timings.Isha, currentTime);
+
+    if (!fajr || !sunrise || !dhuhr || !asr || !maghrib || !isha) {
+      return null;
+    }
+
+    const sunriseMakruhEnd = new Date(
+      sunrise.getTime() + SUNRISE_MAKRUH_MINUTES * 60_000,
+    );
+    const solarNoonStart = new Date(
+      dhuhr.getTime() - SOLAR_NOON_MAKRUH_MINUTES * 60_000,
+    );
+
+    const sunriseMakruh: DayWindow = {
+      start: sunrise,
+      end: sunriseMakruhEnd,
+    };
+    const duhaWindow: DayWindow = {
+      start: sunriseMakruhEnd,
+      end: solarNoonStart,
+    };
+    const beforeDhuhrMakruh: DayWindow = {
+      start: solarNoonStart,
+      end: dhuhr,
+    };
+
+    const makruhWindows = getMakruhWindows(timings, currentTime);
+    const beforeMaghribMakruh = makruhWindows.find(
+      (windowItem) => windowItem.id === "sunset",
+    );
+
+    if (!beforeMaghribMakruh) {
+      return null;
+    }
+
+    return {
+      asr,
+      beforeDhuhrMakruh,
+      beforeMaghribMakruh: {
+        start: beforeMaghribMakruh.start,
+        end: beforeMaghribMakruh.end,
+      },
+      dhuhr,
+      duhaWindow,
+      fajr,
+      isha,
+      maghrib,
+      sunrise,
+      sunriseMakruh,
+    };
+  }, [currentTime, timings]);
+
+  if (!windows) {
     return null;
   }
 
-  const untilNextPrayer = formatMinutesBetween(currentTime, snapshot.nextPrayer.date);
-  const sincePreviousPrayer = formatMinutesBetween(snapshot.previousPrayer.date, currentTime);
-  const upcomingMakruhBeforeNextPrayer =
-    snapshot.upcomingMakruh &&
-    snapshot.upcomingMakruh.start.getTime() > currentTime.getTime() &&
-    snapshot.upcomingMakruh.start.getTime() <= snapshot.nextPrayer.date.getTime()
-      ? snapshot.upcomingMakruh
-      : null;
+  const formatWindow = (windowItem: DayWindow) =>
+    `${new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(windowItem.start)} - ${new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(windowItem.end)}`;
+
+  const isWindowActive = (windowItem: DayWindow) =>
+    currentTime.getTime() >= windowItem.start.getTime() &&
+    currentTime.getTime() < windowItem.end.getTime();
 
   return (
     <section className="space-y-4">
-      <div className="grid w-full gap-4 lg:grid-cols-2">
-        {snapshot.activeMakruh ? (
-          <PrayerPanel
-            description={`${snapshot.activeMakruh.startLabel} - ${snapshot.activeMakruh.endLabel}. Ends in ${formatMinutesBetween(currentTime, snapshot.activeMakruh.end)}. Next prayer ${snapshot.nextPrayer.name} at ${snapshot.nextPrayer.time12}.`}
-            headline="Makrooh Waqt"
-            title="Current State"
-            tone="makruh"
-            showAdhkarLink={false}
-          />
-        ) : upcomingMakruhBeforeNextPrayer ? (
-          <PrayerPanel
-            description={`${upcomingMakruhBeforeNextPrayer.startLabel} - ${upcomingMakruhBeforeNextPrayer.endLabel}. Starts in ${formatMinutesBetween(currentTime, upcomingMakruhBeforeNextPrayer.start)}. Next prayer ${snapshot.nextPrayer.name} at ${snapshot.nextPrayer.time12}.`}
-            headline={upcomingMakruhBeforeNextPrayer.title.replace("Makrooh Waqt: ", "")}
-            title="Next Event"
-            tone="makruh"
-            showAdhkarLink={false}
-          />
-        ) : (
-          <PrayerPanel
-            description={`${snapshot.nextPrayer.time12} • starts in ${untilNextPrayer}`}
-            headline={snapshot.nextPrayer.name}
-            highlight
-            prayerName={snapshot.nextPrayer.name}
-            showAdhkarLink={showAdhkarLinks}
-            title="Next Event"
-          />
-        )}
+      <div className="grid w-full gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <PrayerPanel
+          description="Fajr starts here. Sehar cutoff aligns with Fajr."
+          headline={formatTo12Hour(timings.Fajr)}
+          highlight={currentPrayer === "Fajr"}
+          prayerName="Fajr"
+          showAdhkarLink={showAdhkarLinks}
+          title="Fajr / Sehar"
+        />
 
         <PrayerPanel
-          description={`${snapshot.previousPrayer.time12} • started ${sincePreviousPrayer} ago`}
-          headline={snapshot.previousPrayer.name}
-          prayerName={snapshot.previousPrayer.name}
+          description="Sunrise Makruh window starts at sunrise and lasts for 15 minutes."
+          headline={formatWindow(windows.sunriseMakruh)}
+          highlight={isWindowActive(windows.sunriseMakruh)}
+          showAdhkarLink={false}
+          title="Makruh Waqt"
+          tone="makruh"
+        />
+
+        <PrayerPanel
+          description="Duha prayer window after sunrise Makruh until before Dhuhr Makruh."
+          headline={formatWindow(windows.duhaWindow)}
+          highlight={isWindowActive(windows.duhaWindow)}
+          showAdhkarLink={false}
+          title="Duha Window"
+        />
+
+        <PrayerPanel
+          description="Avoid voluntary prayers shortly before Dhuhr."
+          headline={formatWindow(windows.beforeDhuhrMakruh)}
+          highlight={isWindowActive(windows.beforeDhuhrMakruh)}
+          showAdhkarLink={false}
+          title="Makruh Before Dhuhr"
+          tone="makruh"
+        />
+
+        <PrayerPanel
+          description="Dhuhr obligatory prayer starts at this time."
+          headline={formatTo12Hour(timings.Dhuhr)}
+          highlight={currentPrayer === "Dhuhr"}
+          prayerName="Dhuhr"
           showAdhkarLink={showAdhkarLinks}
-          title="Previous Prayer"
+          title="Dhuhr"
+        />
+
+        <PrayerPanel
+          description="Asr obligatory prayer starts at this time."
+          headline={formatTo12Hour(timings.Asr)}
+          highlight={currentPrayer === "Asr"}
+          prayerName="Asr"
+          showAdhkarLink={showAdhkarLinks}
+          title="Asr"
+        />
+
+        <PrayerPanel
+          description="Final minutes before Maghrib are Makruh for voluntary prayer."
+          headline={formatWindow(windows.beforeMaghribMakruh)}
+          highlight={isWindowActive(windows.beforeMaghribMakruh)}
+          showAdhkarLink={false}
+          title="Makruh Waqt"
+          tone="makruh"
+        />
+
+        <PrayerPanel
+          description="Maghrib starts and Iftar time begins."
+          headline={formatTo12Hour(timings.Maghrib)}
+          highlight={currentPrayer === "Maghrib"}
+          prayerName="Maghrib"
+          showAdhkarLink={showAdhkarLinks}
+          title="Maghrib / Iftar"
+        />
+
+        <PrayerPanel
+          description="Isha obligatory prayer starts at this time."
+          headline={formatTo12Hour(timings.Isha)}
+          highlight={currentPrayer === "Isha"}
+          prayerName="Isha"
+          showAdhkarLink={showAdhkarLinks}
+          title="Isha"
         />
       </div>
     </section>
