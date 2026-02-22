@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { readClientFeatureOverrides, writeClientFeatureOverrides } from "@/features/client";
 import {
+  DEPRECATED_FRONTEND_FEATURE_KEY_SET,
   FEATURE_DEFINITIONS,
   FEATURE_KEYS,
   type FeatureFlags,
@@ -32,6 +33,7 @@ function getDependencyTitles(featureKey: FeatureKey): string {
 function getSubFeatures(parent: FeatureKey): FeatureKey[] {
   return FEATURE_KEYS.filter(
     (featureKey) =>
+      !DEPRECATED_FRONTEND_FEATURE_KEY_SET.has(featureKey) &&
       FEATURE_DEFINITIONS[featureKey].tier === "sub" &&
       FEATURE_DEFINITIONS[featureKey].parent === parent,
   );
@@ -117,7 +119,9 @@ export function FeatureSettingsCard({ onFeatureFlagsChange }: FeatureSettingsCar
 
   const featureFlags = useMemo(() => resolveFeatureFlags(overrides), [overrides]);
   const mainFeatureKeys = FEATURE_KEYS.filter(
-    (featureKey) => FEATURE_DEFINITIONS[featureKey].tier === "main",
+    (featureKey) =>
+      !DEPRECATED_FRONTEND_FEATURE_KEY_SET.has(featureKey) &&
+      FEATURE_DEFINITIONS[featureKey].tier === "main",
   );
 
   useEffect(() => {

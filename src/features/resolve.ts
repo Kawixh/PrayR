@@ -1,10 +1,23 @@
 import {
+  DEPRECATED_FRONTEND_FEATURE_KEY_SET,
   FEATURE_DEFINITIONS,
   FEATURE_KEYS,
   type FeatureFlags,
   type FeatureOverrides,
 } from "./definitions";
 import { getFeatureDefaultsFromEnv } from "./env-defaults";
+
+function applyDeprecatedFrontendFeatures(input: FeatureFlags): FeatureFlags {
+  const resolved = { ...input };
+
+  for (const key of FEATURE_KEYS) {
+    if (DEPRECATED_FRONTEND_FEATURE_KEY_SET.has(key)) {
+      resolved[key] = false;
+    }
+  }
+
+  return resolved;
+}
 
 function applyFeatureDependencies(input: FeatureFlags): FeatureFlags {
   const resolved = { ...input };
@@ -36,5 +49,5 @@ export function resolveFeatureFlags(overrides: FeatureOverrides = {}): FeatureFl
     }
   }
 
-  return applyFeatureDependencies(merged);
+  return applyFeatureDependencies(applyDeprecatedFrontendFeatures(merged));
 }

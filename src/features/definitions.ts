@@ -12,6 +12,11 @@ export type FeatureKey = (typeof FEATURE_KEYS)[number];
 export type FeatureFlags = Record<FeatureKey, boolean>;
 export type FeatureOverrides = Partial<FeatureFlags>;
 
+export const DEPRECATED_FRONTEND_FEATURE_KEY_SET: ReadonlySet<FeatureKey> = new Set([
+  "adhkars",
+  "adhkarOfTheDay",
+]);
+
 type FeatureDefinition = {
   title: string;
   description: string;
@@ -54,13 +59,13 @@ export const FEATURE_DEFINITIONS: Record<FeatureKey, FeatureDefinition> = {
   adhkars: {
     title: "Adhkars",
     description: "Adhkar library and prayer-linked adhkar browsing.",
-    defaultEnabled: true,
+    defaultEnabled: false,
     tier: "main",
   },
   adhkarOfTheDay: {
     title: "Adhkar of the Day",
     description: "Daily highlighted adhkar card on the prayer dashboard.",
-    defaultEnabled: true,
+    defaultEnabled: false,
     tier: "sub",
     parent: "adhkars",
     dependsOn: ["adhkars"],

@@ -5,7 +5,6 @@ import { ModeToggle } from "@/components/theme-manager";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  BookOpenText,
   Home,
   type LucideIcon,
   NotebookTabs,
@@ -30,13 +29,6 @@ const navItems: NavItem[] = [
     icon: Home,
     matches: (pathname: string) => pathname === "/",
     featureKey: "prayerTimings",
-  },
-  {
-    href: "/adhkars",
-    label: "Adhkars",
-    icon: BookOpenText,
-    matches: (pathname: string) => pathname.startsWith("/adhkars"),
-    featureKey: "adhkars",
   },
   {
     href: "/resources",
