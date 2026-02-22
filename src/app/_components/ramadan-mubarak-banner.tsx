@@ -6,8 +6,9 @@ import {
   writeBannerDismissed,
 } from "@/app/_utils/banner-preferences";
 import { type AlAdhanDateInfo, type PrayerTimings } from "@/backend/types";
-import { MoonStar, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { MoonStar, Sunset, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { getFastingTopBannerState } from "../_utils/fasting-top-banner";
 import { formatTo12Hour } from "../_utils/time";
 
 type RamadanMubarakBannerProps = {
@@ -42,14 +43,45 @@ export function RamadanMubarakBanner({
   });
 
   const isRamadanMonth = useMemo(() => isRamadan(dateInfo), [dateInfo]);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    let intervalId: number | undefined;
+    const syncNow = () => setNow(new Date());
+    const delayToNextMinute = 60_000 - (Date.now() % 60_000);
+
+    const timeoutId = window.setTimeout(() => {
+      syncNow();
+      intervalId = window.setInterval(syncNow, 60_000);
+    }, delayToNextMinute);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+
+      if (intervalId !== undefined) {
+        window.clearInterval(intervalId);
+      }
+    };
+  }, []);
+
+  const fastingBannerState = useMemo(() => {
+    if (!showSeharAndIftarTimes) {
+      return "hidden";
+    }
+
+    return getFastingTopBannerState(timings, now);
+  }, [now, showSeharAndIftarTimes, timings]);
 
   if (!isVisible || !isRamadanMonth) {
     return null;
   }
 
   const hijriDateLabel = `${dateInfo.hijri.day} ${dateInfo.hijri.month.en} ${dateInfo.hijri.year} AH`;
-  const seharTime = formatTo12Hour(timings.Fajr);
-  const iftarTime = formatTo12Hour(timings.Maghrib);
+  const isSehar = fastingBannerState === "sehar";
+  const fastingLabel = isSehar ? "Sehar" : "Iftar";
+  const fastingPrayerLabel = isSehar ? "Fajr" : "Maghrib";
+  const fastingTime = formatTo12Hour(isSehar ? timings.Fajr : timings.Maghrib);
+  const FastingIcon = isSehar ? MoonStar : Sunset;
 
   return (
     <section className="overflow-hidden rounded-2xl border border-primary/35 bg-primary/8">
@@ -74,22 +106,19 @@ export function RamadanMubarakBanner({
         </button>
       </div>
 
-      {showSeharAndIftarTimes ? (
-        <div className="grid gap-2 border-t border-primary/20 bg-card/55 p-3 sm:grid-cols-2 sm:px-5 sm:py-4">
-          <article className="rounded-lg border border-border/70 bg-background/65 px-3 py-2">
-            <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-              Sehar
-            </p>
-            <p className="mt-1 text-xl font-semibold">{seharTime}</p>
-            <p className="text-xs text-muted-foreground">Fajr</p>
-          </article>
-
-          <article className="rounded-lg border border-border/70 bg-background/65 px-3 py-2">
-            <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-              Iftar
-            </p>
-            <p className="mt-1 text-xl font-semibold">{iftarTime}</p>
-            <p className="text-xs text-muted-foreground">Maghrib</p>
+      {fastingBannerState !== "hidden" ? (
+        <div className="border-t border-primary/20 bg-card/55 p-3 sm:px-5 sm:py-4">
+          <article className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-background/65 px-3 py-3">
+            <div>
+              <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                {fastingLabel}
+              </p>
+              <p className="mt-1 text-xl font-semibold">{fastingTime}</p>
+              <p className="text-xs text-muted-foreground">{fastingPrayerLabel}</p>
+            </div>
+            <span className="rounded-full border border-primary/30 bg-background/80 p-2 text-primary">
+              <FastingIcon className="size-4" />
+            </span>
           </article>
         </div>
       ) : null}

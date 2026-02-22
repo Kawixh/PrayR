@@ -13,8 +13,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PrayerTimesWrapper } from "./_components/prayer-times-wrapper";
-import { SettingsCheck } from "./_components/settings-check";
-import { WhatsNewBanner } from "./_components/whats-new-banner";
 
 const siteUrl = getSiteBaseUrl();
 
@@ -38,11 +36,6 @@ const settingMeaningItems = [
     name: "Dashboard View",
     meaning:
       "Choose between timeline or card view to read your daily schedule more easily.",
-  },
-  {
-    name: "Reminders",
-    meaning:
-      "Lets you enable local prayer notifications so you do not miss prayer windows.",
   },
 ] as const;
 
@@ -226,7 +219,6 @@ export default async function Page() {
     ? await resolveGooglebotHomepageResult(requestHeaders)
     : {
         initialPrayerDay: null,
-        shouldSkipSettingsRedirect: false,
       };
 
   if (!featureFlags.prayerTimings) {
@@ -240,8 +232,6 @@ export default async function Page() {
   return (
     <>
       <div className="homepage-clean space-y-6">
-        <WhatsNewBanner />
-
         <section aria-labelledby="dashboard-heading" className="space-y-4">
           <h2
             className="text-2xl font-semibold sm:text-3xl"
@@ -250,17 +240,13 @@ export default async function Page() {
             Today&apos;s Prayer Dashboard
           </h2>
           <p className="text-muted-foreground max-w-3xl text-sm leading-6 sm:text-base">
-            Daily prayer schedule, timeline, and reminders based on your saved
-            location and preferences.
+            Daily prayer schedule and timeline based on your saved location and
+            preferences.
           </p>
-          <SettingsCheck
-            allowMissingSettings={googlebotHomepageResult.shouldSkipSettingsRedirect}
-          >
-            <PrayerTimesWrapper
-              featureFlags={featureFlags}
-              initialPrayerDay={googlebotHomepageResult.initialPrayerDay}
-            />
-          </SettingsCheck>
+          <PrayerTimesWrapper
+            featureFlags={featureFlags}
+            initialPrayerDay={googlebotHomepageResult.initialPrayerDay}
+          />
         </section>
 
         <section

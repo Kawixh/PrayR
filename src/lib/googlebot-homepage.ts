@@ -10,7 +10,6 @@ const GOOGLEBOT_DEFAULT_SCHOOL = 0;
 
 export type GooglebotHomepageResult = {
   initialPrayerDay: AlAdhanDayData | null;
-  shouldSkipSettingsRedirect: boolean;
 };
 
 export async function resolveGooglebotHomepageResult(
@@ -21,7 +20,6 @@ export async function resolveGooglebotHomepageResult(
   if (!isVerifiedGooglebot) {
     return {
       initialPrayerDay: null,
-      shouldSkipSettingsRedirect: false,
     };
   }
 
@@ -31,7 +29,6 @@ export async function resolveGooglebotHomepageResult(
   if (!ipLocation || !hasCityAndCountry(ipLocation)) {
     return {
       initialPrayerDay: null,
-      shouldSkipSettingsRedirect: true,
     };
   }
 
@@ -40,7 +37,6 @@ export async function resolveGooglebotHomepageResult(
   if (!city) {
     return {
       initialPrayerDay: null,
-      shouldSkipSettingsRedirect: true,
     };
   }
 
@@ -60,7 +56,6 @@ export async function resolveGooglebotHomepageResult(
 
       return {
         initialPrayerDay: payload.data,
-        shouldSkipSettingsRedirect: true,
       };
     } catch (error) {
       console.error("Googlebot prayer time fallback failed:", error);
@@ -69,6 +64,5 @@ export async function resolveGooglebotHomepageResult(
 
   return {
     initialPrayerDay: null,
-    shouldSkipSettingsRedirect: true,
   };
 }

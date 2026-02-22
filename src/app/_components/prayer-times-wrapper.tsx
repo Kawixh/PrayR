@@ -17,8 +17,6 @@ import { formatTo12Hour, getLocalDayKey } from "../_utils/time";
 import { DailyAdhkarCard } from "./daily-adhkar-card";
 import { CurrentPrayerStatusCard } from "./current-prayer-status-card";
 import { IslamicDateCalendarCard } from "./islamic-date-calendar-card";
-import { PrayerReminder } from "./prayer-reminder";
-import { RamadanMubarakBanner } from "./ramadan-mubarak-banner";
 import { SeharIftarHighlightsCard } from "./sehar-iftar-highlights-card";
 import { PrayerTimeCard } from "./prayer-time-card";
 import { PrayerTimeline } from "./prayer-timeline";
@@ -48,7 +46,15 @@ type PrayerSummaryItem = {
 };
 
 const SETTINGS_STORAGE_KEY = "prayerSettings";
-const CACHE_STORAGE_KEY = "prayerTimesCacheV2";
+const CACHE_STORAGE_KEY = "prayerTimesCacheV3";
+const DEFAULT_PRAYER_METHOD = 2;
+const DEFAULT_PRAYER_SCHOOL = 0;
+
+type IpLocationResponse = {
+  city: string;
+  country: string;
+  countryCode?: string;
+};
 
 function normalizeSettings(raw: unknown): PrayerSettings | null {
   if (!raw || typeof raw !== "object") {
@@ -67,12 +73,15 @@ function normalizeSettings(raw: unknown): PrayerSettings | null {
   const country =
     typeof candidate.country === "string" ? candidate.country.trim() : "";
 
-  const method = Number(candidate.method);
-  const school = Number(candidate.school);
+  const parsedMethod = Number(candidate.method);
+  const parsedSchool = Number(candidate.school);
 
-  if (!cityName || !country || Number.isNaN(method) || Number.isNaN(school)) {
+  if (!cityName || !country) {
     return null;
   }
+
+  const method = Number.isFinite(parsedMethod) ? parsedMethod : DEFAULT_PRAYER_METHOD;
+  const school = Number.isFinite(parsedSchool) ? parsedSchool : DEFAULT_PRAYER_SCHOOL;
 
   return {
     cityName,
@@ -103,6 +112,19 @@ function readSettingsFromStorage(): PrayerSettings | null {
   } catch {
     return null;
   }
+}
+
+function writeSettingsToStorage(settings: PrayerSettings, countryCode = ""): void {
+  localStorage.setItem(
+    SETTINGS_STORAGE_KEY,
+    JSON.stringify({
+      cityName: settings.cityName,
+      country: settings.country,
+      countryCode,
+      method: String(settings.method),
+      school: String(settings.school),
+    }),
+  );
 }
 
 function readPrayerCache(): PrayerTimesCache | null {
@@ -146,10 +168,12 @@ function writePrayerCache(cache: PrayerTimesCache): void {
 
 async function fetchPrayerTimesFromApi(
   settings: PrayerSettings,
+  localDate: string,
 ): Promise<AlAdhanDayData> {
   const params = new URLSearchParams({
     city: settings.cityName,
     country: settings.country,
+    date: localDate,
     method: String(settings.method),
     school: String(settings.school),
   });
@@ -172,6 +196,32 @@ async function fetchPrayerTimesFromApi(
   }
 
   return data.data;
+}
+
+async function fetchLocationFromIp(): Promise<IpLocationResponse> {
+  const response = await fetch("/api/places/from-ip", {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  const data = (await response.json()) as Partial<IpLocationResponse> & { error?: string };
+
+  if (!response.ok) {
+    throw new Error(data.error ?? "Unable to resolve location from IP address.");
+  }
+
+  const city = typeof data.city === "string" ? data.city.trim() : "";
+  const country = typeof data.country === "string" ? data.country.trim() : "";
+
+  if (!city || !country) {
+    throw new Error("Could not determine city and country from IP address.");
+  }
+
+  return {
+    city,
+    country,
+    countryCode: typeof data.countryCode === "string" ? data.countryCode : "",
+  };
 }
 
 type PrayerTimesWrapperProps = {
@@ -221,19 +271,17 @@ export function PrayerTimesWrapper({
 
     const getPrayerTimes = async () => {
       try {
-        const settings = readSettingsFromStorage();
+        let settings = readSettingsFromStorage();
 
         if (!settings) {
-          if (active) {
-            if (initialPrayerDay) {
-              setPrayerDay(initialPrayerDay);
-              setError(null);
-            }
-
-            setLoading(false);
-          }
-
-          return;
+          const location = await fetchLocationFromIp();
+          settings = {
+            cityName: location.city,
+            country: location.country,
+            method: DEFAULT_PRAYER_METHOD,
+            school: DEFAULT_PRAYER_SCHOOL,
+          };
+          writeSettingsToStorage(settings, location.countryCode ?? "");
         }
 
         const dayKey = getLocalDayKey();
@@ -250,7 +298,7 @@ export function PrayerTimesWrapper({
           return;
         }
 
-        const dayData = await fetchPrayerTimesFromApi(settings);
+        const dayData = await fetchPrayerTimesFromApi(settings, dayKey);
 
         if (!active) {
           return;
@@ -268,7 +316,12 @@ export function PrayerTimesWrapper({
         console.error("Error fetching prayer times:", fetchError);
 
         if (active) {
-          setError("Failed to fetch prayer times. Please try again later.");
+          if (initialPrayerDay) {
+            setPrayerDay(initialPrayerDay);
+            setError(null);
+          } else {
+            setError("Failed to fetch prayer times. Set location in Settings and try again.");
+          }
         }
       } finally {
         if (active) {
@@ -431,19 +484,13 @@ export function PrayerTimesWrapper({
 
   return (
     <section className="space-y-5">
-      <RamadanMubarakBanner
-        dateInfo={prayerDay.date}
-        showSeharAndIftarTimes={featureFlags.sehrAndIftarTimes}
-        timings={prayerDay.timings}
-      />
-      <PrayerReminder timings={prayerDay.timings} />
       {featureFlags.sehrAndIftarTimes ? (
-        <SeharIftarHighlightsCard timings={prayerDay.timings} />
+        <SeharIftarHighlightsCard dateInfo={prayerDay.date} timings={prayerDay.timings} />
       ) : null}
+      <CurrentPrayerStatusCard timings={prayerDay.timings} />
       {featureFlags.islamicCalendar ? (
         <IslamicDateCalendarCard dateInfo={prayerDay.date} />
       ) : null}
-      <CurrentPrayerStatusCard timings={prayerDay.timings} />
       {featureFlags.adhkars && featureFlags.adhkarOfTheDay ? <DailyAdhkarCard /> : null}
       {dashboardView === "timeline" ? (
         <PrayerTimeline showAdhkarLinks={featureFlags.adhkars} timings={prayerDay.timings} />

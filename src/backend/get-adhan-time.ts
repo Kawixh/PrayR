@@ -5,6 +5,7 @@ export const getAdhanTime = async (
   country: string,
   method: number,
   school: number,
+  date?: string,
 ): Promise<AlAdhanTimingsResponse> => {
   const searchParams = new URLSearchParams({
     city,
@@ -13,10 +14,11 @@ export const getAdhanTime = async (
     school: String(school),
   });
 
-  const response = await fetch(
-    `https://api.aladhan.com/v1/timingsByCity?${searchParams.toString()}`,
-    { cache: "no-store" },
-  );
+  const baseUrl = date
+    ? `https://api.aladhan.com/v1/timingsByCity/${encodeURIComponent(date)}`
+    : "https://api.aladhan.com/v1/timingsByCity";
+
+  const response = await fetch(`${baseUrl}?${searchParams.toString()}`, { cache: "no-store" });
 
   if (!response.ok) {
     throw new Error(`Prayer API request failed with status ${response.status}`);
