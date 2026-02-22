@@ -4,7 +4,7 @@ import { type AlAdhanDayData, type AlAdhanTimingsResponse } from "@/backend/type
 import { Card } from "@/components/ui/card";
 import { type FeatureFlags } from "@/features/definitions";
 import { AlertTriangle, Clock3 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   applyHijriDateAdjustment,
   DEFAULT_HIJRI_DATE_ADJUSTMENT,
@@ -37,8 +37,15 @@ type PrayerTimesCache = {
   data: AlAdhanDayData;
 };
 
+type InitialLoadStage =
+  | "gettingIp"
+  | "calculatingLocation"
+  | "calculatingPrayerTimings";
+
 const SETTINGS_STORAGE_KEY = "prayerSettings";
 const CACHE_STORAGE_KEY = "prayerTimesCacheV3";
+const FIRST_VISIT_STEP_LOADER_DONE_STORAGE_KEY =
+  "prayerFirstVisitStepLoaderDoneV1";
 const DEFAULT_PRAYER_METHOD = 2;
 const DEFAULT_PRAYER_SCHOOL = 0;
 
@@ -225,6 +232,68 @@ type PrayerTimesWrapperProps = {
   initialPrayerDay?: AlAdhanDayData | null;
 };
 
+function FirstVisitStepLoader({ stage }: { stage: InitialLoadStage }) {
+  const steps: Array<{ id: InitialLoadStage; label: string }> = [
+    { id: "gettingIp", label: "Getting IP" },
+    { id: "calculatingLocation", label: "Calculating location" },
+    { id: "calculatingPrayerTimings", label: "Calculating prayer timings" },
+  ];
+  const activeStepIndex = steps.findIndex((step) => step.id === stage);
+
+  return (
+    <section className="space-y-5">
+      <Card className="glass-panel border-border/80 p-5 sm:p-6">
+        <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">
+          Initial Setup
+        </p>
+        <h2 className="font-display mt-2 text-2xl leading-tight sm:text-3xl">
+          Preparing your prayer dashboard
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+          This guided loading appears only on your first visit.
+        </p>
+
+        <div className="mt-5 space-y-3">
+          {steps.map((step, index) => {
+            const status =
+              index < activeStepIndex
+                ? "completed"
+                : index === activeStepIndex
+                  ? "active"
+                  : "pending";
+
+            return (
+              <article
+                className="flex items-center gap-3 rounded-xl border border-border/80 bg-background/45 px-3 py-3"
+                key={step.id}
+              >
+                <span
+                  className={
+                    status === "completed"
+                      ? "size-2.5 rounded-full bg-primary"
+                      : status === "active"
+                        ? "size-2.5 rounded-full bg-primary animate-pulse"
+                        : "size-2.5 rounded-full bg-muted-foreground/40"
+                  }
+                />
+                <p
+                  className={
+                    status === "pending"
+                      ? "text-sm text-muted-foreground"
+                      : "text-sm font-medium text-foreground"
+                  }
+                >
+                  {step.label}
+                </p>
+              </article>
+            );
+          })}
+        </div>
+      </Card>
+    </section>
+  );
+}
+
 export function PrayerTimesWrapper({
   featureFlags,
   initialPrayerDay = null,
@@ -236,8 +305,25 @@ export function PrayerTimesWrapper({
   const [dashboardView, setDashboardView] = useState<PrayerDashboardView>(
     readPrayerDashboardViewFromStorage,
   );
+  const [showFirstVisitStepLoader, setShowFirstVisitStepLoader] = useState(() => {
+    if (typeof window === "undefined" || initialPrayerDay) {
+      return false;
+    }
+
+    try {
+      return (
+        window.localStorage.getItem(FIRST_VISIT_STEP_LOADER_DONE_STORAGE_KEY) !==
+        "1"
+      );
+    } catch {
+      return false;
+    }
+  });
+  const [initialLoadStage, setInitialLoadStage] =
+    useState<InitialLoadStage>("gettingIp");
   const [loading, setLoading] = useState(() => initialPrayerDay === null);
   const [error, setError] = useState<string | null>(null);
+  const firstVisitStepLoaderEnabledRef = useRef(showFirstVisitStepLoader);
 
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
@@ -260,6 +346,13 @@ export function PrayerTimesWrapper({
       return;
     }
 
+    try {
+      window.localStorage.setItem(FIRST_VISIT_STEP_LOADER_DONE_STORAGE_KEY, "1");
+    } catch {}
+
+    firstVisitStepLoaderEnabledRef.current = false;
+    setShowFirstVisitStepLoader(false);
+
     setPrayerDay(initialPrayerDay);
     setError(null);
     setLoading(false);
@@ -267,13 +360,39 @@ export function PrayerTimesWrapper({
 
   useEffect(() => {
     let active = true;
+    const useStepLoader = firstVisitStepLoaderEnabledRef.current;
+
+    const completeFirstVisitStepLoader = () => {
+      if (!useStepLoader) {
+        return;
+      }
+
+      try {
+        window.localStorage.setItem(FIRST_VISIT_STEP_LOADER_DONE_STORAGE_KEY, "1");
+      } catch {}
+
+      firstVisitStepLoaderEnabledRef.current = false;
+
+      if (active) {
+        setShowFirstVisitStepLoader(false);
+      }
+    };
 
     const getPrayerTimes = async () => {
       try {
+        if (useStepLoader) {
+          setInitialLoadStage("gettingIp");
+        }
+
         let settings = readSettingsFromStorage();
 
         if (!settings) {
           const location = await fetchLocationFromIp();
+
+          if (useStepLoader) {
+            setInitialLoadStage("calculatingLocation");
+          }
+
           settings = {
             cityName: location.city,
             country: location.country,
@@ -282,6 +401,10 @@ export function PrayerTimesWrapper({
             school: DEFAULT_PRAYER_SCHOOL,
           };
           writeSettingsToStorage(settings, location.countryCode ?? "");
+        }
+
+        if (useStepLoader) {
+          setInitialLoadStage("calculatingPrayerTimings");
         }
 
         setHijriDateAdjustment(settings.hijriDateAdjustment);
@@ -295,6 +418,7 @@ export function PrayerTimesWrapper({
             setPrayerDay(cached.data);
             setError(null);
             setLoading(false);
+            completeFirstVisitStepLoader();
           }
 
           return;
@@ -308,6 +432,7 @@ export function PrayerTimesWrapper({
 
         setPrayerDay(dayData);
         setError(null);
+        completeFirstVisitStepLoader();
 
         writePrayerCache({
           dayKey,
@@ -321,6 +446,7 @@ export function PrayerTimesWrapper({
           if (initialPrayerDay) {
             setPrayerDay(initialPrayerDay);
             setError(null);
+            completeFirstVisitStepLoader();
           } else {
             setError("Failed to fetch prayer times. Set location in Settings and try again.");
           }
@@ -340,6 +466,10 @@ export function PrayerTimesWrapper({
   }, [initialPrayerDay]);
 
   if (loading) {
+    if (showFirstVisitStepLoader) {
+      return <FirstVisitStepLoader stage={initialLoadStage} />;
+    }
+
     return (
       <section className="space-y-5">
         <Card className="glass-panel rounded-2xl border-border/80 p-4">
