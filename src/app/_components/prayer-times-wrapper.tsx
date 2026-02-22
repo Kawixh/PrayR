@@ -3,7 +3,14 @@
 import { type AlAdhanDayData, type AlAdhanTimingsResponse } from "@/backend/types";
 import { Card } from "@/components/ui/card";
 import { type FeatureFlags } from "@/features/definitions";
-import { AlertTriangle, Clock3 } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock3,
+  Loader2,
+  LocateFixed,
+  MapPin,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
   applyHijriDateAdjustment,
@@ -233,61 +240,154 @@ type PrayerTimesWrapperProps = {
 };
 
 function FirstVisitStepLoader({ stage }: { stage: InitialLoadStage }) {
-  const steps: Array<{ id: InitialLoadStage; label: string }> = [
-    { id: "gettingIp", label: "Getting IP" },
-    { id: "calculatingLocation", label: "Calculating location" },
-    { id: "calculatingPrayerTimings", label: "Calculating prayer timings" },
+  const steps: Array<{
+    detail: string;
+    id: InitialLoadStage;
+    icon: typeof LocateFixed;
+    label: string;
+  }> = [
+    {
+      id: "gettingIp",
+      label: "Getting IP",
+      detail: "Detecting your network region.",
+      icon: LocateFixed,
+    },
+    {
+      id: "calculatingLocation",
+      label: "Calculating location",
+      detail: "Resolving your nearest city and country.",
+      icon: MapPin,
+    },
+    {
+      id: "calculatingPrayerTimings",
+      label: "Calculating prayer timings",
+      detail: "Building today's prayer schedule.",
+      icon: Clock3,
+    },
   ];
-  const activeStepIndex = steps.findIndex((step) => step.id === stage);
+  const resolvedActiveStepIndex = steps.findIndex((step) => step.id === stage);
+  const activeStepIndex =
+    resolvedActiveStepIndex >= 0 ? resolvedActiveStepIndex : 0;
+  const activeStep = steps[activeStepIndex];
+  const progressPercent = ((activeStepIndex + 1) / steps.length) * 100;
 
   return (
-    <section className="space-y-5">
-      <Card className="glass-panel border-border/80 p-5 sm:p-6">
-        <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">
-          Initial Setup
-        </p>
-        <h2 className="font-display mt-2 text-2xl leading-tight sm:text-3xl">
-          Preparing your prayer dashboard
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-          This guided loading appears only on your first visit.
-        </p>
+    <section aria-busy="true" aria-live="polite" className="space-y-5">
+      <Card className="overflow-hidden border-primary/35 bg-linear-to-br from-primary/18 via-card to-accent/14 p-0">
+        <div className="relative px-4 py-5 sm:px-6 sm:py-6">
+          <div className="pointer-events-none absolute -top-16 right-2 size-40 rounded-full bg-primary/25 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-16 -left-8 size-40 rounded-full bg-primary/12 blur-3xl" />
 
-        <div className="mt-5 space-y-3">
-          {steps.map((step, index) => {
-            const status =
-              index < activeStepIndex
-                ? "completed"
-                : index === activeStepIndex
-                  ? "active"
-                  : "pending";
+          <div className="relative z-10 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">
+                First Visit Setup
+              </p>
+              <h2 className="font-display mt-2 text-balance text-2xl leading-tight sm:text-3xl">
+                Preparing your prayer dashboard
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+                {activeStep.detail}
+              </p>
+            </div>
+            <span className="rounded-full border border-primary/35 bg-background/75 p-2.5 text-primary">
+              <Loader2 className="size-5 animate-spin" />
+            </span>
+          </div>
 
-            return (
-              <article
-                className="flex items-center gap-3 rounded-xl border border-border/80 bg-background/45 px-3 py-3"
-                key={step.id}
-              >
-                <span
+          <div className="relative z-10 mt-5">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-primary/15">
+              <div
+                className="h-full rounded-full bg-linear-to-r from-primary via-primary/80 to-primary transition-all duration-500 ease-out"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <p className="mt-2 text-xs font-medium text-muted-foreground">
+              {Math.round(progressPercent)}% complete
+            </p>
+          </div>
+
+          <div className="relative z-10 mt-4 grid gap-2">
+            {steps.map((step, index) => {
+              const isCompleted = index < activeStepIndex;
+              const isActive = index === activeStepIndex;
+              const Icon = step.icon;
+
+              return (
+                <article
                   className={
-                    status === "completed"
-                      ? "size-2.5 rounded-full bg-primary"
-                      : status === "active"
-                        ? "size-2.5 rounded-full bg-primary animate-pulse"
-                        : "size-2.5 rounded-full bg-muted-foreground/40"
+                    isActive
+                      ? "rounded-xl border border-primary/35 bg-background/80 px-3 py-3 shadow-sm"
+                      : "rounded-xl border border-border/80 bg-background/45 px-3 py-3"
                   }
-                />
-                <p
-                  className={
-                    status === "pending"
-                      ? "text-sm text-muted-foreground"
-                      : "text-sm font-medium text-foreground"
-                  }
+                  key={step.id}
                 >
-                  {step.label}
-                </p>
-              </article>
-            );
-          })}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span
+                        className={
+                          isCompleted
+                            ? "mt-0.5 text-primary"
+                            : isActive
+                              ? "mt-0.5 text-primary"
+                              : "mt-0.5 text-muted-foreground"
+                        }
+                      >
+                        {isCompleted ? (
+                          <CheckCircle2 className="size-4" />
+                        ) : isActive ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Icon className="size-4" />
+                        )}
+                      </span>
+                      <div className="min-w-0">
+                        <p
+                          className={
+                            isCompleted || isActive
+                              ? "text-sm font-medium text-foreground"
+                              : "text-sm text-muted-foreground"
+                          }
+                        >
+                          {step.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{step.detail}</p>
+                      </div>
+                    </div>
+                    <span
+                      className={
+                        isCompleted
+                          ? "rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"
+                          : isActive
+                            ? "rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"
+                            : "rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+                      }
+                    >
+                      {isCompleted ? "Done" : isActive ? "In progress" : "Waiting"}
+                    </span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </Card>
+
+      <Card className="glass-panel border-border/80 p-4 sm:p-5">
+        <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+          Loading Preview
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-border/80 bg-background/55 p-3">
+            <div className="h-4 w-28 animate-pulse rounded bg-muted/70" />
+            <div className="mt-3 h-10 w-44 animate-pulse rounded bg-muted/80" />
+            <div className="mt-2 h-4 w-full animate-pulse rounded bg-muted/70" />
+          </div>
+          <div className="rounded-xl border border-border/80 bg-background/55 p-3">
+            <div className="h-4 w-24 animate-pulse rounded bg-muted/70" />
+            <div className="mt-3 h-10 w-36 animate-pulse rounded bg-muted/80" />
+            <div className="mt-2 h-4 w-5/6 animate-pulse rounded bg-muted/70" />
+          </div>
         </div>
       </Card>
     </section>
