@@ -97,10 +97,37 @@ const dashboardViewOptions: Array<{
   },
 ];
 
+const HIJRI_DATE_ADJUSTMENT_OPTIONS = [
+  { value: "-2", label: "-2 days" },
+  { value: "-1", label: "-1 day" },
+  { value: "0", label: "No adjustment" },
+  { value: "1", label: "+1 day" },
+  { value: "2", label: "+2 days" },
+] as const;
+
+const DEFAULT_HIJRI_DATE_ADJUSTMENT = "0";
+
+function normalizeHijriDateAdjustmentValue(value: unknown): string {
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_HIJRI_DATE_ADJUSTMENT;
+  }
+
+  const integerValue = Math.trunc(parsed);
+
+  if (integerValue < -2 || integerValue > 2) {
+    return DEFAULT_HIJRI_DATE_ADJUSTMENT;
+  }
+
+  return String(integerValue);
+}
+
 type PrayerSettingsState = {
   cityName: string;
   country: string;
   countryCode: string;
+  hijriDateAdjustment: string;
   method: string;
   school: string;
 };
@@ -137,6 +164,7 @@ const EMPTY_SETTINGS: PrayerSettingsState = {
   cityName: "",
   country: "",
   countryCode: "",
+  hijriDateAdjustment: DEFAULT_HIJRI_DATE_ADJUSTMENT,
   method: "",
   school: "",
 };
@@ -162,6 +190,9 @@ function getInitialSettings(): PrayerSettingsState {
       cityName: parsed.cityName ?? "",
       country: parsed.country ?? "",
       countryCode: parsed.countryCode ?? "",
+      hijriDateAdjustment: normalizeHijriDateAdjustmentValue(
+        parsed.hijriDateAdjustment,
+      ),
       method: parsed.method ?? "",
       school: parsed.school ?? "",
     };
@@ -913,39 +944,82 @@ export default function SettingsPage() {
               description="Select how prayer data is presented on the home dashboard."
               title="Display"
             >
-              <div className="grid gap-2 md:grid-cols-2">
-                {dashboardViewOptions.map((option) => {
-                  const selected = dashboardView === option.value;
+              <div className="space-y-5">
+                <div className="grid gap-2 md:grid-cols-2">
+                  {dashboardViewOptions.map((option) => {
+                    const selected = dashboardView === option.value;
 
-                  return (
-                    <label
-                      className={cn(
-                        "flex cursor-pointer items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
-                        selected
-                          ? "border-primary bg-accent text-foreground"
-                          : "border-input text-muted-foreground hover:bg-accent",
-                      )}
-                      htmlFor={`dashboard-view-${option.value}`}
-                      key={option.value}
-                    >
-                      <div className="min-w-0">
-                        <p className="font-medium text-foreground">{option.label}</p>
-                        <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">
-                          {option.description}
-                        </p>
-                      </div>
-                      <input
-                        checked={selected}
-                        className="sr-only"
-                        id={`dashboard-view-${option.value}`}
-                        name="dashboardView"
-                        onChange={() => changeDashboardView(option.value)}
-                        type="radio"
-                        value={option.value}
-                      />
-                    </label>
-                  );
-                })}
+                    return (
+                      <label
+                        className={cn(
+                          "flex cursor-pointer items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                          selected
+                            ? "border-primary bg-accent text-foreground"
+                            : "border-input text-muted-foreground hover:bg-accent",
+                        )}
+                        htmlFor={`dashboard-view-${option.value}`}
+                        key={option.value}
+                      >
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground">{option.label}</p>
+                          <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">
+                            {option.description}
+                          </p>
+                        </div>
+                        <input
+                          checked={selected}
+                          className="sr-only"
+                          id={`dashboard-view-${option.value}`}
+                          name="dashboardView"
+                          onChange={() => changeDashboardView(option.value)}
+                          type="radio"
+                          value={option.value}
+                        />
+                      </label>
+                    );
+                  })}
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">Hijri Date Adjustment</p>
+                  <p className="text-xs text-muted-foreground">
+                    Use this when your local moon-sighting differs (for example UAE vs Pakistan).
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+                    {HIJRI_DATE_ADJUSTMENT_OPTIONS.map((option) => {
+                      const selected = settings.hijriDateAdjustment === option.value;
+
+                      return (
+                        <label
+                          className={cn(
+                            "flex cursor-pointer items-center justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                            selected
+                              ? "border-primary bg-accent text-foreground"
+                              : "border-input text-muted-foreground hover:bg-accent",
+                          )}
+                          htmlFor={`hijri-date-adjustment-${option.value}`}
+                          key={option.value}
+                        >
+                          <span className="font-medium">{option.label}</span>
+                          <input
+                            checked={selected}
+                            className="sr-only"
+                            id={`hijri-date-adjustment-${option.value}`}
+                            name="hijriDateAdjustment"
+                            onChange={(event) =>
+                              setSettings((prev) => ({
+                                ...prev,
+                                hijriDateAdjustment: event.target.value,
+                              }))
+                            }
+                            type="radio"
+                            value={option.value}
+                          />
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </SettingsSection>
           </CardContent>

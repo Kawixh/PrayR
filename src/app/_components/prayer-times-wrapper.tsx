@@ -8,6 +8,11 @@ import { AlertTriangle, Clock3, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
+  applyHijriDateAdjustment,
+  DEFAULT_HIJRI_DATE_ADJUSTMENT,
+  normalizeHijriDateAdjustment,
+} from "../_utils/hijri-date-adjustment";
+import {
   PRAYER_DASHBOARD_VIEW_STORAGE_KEY,
   readPrayerDashboardViewFromStorage,
   type PrayerDashboardView,
@@ -24,6 +29,7 @@ import { PrayerTimeline } from "./prayer-timeline";
 type PrayerSettings = {
   cityName: string;
   country: string;
+  hijriDateAdjustment: number;
   method: number;
   school: number;
 };
@@ -64,6 +70,7 @@ function normalizeSettings(raw: unknown): PrayerSettings | null {
   const candidate = raw as {
     cityName?: unknown;
     country?: unknown;
+    hijriDateAdjustment?: unknown;
     method?: unknown;
     school?: unknown;
   };
@@ -75,6 +82,7 @@ function normalizeSettings(raw: unknown): PrayerSettings | null {
 
   const parsedMethod = Number(candidate.method);
   const parsedSchool = Number(candidate.school);
+  const hijriDateAdjustment = normalizeHijriDateAdjustment(candidate.hijriDateAdjustment);
 
   if (!cityName || !country) {
     return null;
@@ -86,6 +94,7 @@ function normalizeSettings(raw: unknown): PrayerSettings | null {
   return {
     cityName,
     country,
+    hijriDateAdjustment,
     method,
     school,
   };
@@ -121,6 +130,7 @@ function writeSettingsToStorage(settings: PrayerSettings, countryCode = ""): voi
       cityName: settings.cityName,
       country: settings.country,
       countryCode,
+      hijriDateAdjustment: String(settings.hijriDateAdjustment),
       method: String(settings.method),
       school: String(settings.school),
     }),
@@ -234,6 +244,9 @@ export function PrayerTimesWrapper({
   initialPrayerDay = null,
 }: PrayerTimesWrapperProps) {
   const [prayerDay, setPrayerDay] = useState<AlAdhanDayData | null>(initialPrayerDay);
+  const [hijriDateAdjustment, setHijriDateAdjustment] = useState(
+    DEFAULT_HIJRI_DATE_ADJUSTMENT,
+  );
   const [dashboardView, setDashboardView] = useState<PrayerDashboardView>(
     readPrayerDashboardViewFromStorage,
   );
@@ -278,11 +291,14 @@ export function PrayerTimesWrapper({
           settings = {
             cityName: location.city,
             country: location.country,
+            hijriDateAdjustment: DEFAULT_HIJRI_DATE_ADJUSTMENT,
             method: DEFAULT_PRAYER_METHOD,
             school: DEFAULT_PRAYER_SCHOOL,
           };
           writeSettingsToStorage(settings, location.countryCode ?? "");
         }
+
+        setHijriDateAdjustment(settings.hijriDateAdjustment);
 
         const dayKey = getLocalDayKey();
         const settingsKey = getSettingsCacheKey(settings);
@@ -419,6 +435,11 @@ export function PrayerTimesWrapper({
     return null;
   }
 
+  const adjustedDateInfo = applyHijriDateAdjustment(
+    prayerDay.date,
+    hijriDateAdjustment,
+  );
+
   const summaryItems: PrayerSummaryItem[] = [
     { name: "Fajr", time: prayerDay.timings.Fajr, adhkarPrayerName: "Fajr" },
     { name: "Sunrise", time: prayerDay.timings.Sunrise },
@@ -485,11 +506,11 @@ export function PrayerTimesWrapper({
   return (
     <section className="space-y-5">
       {featureFlags.sehrAndIftarTimes ? (
-        <SeharIftarHighlightsCard dateInfo={prayerDay.date} timings={prayerDay.timings} />
+        <SeharIftarHighlightsCard dateInfo={adjustedDateInfo} timings={prayerDay.timings} />
       ) : null}
       <CurrentPrayerStatusCard timings={prayerDay.timings} />
       {featureFlags.islamicCalendar ? (
-        <IslamicDateCalendarCard dateInfo={prayerDay.date} />
+        <IslamicDateCalendarCard dateInfo={adjustedDateInfo} />
       ) : null}
       {featureFlags.adhkars && featureFlags.adhkarOfTheDay ? <DailyAdhkarCard /> : null}
       {dashboardView === "timeline" ? (
