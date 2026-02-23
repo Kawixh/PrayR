@@ -12,7 +12,6 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { WhatsNewBanner } from "./_components/whats-new-banner";
 import { PrayerTimesWrapper } from "./_components/prayer-times-wrapper";
 
 const siteUrl = getSiteBaseUrl();
@@ -233,33 +232,6 @@ export default async function Page() {
   return (
     <>
       <div className="homepage-clean space-y-4">
-        <section aria-label="Prayer dashboard intro" className="glass-panel rounded-3xl border-border/80 p-5 sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="space-y-2">
-              <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-                Daily Salah
-              </p>
-              <h1 className="font-display text-2xl leading-tight sm:text-3xl">
-                Prayer Dashboard
-              </h1>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                View prayer timings, Makruh windows, and adhkar shortcuts from one clean daily view.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <Button asChild className="rounded-full px-5" variant="outline">
-                <Link href="/settings">Location & Method</Link>
-              </Button>
-              <Button asChild className="rounded-full px-5" variant="outline">
-                <Link href="/resources">Ramadan Resources</Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        <WhatsNewBanner />
-
         <section aria-labelledby="dashboard-heading" className="space-y-2">
           <h2 className="text-base font-semibold sm:text-lg" id="dashboard-heading">
             Today

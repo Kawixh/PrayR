@@ -27,7 +27,6 @@ import { DailyAdhkarCard } from "./daily-adhkar-card";
 import { CurrentPrayerStatusCard } from "./current-prayer-status-card";
 import { IslamicDateCalendarCard } from "./islamic-date-calendar-card";
 import { SeharIftarHighlightsCard } from "./sehar-iftar-highlights-card";
-import { RamadanMubarakBanner } from "./ramadan-mubarak-banner";
 import { PrayerTimeCard } from "./prayer-time-card";
 import { PrayerTimeline } from "./prayer-timeline";
 
@@ -636,11 +635,6 @@ export function PrayerTimesWrapper({
 
   return (
     <section className="space-y-5">
-      <RamadanMubarakBanner
-        dateInfo={adjustedDateInfo}
-        showSeharAndIftarTimes={featureFlags.sehrAndIftarTimes}
-        timings={prayerDay.timings}
-      />
       {featureFlags.sehrAndIftarTimes ? (
         <SeharIftarHighlightsCard dateInfo={adjustedDateInfo} timings={prayerDay.timings} />
       ) : null}
