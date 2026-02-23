@@ -55,7 +55,7 @@ export function SeharIftarHighlightsCard({
   const hijriMetaLabel = `${dateInfo.hijri.weekday.en} • ${dateInfo.hijri.month.ar}`;
 
   return (
-    <Card className="glass-panel rounded-2xl border-primary/30 p-4 sm:p-5">
+    <Card className="glass-panel block rounded-2xl border-primary/30 p-4 sm:p-5">
       <p className="soft-chip inline-flex">Ramadan Dashboard</p>
 
       <div className="mt-3 grid gap-2 min-[580px]:grid-cols-2">
