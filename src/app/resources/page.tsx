@@ -6,6 +6,7 @@ import {
   SITE_LOCALE,
   SITE_NAME,
 } from "@/lib/seo/site";
+import { getOgImageMetadata, getOgImageUrl } from "@/lib/seo/og-image";
 import type { Metadata } from "next";
 
 const asimYouTubeResources = [
@@ -115,12 +116,12 @@ export const metadata: Metadata = {
       "Ramadan fasting resources, timing guidance, and dua references based on Sheikh Assim Al Hakeem materials.",
     url: "/resources",
     images: [
-      {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: "PrayR daily prayer times app",
-      },
+      getOgImageMetadata({
+        title: "Ramadan Resources and Fasting Guide",
+        description:
+          "Ramadan fasting resources, timing guidance, and dua references based on Sheikh Assim Al Hakeem materials.",
+        pathname: "/resources",
+      }),
     ],
   },
   twitter: {
@@ -128,7 +129,14 @@ export const metadata: Metadata = {
     title: "Ramadan Resources and Fasting Guide",
     description:
       "Ramadan fasting resources, timing guidance, and dua references based on Sheikh Assim Al Hakeem materials.",
-    images: ["/twitter-image"],
+    images: [
+      getOgImageUrl({
+        title: "Ramadan Resources and Fasting Guide",
+        description:
+          "Ramadan fasting resources, timing guidance, and dua references based on Sheikh Assim Al Hakeem materials.",
+        pathname: "/resources",
+      }),
+    ],
   },
   robots: {
     index: true,

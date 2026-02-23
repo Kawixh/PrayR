@@ -12,6 +12,7 @@ import {
   SITE_LOCALE,
   SITE_NAME,
 } from "@/lib/seo/site";
+import { getOgImageMetadata, getOgImageUrl } from "@/lib/seo/og-image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AdhkarBrowser } from "./_components/adhkar-browser";
@@ -82,12 +83,12 @@ export const metadata: Metadata = {
       "Read daily adhkar with source-preserved Arabic text and source-provided translation wording.",
     url: "/adhkars",
     images: [
-      {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: "PrayR daily prayer times app",
-      },
+      getOgImageMetadata({
+        title: "Adhkars Library",
+        description:
+          "Read daily adhkar with source-preserved Arabic text and source-provided translation wording.",
+        pathname: "/adhkars",
+      }),
     ],
   },
   twitter: {
@@ -95,7 +96,14 @@ export const metadata: Metadata = {
     title: "Adhkars Library",
     description:
       "Read daily adhkar with source-preserved Arabic text and source-provided translation wording.",
-    images: ["/twitter-image"],
+    images: [
+      getOgImageUrl({
+        title: "Adhkars Library",
+        description:
+          "Read daily adhkar with source-preserved Arabic text and source-provided translation wording.",
+        pathname: "/adhkars",
+      }),
+    ],
   },
   robots: {
     index: true,

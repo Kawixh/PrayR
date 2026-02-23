@@ -2,7 +2,7 @@ import { getSiteBaseUrl } from "@/lib/seo/site";
 import type { MetadataRoute } from "next";
 
 const siteUrl = getSiteBaseUrl();
-const siteHost = new URL(siteUrl).host;
+const siteOrigin = new URL(siteUrl).origin;
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -27,6 +27,6 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,
-    host: siteHost,
+    host: siteOrigin,
   };
 }

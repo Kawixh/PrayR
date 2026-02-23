@@ -11,6 +11,7 @@ import {
   SITE_LOCALE,
   SITE_NAME,
 } from "@/lib/seo/site";
+import { getOgImageMetadata, getOgImageUrl } from "@/lib/seo/og-image";
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Sora } from "next/font/google";
 import { Navbar } from "./_components/navbar";
@@ -49,7 +50,7 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: SITE_NAME,
   url: siteUrl,
-  logo: `${siteUrl}/icon-512.png`,
+  logo: `${siteUrl}/android-chrome-512x512.png`,
 };
 
 const themeInitScript = `
@@ -109,8 +110,16 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico" },
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      {
+        url: "/android-chrome-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        url: "/android-chrome-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+      },
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
     shortcut: ["/favicon.ico"],
@@ -134,12 +143,12 @@ export const metadata: Metadata = {
     description:
       "Get accurate daily prayer times by city and country, with trusted Islamic calculation methods and school preferences.",
     images: [
-      {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: "PrayR daily prayer times app",
-      },
+      getOgImageMetadata({
+        title: `${SITE_NAME} Prayer Times`,
+        description:
+          "Get accurate daily prayer times by city and country, with trusted Islamic calculation methods and school preferences.",
+        pathname: "/",
+      }),
     ],
   },
   twitter: {
@@ -147,7 +156,14 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} Prayer Times`,
     description:
       "Get accurate daily prayer times by city and country, with trusted Islamic calculation methods and school preferences.",
-    images: ["/twitter-image"],
+    images: [
+      getOgImageUrl({
+        title: `${SITE_NAME} Prayer Times`,
+        description:
+          "Get accurate daily prayer times by city and country, with trusted Islamic calculation methods and school preferences.",
+        pathname: "/",
+      }),
+    ],
   },
   other: {
     "msapplication-config": "/browserconfig.xml",
@@ -180,7 +196,7 @@ export default async function RootLayout({
   return (
     <html lang={SITE_LOCALE} suppressHydrationWarning>
       <head>
-        <meta name="apple-mobile-web-app-title" content="Prayr" />
+        <meta name="apple-mobile-web-app-title" content="PrayR" />
         <meta content={SITE_LOCALE} httpEquiv="content-language" />
         <meta content={SITE_LOCALE} name="language" />
         <script

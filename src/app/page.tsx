@@ -7,6 +7,7 @@ import {
   getSiteBaseUrl,
   SITE_LOCALE,
 } from "@/lib/seo/site";
+import { getOgImageMetadata, getOgImageUrl } from "@/lib/seo/og-image";
 import type { Metadata } from "next";
 import { cookies, headers } from "next/headers";
 import Link from "next/link";
@@ -189,12 +190,12 @@ export const metadata: Metadata = {
       "View accurate daily prayer times by city and country with clear explanations for every prayer and setting.",
     url: "/",
     images: [
-      {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: "PrayR daily prayer times app",
-      },
+      getOgImageMetadata({
+        title: "Prayer Times and Daily Salah Guide",
+        description:
+          "View accurate daily prayer times by city and country with clear explanations for every prayer and setting.",
+        pathname: "/",
+      }),
     ],
   },
   twitter: {
@@ -202,7 +203,14 @@ export const metadata: Metadata = {
     title: "Prayer Times and Daily Salah Guide",
     description:
       "View accurate daily prayer times by city and country with clear explanations for every prayer and setting.",
-    images: ["/twitter-image"],
+    images: [
+      getOgImageUrl({
+        title: "Prayer Times and Daily Salah Guide",
+        description:
+          "View accurate daily prayer times by city and country with clear explanations for every prayer and setting.",
+        pathname: "/",
+      }),
+    ],
   },
   robots: {
     index: true,

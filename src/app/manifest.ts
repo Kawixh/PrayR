@@ -17,14 +17,8 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#5f72d8",
     icons: [
       { src: "/favicon.ico", type: "image/x-icon", sizes: "16x16 32x32" },
-      { src: "/icon-192.png", type: "image/png", sizes: "192x192" },
-      { src: "/icon-512.png", type: "image/png", sizes: "512x512" },
-      {
-        src: "/icon-192-maskable.png",
-        type: "image/png",
-        sizes: "192x192",
-        purpose: "maskable",
-      },
+      { src: "/android-chrome-192x192.png", type: "image/png", sizes: "192x192" },
+      { src: "/android-chrome-512x512.png", type: "image/png", sizes: "512x512" },
       {
         src: "/web-app-manifest-192x192.png",
         sizes: "192x192",
@@ -35,12 +29,6 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/web-app-manifest-512x512.png",
         sizes: "512x512",
         type: "image/png",
-        purpose: "maskable",
-      },
-      {
-        src: "/icon-512-maskable.png",
-        type: "image/png",
-        sizes: "512x512",
         purpose: "maskable",
       },
     ],
