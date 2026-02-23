@@ -832,48 +832,6 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
         </p>
       </header>
 
-      <div className="space-y-2.5 md:hidden">
-        <nav aria-label="Settings categories" className="grid gap-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const selected = resolvedActivePanel === item.id;
-
-            return (
-              <Link
-                aria-current={selected ? "page" : undefined}
-                className={cn(
-                  "focus-visible:ring-ring/50 flex min-h-14 items-center justify-between gap-3 rounded-md border px-3 py-2.5 outline-none transition-colors focus-visible:ring-[3px]",
-                  selected
-                    ? "border-border bg-accent/70 text-foreground"
-                    : "border-border/70 bg-card/80 hover:bg-accent/45",
-                )}
-                href={getSettingsPanelPath(item.id)}
-                key={item.id}
-                title={item.description}
-              >
-                <span className="flex min-w-0 items-center gap-2.5">
-                  <Icon className="size-4 shrink-0 text-muted-foreground" />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium">{item.label}</span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {item.summary}
-                    </span>
-                  </span>
-                </span>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-              </Link>
-            );
-          })}
-        </nav>
-
-        {!featureFlags.prayerTimings ? (
-          <p className="rounded-xl border border-border/80 bg-muted/30 px-3 py-2 text-xs leading-5 text-muted-foreground">
-            Prayer settings are hidden while Prayer Timings is disabled in
-            Features.
-          </p>
-        ) : null}
-      </div>
-
       <div className="grid gap-3 md:grid-cols-[17rem_minmax(0,1fr)] ">
         <aside className="hidden self-start md:sticky md:top-24 md:block">
           <CardContent className="p-0!">
@@ -938,45 +896,64 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
             <p className="mt-1 text-sm text-muted-foreground">
               {activePanelMeta.description}
             </p>
-            <div className="mt-3 flex gap-2 md:hidden">
-              <Button
-                asChild={Boolean(previousPanelItem)}
-                className="flex-1 justify-start"
-                size="sm"
-                type="button"
-                variant="outline"
+            <div className="mt-3 space-y-2 md:hidden">
+              <Select
+                onValueChange={(value) =>
+                  router.push(getSettingsPanelPath(value as SettingsPanelId))
+                }
+                value={resolvedActivePanel}
               >
-                {previousPanelItem ? (
-                  <Link href={getSettingsPanelPath(previousPanelItem.id)}>
-                    <ChevronLeft className="size-4" />
-                    {previousPanelItem.label}
-                  </Link>
-                ) : (
-                  <span>
-                    <ChevronLeft className="size-4" />
-                    Previous
-                  </span>
-                )}
-              </Button>
-              <Button
-                asChild={Boolean(nextPanelItem)}
-                className="flex-1 justify-end"
-                size="sm"
-                type="button"
-                variant="outline"
-              >
-                {nextPanelItem ? (
-                  <Link href={getSettingsPanelPath(nextPanelItem.id)}>
-                    {nextPanelItem.label}
-                    <ChevronRight className="size-4" />
-                  </Link>
-                ) : (
-                  <span>
-                    Next
-                    <ChevronRight className="size-4" />
-                  </span>
-                )}
-              </Button>
+                <SelectTrigger className="min-h-10 w-full rounded-md">
+                  <SelectValue placeholder="Choose settings section" />
+                </SelectTrigger>
+                <SelectContent>
+                  {menuItems.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex gap-2">
+                <Button
+                  asChild={Boolean(previousPanelItem)}
+                  className="flex-1 justify-start"
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  {previousPanelItem ? (
+                    <Link href={getSettingsPanelPath(previousPanelItem.id)}>
+                      <ChevronLeft className="size-4" />
+                      {previousPanelItem.label}
+                    </Link>
+                  ) : (
+                    <span>
+                      <ChevronLeft className="size-4" />
+                      Previous
+                    </span>
+                  )}
+                </Button>
+                <Button
+                  asChild={Boolean(nextPanelItem)}
+                  className="flex-1 justify-end"
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  {nextPanelItem ? (
+                    <Link href={getSettingsPanelPath(nextPanelItem.id)}>
+                      {nextPanelItem.label}
+                      <ChevronRight className="size-4" />
+                    </Link>
+                  ) : (
+                    <span>
+                      Next
+                      <ChevronRight className="size-4" />
+                    </span>
+                  )}
+                </Button>
+              </div>
             </div>
           </header>
 
