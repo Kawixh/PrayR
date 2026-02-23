@@ -1,5 +1,6 @@
 "use client";
 
+import { resetBannerPreferencesToDefaults } from "@/app/_utils/banner-preferences";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import {
@@ -9,7 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { readClientFeatureOverrides } from "@/features/client";
+import {
+  readClientFeatureOverrides,
+  writeClientFeatureOverrides,
+} from "@/features/client";
 import { type FeatureFlags } from "@/features/definitions";
 import { resolveFeatureFlags } from "@/features/resolve";
 import { cn } from "@/lib/utils";
@@ -26,7 +30,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   getLocalNotificationPermission,
   showLocalNotification,
@@ -385,6 +389,7 @@ type SettingsRouteClientProps = {
 
 export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
   const router = useRouter();
+  const [isResettingDefaults, startResetDefaultsTransition] = useTransition();
   const [settings, setSettings] =
     useState<PrayerSettingsState>(getInitialSettings);
   const [featureFlags, setFeatureFlags] = useState<FeatureFlags>(
@@ -602,6 +607,25 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
   const changeDashboardView = (value: PrayerDashboardView) => {
     setDashboardView(value);
     writePrayerDashboardViewToStorage(value);
+  };
+
+  const resetSettingsToDefaults = () => {
+    setLocationError(null);
+    setLocationStatus(null);
+    setCitySearchError(null);
+    setCitySuggestions([]);
+    setMockNotificationStatus(null);
+    setMockNotificationError(null);
+
+    startResetDefaultsTransition(() => {
+      resetBannerPreferencesToDefaults();
+      writeClientFeatureOverrides({});
+      setFeatureFlags(DEFAULT_FEATURE_FLAGS);
+      setSettings(EMPTY_SETTINGS);
+      setDashboardView("cards");
+      writePrayerDashboardViewToStorage("cards");
+      router.refresh();
+    });
   };
 
   const requestDevNotificationPermission = async () => {
@@ -993,6 +1017,30 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
                     {locationStatus ? (
                       <p className="text-sm text-primary">{locationStatus}</p>
                     ) : null}
+                  </section>
+
+                  <section className="border-t pt-3">
+                    <div className="mb-2">
+                      <h3 className="text-sm font-semibold text-destructive">
+                        Danger Zone
+                      </h3>
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        Reset all settings to defaults. This clears your
+                        location, method, dashboard view, and feature toggles.
+                      </p>
+                    </div>
+                    <Button
+                      disabled={isResettingDefaults}
+                      onClick={resetSettingsToDefaults}
+                      size="sm"
+                      type="button"
+                      className="rounded-sm items-center"
+                      variant="destructive"
+                    >
+                      {isResettingDefaults
+                        ? "Resetting..."
+                        : "Reset to default settings"}
+                    </Button>
                   </section>
                 </div>
               ) : (
