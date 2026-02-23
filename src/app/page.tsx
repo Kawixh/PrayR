@@ -17,6 +17,7 @@ import {
   parseHomepageSeoContentCookie,
 } from "./_utils/homepage-seo-content";
 import { PrayerTimesWrapper } from "./_components/prayer-times-wrapper";
+import { TodayCityHeading } from "./_components/today-city-heading";
 
 const siteUrl = getSiteBaseUrl();
 
@@ -241,9 +242,7 @@ export default async function Page() {
     <>
       <div className="homepage-clean space-y-4">
         <section aria-labelledby="dashboard-heading" className="space-y-2">
-          <h2 className="text-base font-semibold sm:text-lg" id="dashboard-heading">
-            Today
-          </h2>
+          <TodayCityHeading />
           <PrayerTimesWrapper
             featureFlags={featureFlags}
             initialPrayerDay={googlebotHomepageResult.initialPrayerDay}
