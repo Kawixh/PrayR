@@ -1,0 +1,226 @@
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ],
+      "regex": "^(?:/(.*))(?:/)?$"
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'"
+        }
+      ],
+      "regex": "^/sw\\.js(?:/)?$"
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ],
+      "regex": "^/manifest\\.webmanifest(?:/)?$"
+    }
+  ],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [
+      {
+        "source": "/phrp/static/(.*)",
+        "destination": "https://us-assets.i.posthog.com/static/$1",
+        "regex": "^/phrp/static(?:/(.*))(?:/)?$"
+      },
+      {
+        "source": "/phrp/(.*)",
+        "destination": "https://us.i.posthog.com/$1",
+        "regex": "^/phrp(?:/(.*))(?:/)?$"
+      }
+    ],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/api/adhkar/category/[id]",
+      "regex": "^/api/adhkar/category/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/adhkar/category/(?<nxtPid>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/adhkars",
+      "regex": "^/adhkars(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/adhkars(?:/)?$"
+    },
+    {
+      "page": "/adkars",
+      "regex": "^/adkars(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/adkars(?:/)?$"
+    },
+    {
+      "page": "/api/adhkar/categories",
+      "regex": "^/api/adhkar/categories(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/adhkar/categories(?:/)?$"
+    },
+    {
+      "page": "/api/adhkar/daily",
+      "regex": "^/api/adhkar/daily(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/adhkar/daily(?:/)?$"
+    },
+    {
+      "page": "/api/places/from-ip",
+      "regex": "^/api/places/from\\-ip(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/places/from\\-ip(?:/)?$"
+    },
+    {
+      "page": "/api/places/reverse",
+      "regex": "^/api/places/reverse(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/places/reverse(?:/)?$"
+    },
+    {
+      "page": "/api/places/suggest",
+      "regex": "^/api/places/suggest(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/places/suggest(?:/)?$"
+    },
+    {
+      "page": "/api/places/validate",
+      "regex": "^/api/places/validate(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/places/validate(?:/)?$"
+    },
+    {
+      "page": "/api/prayer-times",
+      "regex": "^/api/prayer\\-times(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/prayer\\-times(?:/)?$"
+    },
+    {
+      "page": "/fallback",
+      "regex": "^/fallback(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/fallback(?:/)?$"
+    },
+    {
+      "page": "/manifest.webmanifest",
+      "regex": "^/manifest\\.webmanifest(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/manifest\\.webmanifest(?:/)?$"
+    },
+    {
+      "page": "/opengraph-image",
+      "regex": "^/opengraph\\-image(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/opengraph\\-image(?:/)?$"
+    },
+    {
+      "page": "/resources",
+      "regex": "^/resources(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/resources(?:/)?$"
+    },
+    {
+      "page": "/robots.txt",
+      "regex": "^/robots\\.txt(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/robots\\.txt(?:/)?$"
+    },
+    {
+      "page": "/settings",
+      "regex": "^/settings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/settings(?:/)?$"
+    },
+    {
+      "page": "/sitemap.xml",
+      "regex": "^/sitemap\\.xml(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/sitemap\\.xml(?:/)?$"
+    },
+    {
+      "page": "/twitter-image",
+      "regex": "^/twitter\\-image(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/twitter\\-image(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}
