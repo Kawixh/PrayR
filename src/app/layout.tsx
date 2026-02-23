@@ -1,6 +1,6 @@
 import { PostHogProvider } from "@/app/providers";
-import { JsonLdScript } from "@/components/seo/json-ld-script";
 import RootLayoutClient from "@/components/root-layout-client";
+import { JsonLdScript } from "@/components/seo/json-ld-script";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { getServerFeatureFlags } from "@/features/server";
@@ -180,6 +180,7 @@ export default async function RootLayout({
   return (
     <html lang={SITE_LOCALE} suppressHydrationWarning>
       <head>
+        <meta name="apple-mobile-web-app-title" content="Prayr" />
         <meta content={SITE_LOCALE} httpEquiv="content-language" />
         <meta content={SITE_LOCALE} name="language" />
         <script
