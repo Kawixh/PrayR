@@ -47,14 +47,12 @@ const calculationMethods = [
   {
     value: "0",
     label: "Jafari / Shia Ithna-Ashari",
-    description:
-      "Ja'fari preset commonly used by Shia communities.",
+    description: "Ja'fari preset commonly used by Shia communities.",
   },
   {
     value: "1",
     label: "University of Islamic Sciences, Karachi",
-    description:
-      "Karachi preset, common in South Asia.",
+    description: "Karachi preset, common in South Asia.",
   },
   {
     value: "2",
@@ -64,8 +62,7 @@ const calculationMethods = [
   {
     value: "3",
     label: "Muslim World League",
-    description:
-      "MWL preset, widely used internationally.",
+    description: "MWL preset, widely used internationally.",
   },
   {
     value: "4",
@@ -85,8 +82,7 @@ const calculationMethods = [
   {
     value: "8",
     label: "Gulf Region",
-    description:
-      "General Gulf-region preset.",
+    description: "General Gulf-region preset.",
   },
   {
     value: "9",
@@ -121,8 +117,7 @@ const calculationMethods = [
   {
     value: "15",
     label: "Moonsighting Committee Worldwide (requires shafaq parameter)",
-    description:
-      "Moonsighting Committee preset (requires `shafaq`).",
+    description: "Moonsighting Committee preset (requires `shafaq`).",
   },
   {
     value: "16",
@@ -1136,8 +1131,8 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
             {resolvedActivePanel === "display" ? (
               featureFlags.prayerTimings ? (
                 <div className="space-y-5">
-                  <section className="space-y-4 rounded-xl border border-border/70 bg-background/50 p-4 sm:p-5">
-                    <div className="space-y-1">
+                  <section>
+                    <div className="mb-3">
                       <h3 className="text-sm font-semibold">
                         Dashboard Layout
                       </h3>
@@ -1183,8 +1178,8 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
                     </div>
                   </section>
 
-                  <section className="space-y-4 rounded-xl border border-border/70 bg-background/50 p-4 sm:p-5">
-                    <div className="space-y-1">
+                  <section>
+                    <div className="mb-3">
                       <h3 className="text-sm font-semibold">
                         Hijri Date Adjustment
                       </h3>
