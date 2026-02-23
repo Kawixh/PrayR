@@ -48,7 +48,7 @@ const navItems: NavItem[] = [
     featureKey: "resourcesTab",
   },
   {
-    href: "/settings",
+    href: "/settings/general",
     label: "Settings",
     icon: Settings,
     matches: (pathname: string) => pathname.startsWith("/settings"),

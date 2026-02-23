@@ -226,7 +226,7 @@ export default async function Page() {
       redirect("/adhkars");
     }
 
-    redirect("/settings");
+    redirect("/settings/general");
   }
 
   return (
