@@ -6,6 +6,34 @@ export const DEFAULT_HIJRI_DATE_ADJUSTMENT = 0;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const RTL_MARK_REGEX = /[\u200e\u200f]/g;
+const HIJRI_MONTH_EN_BY_NUMBER = [
+  "Muharram",
+  "Safar",
+  "Rabi al-Awwal",
+  "Rabi al-Thani",
+  "Jumada al-Awwal",
+  "Jumada al-Thani",
+  "Rajab",
+  "Sha'ban",
+  "Ramadan",
+  "Shawwal",
+  "Dhu al-Qadah",
+  "Dhu al-Hijjah",
+] as const;
+const HIJRI_MONTH_AR_BY_NUMBER = [
+  "محرم",
+  "صفر",
+  "ربيع الأول",
+  "ربيع الآخر",
+  "جمادى الأولى",
+  "جمادى الآخرة",
+  "رجب",
+  "شعبان",
+  "رمضان",
+  "شوال",
+  "ذو القعدة",
+  "ذو الحجة",
+] as const;
 
 function cleanText(value: string): string {
   return value.replace(RTL_MARK_REGEX, "").trim();
@@ -96,19 +124,8 @@ export function applyHijriDateAdjustment(
       return dateInfo;
     }
 
-    const monthEn = cleanText(
-      new Intl.DateTimeFormat("en-u-ca-islamic", {
-        month: "long",
-        timeZone: "UTC",
-      }).format(adjustedGregorianDate),
-    );
-
-    const monthAr = cleanText(
-      new Intl.DateTimeFormat("ar-u-ca-islamic", {
-        month: "long",
-        timeZone: "UTC",
-      }).format(adjustedGregorianDate),
-    );
+    const monthEn = HIJRI_MONTH_EN_BY_NUMBER[monthNumber - 1] ?? dateInfo.hijri.month.en;
+    const monthAr = HIJRI_MONTH_AR_BY_NUMBER[monthNumber - 1] ?? dateInfo.hijri.month.ar;
 
     const weekdayAr = cleanText(
       new Intl.DateTimeFormat("ar-u-ca-islamic", {
