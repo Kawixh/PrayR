@@ -103,44 +103,54 @@ export const Navbar = ({ featureFlags }: { featureFlags: FeatureFlags }) => {
         aria-label="Primary"
         className="sticky top-[calc(env(safe-area-inset-top)+0.35rem)] z-40 hidden md:block"
       >
-        <div className="rounded-2xl border border-border/85 bg-card p-1.5 shadow-[0_1px_1px_color-mix(in_oklab,var(--foreground)_8%,transparent),0_10px_20px_-18px_color-mix(in_oklab,var(--foreground)_35%,transparent)]">
-          <div className="grid gap-1.5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-            <div className="grid min-w-0 gap-1.5 [grid-template-columns:repeat(auto-fit,minmax(min(10ch,100%),1fr))]">
+        <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-card/95 p-2 shadow-[0_1px_1px_color-mix(in_oklab,var(--foreground)_8%,transparent),0_18px_36px_-30px_color-mix(in_oklab,var(--foreground)_42%,transparent)] backdrop-blur-md">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -left-10 top-0 h-full w-48 rounded-full bg-primary/10 blur-3xl"
+          />
+
+          <div className="relative flex items-center gap-2.5 lg:gap-4">
+            <ul className="flex min-w-0 flex-1 items-center justify-center gap-1">
               {visibleNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = item.matches(pathname);
 
                 return (
-                  <Button
-                    asChild
-                    className={cn(
-                      "min-h-10 h-auto rounded-xl border px-2.5 py-2 whitespace-normal sm:px-3",
-                      isActive
-                        ? "border-primary/35 bg-primary/12 text-primary"
-                        : "border-transparent bg-transparent text-muted-foreground hover:border-border/70 hover:bg-muted/45 hover:text-foreground",
-                    )}
-                    key={item.href}
-                    size="sm"
-                    variant="outline"
-                  >
+                  <li key={item.href}>
                     <Link
                       aria-current={isActive ? "page" : undefined}
-                      className="flex w-full items-center justify-center gap-1.5 text-center leading-tight"
+                      className={cn(
+                        "group relative flex h-10 items-center gap-2 rounded-lg border px-3.5 text-sm font-semibold tracking-tight transition-all duration-200",
+                        isActive
+                          ? "border-primary/30 bg-primary/12 text-primary"
+                          : "border-transparent text-muted-foreground hover:border-border/80 hover:bg-card hover:text-foreground",
+                      )}
                       href={item.href}
                     >
-                      <Icon className="size-4 shrink-0" />
-                      <span className="text-[0.8125rem] leading-tight font-semibold tracking-normal [overflow-wrap:anywhere]">
+                      <Icon
+                        className={cn(
+                          "size-4 shrink-0 transition-colors duration-200",
+                          isActive
+                            ? "text-primary"
+                            : "text-muted-foreground group-hover:text-foreground",
+                        )}
+                      />
+                      <span className="leading-none whitespace-nowrap">
                         {item.label}
                       </span>
+                      {isActive ? (
+                        <span
+                          aria-hidden
+                          className="absolute h-0.5 rounded-full bg-primary"
+                        />
+                      ) : null}
                     </Link>
-                  </Button>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
 
-            <div className="flex justify-end">
-              <ModeToggle className="shrink-0 rounded-xl border-border/80 bg-background hover:border-primary/30 hover:bg-muted/45" />
-            </div>
+            <ModeToggle className="shrink-0 rounded-xl border-border/80 bg-background hover:border-primary/30 hover:bg-muted/45" />
           </div>
         </div>
       </nav>
