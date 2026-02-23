@@ -263,7 +263,7 @@ async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
 
 function SuggestionsSkeleton({ withCode = false }: { withCode?: boolean }) {
   return (
-    <div className="bg-popover absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border p-1 shadow-md">
+    <div className="bg-popover absolute top-full left-0 z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border p-1 shadow-md">
       {Array.from({ length: 4 }).map((_, index) => (
         <div
           className="flex items-start justify-between rounded-lg px-2.5 py-2"
@@ -734,13 +734,13 @@ export default function SettingsPage() {
           <div className="pt-5">
             {activePanel === "general" ? (
               featureFlags.prayerTimings ? (
-                <div className="space-y-5">
+                <div className="space-y-6">
                   {locationError ? (
                     <p className="rounded-md border border-destructive/35 bg-destructive/8 px-3 py-2 text-sm text-destructive">
                       {locationError}
                     </p>
                   ) : null}
-                  <section className="flex flex-col gap-4">
+                  <section className="flex flex-col gap-3">
                     <div className="space-y-1">
                       <h3 className="text-sm font-semibold">Manual Location</h3>
                       <p className="text-sm leading-6 text-muted-foreground">
@@ -749,7 +749,7 @@ export default function SettingsPage() {
                       </p>
                     </div>
 
-                    <div className="grid gap-5">
+                    <div className="grid gap-3">
                       <div className="relative space-y-2">
                         <label
                           className="text-sm font-medium text-foreground"
@@ -798,51 +798,51 @@ export default function SettingsPage() {
                             value={settings.cityName}
                           />
                           <Search className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                        </div>
 
-                        <div className="min-h-5">
-                          {citySearchError ? (
-                            <p className="text-sm text-destructive">
-                              {citySearchError}
-                            </p>
+                          {cityFocused && cityLoading ? (
+                            <SuggestionsSkeleton withCode />
+                          ) : null}
+
+                          {showCitySuggestions ? (
+                            <div className="bg-popover absolute top-full left-0 z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border p-1 shadow-md">
+                              {citySuggestions.map((city) => (
+                                <button
+                                  className="hover:bg-accent hover:text-accent-foreground flex w-full items-start justify-between rounded-md px-2.5 py-2 text-left transition-colors"
+                                  key={city.geonameId}
+                                  onMouseDown={() => selectCitySuggestion(city)}
+                                  type="button"
+                                >
+                                  <div className="min-w-0">
+                                    <p className="break-words text-sm leading-snug font-medium">
+                                      {city.name}
+                                    </p>
+                                    <p className="break-words text-sm text-muted-foreground">
+                                      {[city.adminName1, city.countryName]
+                                        .filter(Boolean)
+                                        .join(", ")}
+                                    </p>
+                                  </div>
+                                  <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                                    {city.countryCode}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
                           ) : null}
                         </div>
 
-                        {cityFocused && cityLoading ? (
-                          <SuggestionsSkeleton withCode />
-                        ) : null}
-
-                        {showCitySuggestions ? (
-                          <div className="bg-popover absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border p-1 shadow-md">
-                            {citySuggestions.map((city) => (
-                              <button
-                                className="hover:bg-accent hover:text-accent-foreground flex w-full items-start justify-between rounded-md px-2.5 py-2 text-left transition-colors"
-                                key={city.geonameId}
-                                onMouseDown={() => selectCitySuggestion(city)}
-                                type="button"
-                              >
-                                <div className="min-w-0">
-                                  <p className="break-words text-sm leading-snug font-medium">
-                                    {city.name}
-                                  </p>
-                                  <p className="break-words text-sm text-muted-foreground">
-                                    {[city.adminName1, city.countryName]
-                                      .filter(Boolean)
-                                      .join(", ")}
-                                  </p>
-                                </div>
-                                <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                                  {city.countryCode}
-                                </span>
-                              </button>
-                            ))}
+                        {citySearchError ? (
+                          <div className="min-h-5">
+                            <p className="text-sm text-destructive">
+                              {citySearchError}
+                            </p>
                           </div>
                         ) : null}
                       </div>
                     </div>
                   </section>
 
-                  <section className="flex flex-col gap-3">
+                  <section className="flex flex-col gap-2">
                     <div className="space-y-1">
                       <h3 className="text-sm font-semibold">
                         Auto Detect Location
