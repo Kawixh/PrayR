@@ -170,7 +170,7 @@ export default async function ResourcesPage() {
         </header>
 
         <section className="grid gap-4 lg:grid-cols-2">
-          <article className="glass-panel rounded-3xl border-border/80 border-l-4 border-l-primary p-4 sm:p-5">
+          <article className="glass-panel rounded-3xl border-border/80 p-4 sm:p-5">
             <h2 className="text-xl font-semibold sm:text-2xl">
               Why these settings in PrayR
             </h2>
@@ -189,12 +189,12 @@ export default async function ResourcesPage() {
             </ul>
           </article>
 
-          <article className="glass-panel rounded-3xl border-border/80 border-l-4 border-l-primary p-4 sm:p-5">
+          <article className="glass-panel rounded-3xl border-border/80 p-4 sm:p-5">
             <h2 className="text-xl font-semibold sm:text-2xl">
               When to start and end fasting
             </h2>
             <div className="mt-3 space-y-3 text-sm leading-6 sm:text-base">
-              <div className="rounded-xl border border-border/70 border-l-4 border-l-primary/35 bg-background/80 p-3">
+              <div className="rounded-xl border border-border/70 bg-background/80 p-3">
                 <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                   Start Fast
                 </p>
@@ -204,7 +204,7 @@ export default async function ResourcesPage() {
                 </p>
               </div>
 
-              <div className="rounded-xl border border-border/70 border-l-4 border-l-primary/35 bg-background/80 p-3">
+              <div className="rounded-xl border border-border/70 bg-background/80 p-3">
                 <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                   End Fast
                 </p>
@@ -221,7 +221,7 @@ export default async function ResourcesPage() {
         <section className="app-banner-subtle">
           <h2 className="text-xl font-semibold sm:text-2xl">Dua for fasting</h2>
           <div className="mt-3 grid gap-3 lg:grid-cols-2">
-            <article className="rounded-xl border border-border/70 border-l-4 border-l-primary/35 bg-background/85 p-3">
+            <article className="rounded-xl border border-border/70 bg-background/85 p-3">
               <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                 Starting Fast (Sehar)
               </p>
@@ -231,7 +231,7 @@ export default async function ResourcesPage() {
               </p>
             </article>
 
-            <article className="rounded-xl border border-border/70 border-l-4 border-l-primary/35 bg-background/85 p-3">
+            <article className="rounded-xl border border-border/70 bg-background/85 p-3">
               <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                 Breaking Fast (Iftar)
               </p>
@@ -264,7 +264,7 @@ export default async function ResourcesPage() {
               <ul className="space-y-2">
                 {asimYouTubeResources.map((resource) => (
                   <li
-                    className="rounded-xl border border-border/70 border-l-4 border-l-primary/35 bg-background/85 p-3"
+                    className="rounded-xl border border-border/70 bg-background/85 p-3"
                     key={resource.url}
                   >
                     <p className="mb-2 inline-flex rounded-full border border-border/80 bg-muted/55 px-2 py-0.5 text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
@@ -303,7 +303,7 @@ export default async function ResourcesPage() {
             <div className="mt-3 space-y-2.5">
               {ramadanFaqItems.map((item) => (
                 <article
-                  className="rounded-xl border border-border/70 border-l-4 border-l-primary/35 bg-background/85 p-3"
+                  className="rounded-xl border border-border/70 bg-background/85 p-3"
                   key={item.question}
                 >
                   <p className="mb-2 inline-flex rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold tracking-[0.14em] text-primary uppercase">

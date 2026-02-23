@@ -38,7 +38,7 @@ export function WhatsNewBanner() {
   return (
     <section
       aria-label="What's new"
-      className="app-banner-subtle animate-in fade-in slide-in-from-top-2 duration-500 border-l-4"
+      className="app-banner-subtle animate-in fade-in slide-in-from-top-2 duration-500"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

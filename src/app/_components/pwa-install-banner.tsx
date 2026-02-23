@@ -113,7 +113,7 @@ export function PwaInstallBanner() {
     <div
       aria-label={showAndroidBanner ? "Install PrayR" : undefined}
       className={cn(
-        "animate-in fade-in slide-in-from-top-2 duration-500 border-l-4",
+        "animate-in fade-in slide-in-from-top-2 duration-500",
         showAndroidBanner ? "app-banner cursor-pointer" : "app-banner-subtle",
       )}
       onClick={showAndroidBanner ? () => void installOnAndroid() : undefined}

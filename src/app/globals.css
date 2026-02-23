@@ -188,8 +188,6 @@ html.light body {
 
   .app-banner {
     @apply overflow-hidden rounded-2xl border border-border px-4 py-3 sm:px-5 sm:py-4;
-    border-left-width: 4px;
-    border-left-color: color-mix(in oklab, var(--primary) 70%, var(--border));
     background: var(--card);
     box-shadow: 0 8px 20px -18px color-mix(in oklab, var(--foreground) 22%, transparent);
   }
