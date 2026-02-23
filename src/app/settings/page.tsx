@@ -183,23 +183,14 @@ type CitySuggestion = {
   lng: number;
 };
 
-type CountrySuggestion = {
-  countryCode: string;
-  countryName: string;
-};
-
 type LocationResult = {
   city: string;
   country: string;
   countryCode: string;
 };
 
-type ComboValidationResponse = {
-  valid: boolean;
-  warning?: string;
-  normalizedCountry?: string;
-  countryCode?: string;
-};
+const AUTO_DETECT_FALLBACK_MESSAGE =
+  "Unable to determine location automatically. Search manually.";
 
 const EMPTY_SETTINGS: PrayerSettingsState = {
   cityName: "",
@@ -301,24 +292,10 @@ export default function SettingsPage() {
     getInitialDashboardView,
   );
   const [citySuggestions, setCitySuggestions] = useState<CitySuggestion[]>([]);
-  const [countrySuggestions, setCountrySuggestions] = useState<
-    CountrySuggestion[]
-  >([]);
   const [cityFocused, setCityFocused] = useState(false);
-  const [countryFocused, setCountryFocused] = useState(false);
   const [cityInteracted, setCityInteracted] = useState(false);
-  const [countryInteracted, setCountryInteracted] = useState(false);
-  const [locationOptionsChanged, setLocationOptionsChanged] = useState(false);
   const [cityLoading, setCityLoading] = useState(false);
-  const [countryLoading, setCountryLoading] = useState(false);
   const [citySearchError, setCitySearchError] = useState<string | null>(null);
-  const [countrySearchError, setCountrySearchError] = useState<string | null>(
-    null,
-  );
-  const [comboValidation, setComboValidation] = useState<
-    "idle" | "checking" | "valid" | "invalid"
-  >("idle");
-  const [comboWarning, setComboWarning] = useState<string | null>(null);
   const [locationStatus, setLocationStatus] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [resolving, setResolving] = useState<"gps" | "ip" | null>(null);
@@ -387,118 +364,6 @@ export default function SettingsPage() {
   }, [cityFocused, cityInteracted, settings.cityName, settings.countryCode]);
 
   useEffect(() => {
-    const query = settings.country.trim();
-
-    if (!countryFocused || !countryInteracted || query.length < 1) {
-      setCountrySuggestions([]);
-      setCountryLoading(false);
-      setCountrySearchError(null);
-      return;
-    }
-
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(async () => {
-      try {
-        setCountryLoading(true);
-        setCountrySuggestions([]);
-        setCountrySearchError(null);
-        const params = new URLSearchParams({
-          kind: "country",
-          q: query,
-        });
-
-        const data = await fetchJson<{ items: CountrySuggestion[] }>(
-          `/api/places/suggest?${params.toString()}`,
-          controller.signal,
-        );
-
-        setCountrySuggestions(data.items);
-      } catch (error) {
-        if ((error as Error).name !== "AbortError") {
-          setCountrySuggestions([]);
-          setCountrySearchError(
-            error instanceof Error ? error.message : "Country search failed",
-          );
-        }
-      } finally {
-        setCountryLoading(false);
-      }
-    }, 240);
-
-    return () => {
-      controller.abort();
-      window.clearTimeout(timeoutId);
-    };
-  }, [countryFocused, countryInteracted, settings.country]);
-
-  useEffect(() => {
-    if (!locationOptionsChanged) {
-      return;
-    }
-
-    const city = settings.cityName.trim();
-    const country = settings.country.trim();
-
-    if (city.length < 2 || country.length < 2) {
-      setComboValidation("idle");
-      setComboWarning(null);
-      return;
-    }
-
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(async () => {
-      try {
-        setComboValidation("checking");
-        setComboWarning(null);
-
-        const params = new URLSearchParams({
-          city,
-          country,
-        });
-
-        if (settings.countryCode) {
-          params.set("countryCode", settings.countryCode);
-        }
-
-        const data = await fetchJson<ComboValidationResponse>(
-          `/api/places/validate?${params.toString()}`,
-          controller.signal,
-        );
-
-        if (!data.valid) {
-          setComboValidation("invalid");
-          setComboWarning(
-            data.warning ?? "City and country combination does not match.",
-          );
-          return;
-        }
-
-        setComboValidation("valid");
-        setComboWarning(null);
-      } catch (error) {
-        if ((error as Error).name === "AbortError") {
-          return;
-        }
-
-        setComboValidation("invalid");
-        setComboWarning(
-          error instanceof Error ? error.message : "Validation failed",
-        );
-      }
-    }, 260);
-
-    return () => {
-      controller.abort();
-      window.clearTimeout(timeoutId);
-    };
-  }, [
-    locationOptionsChanged,
-    settings.cityName,
-    settings.country,
-    settings.countryCode,
-  ]);
-
-  useEffect(() => {
     if (!DEV_MENU_ENABLED || typeof window === "undefined") {
       return;
     }
@@ -534,22 +399,29 @@ export default function SettingsPage() {
   }, [activePanel, featureFlags.prayerTimings]);
 
   const applyResolvedLocation = (location: LocationResult) => {
-    setLocationOptionsChanged(true);
+    const resolvedCity = location.city.trim();
+
+    if (resolvedCity.length < 2) {
+      setLocationStatus(null);
+      setLocationError(AUTO_DETECT_FALLBACK_MESSAGE);
+      return;
+    }
+
     setSettings((prev) => ({
       ...prev,
-      cityName: location.city,
+      cityName: resolvedCity,
       country: location.country,
       countryCode: location.countryCode,
     }));
     setLocationError(null);
     setLocationStatus(
-      `Location updated to ${location.city}, ${location.country}.`,
+      `Location updated to ${resolvedCity}, ${location.country}.`,
     );
   };
 
   const resolveFromGps = () => {
     if (!("geolocation" in navigator)) {
-      setLocationError("Geolocation is not available on this device.");
+      setLocationError(AUTO_DETECT_FALLBACK_MESSAGE);
       setLocationStatus(null);
       return;
     }
@@ -572,17 +444,13 @@ export default function SettingsPage() {
 
           applyResolvedLocation(data);
         } catch (error) {
-          setLocationError(
-            error instanceof Error
-              ? error.message
-              : "Unable to resolve location from GPS.",
-          );
+          setLocationError(AUTO_DETECT_FALLBACK_MESSAGE);
         } finally {
           setResolving(null);
         }
       },
-      (error) => {
-        setLocationError(error.message || "Unable to access GPS location.");
+      () => {
+        setLocationError(AUTO_DETECT_FALLBACK_MESSAGE);
         setResolving(null);
       },
       {
@@ -601,49 +469,25 @@ export default function SettingsPage() {
     try {
       const data = await fetchJson<LocationResult>("/api/places/from-ip");
       applyResolvedLocation(data);
-    } catch (error) {
-      setLocationError(
-        error instanceof Error
-          ? error.message
-          : "Unable to resolve location from IP address.",
-      );
+    } catch {
+      setLocationError(AUTO_DETECT_FALLBACK_MESSAGE);
     } finally {
       setResolving(null);
     }
   };
 
   const selectCitySuggestion = (city: CitySuggestion) => {
-    setLocationOptionsChanged(true);
     setCityInteracted(false);
-    setCountryInteracted(false);
     setSettings((prev) => ({
       ...prev,
       cityName: city.name,
       country: city.countryName,
       countryCode: city.countryCode,
     }));
-    setComboValidation("valid");
-    setComboWarning(null);
+    setLocationError(null);
+    setLocationStatus(null);
     setCitySuggestions([]);
-    setCountrySuggestions([]);
     setCityFocused(false);
-    setCountryFocused(false);
-  };
-
-  const selectCountrySuggestion = (country: CountrySuggestion) => {
-    setLocationOptionsChanged(true);
-    setCountryInteracted(false);
-    setCityInteracted(false);
-    setSettings((prev) => ({
-      ...prev,
-      cityName: "",
-      country: country.countryName,
-      countryCode: country.countryCode,
-    }));
-    setComboValidation("idle");
-    setComboWarning(null);
-    setCountrySuggestions([]);
-    setCountryFocused(false);
   };
 
   const changeDashboardView = (value: PrayerDashboardView) => {
@@ -719,8 +563,6 @@ export default function SettingsPage() {
   };
 
   const showCitySuggestions = cityFocused && citySuggestions.length > 0;
-  const showCountrySuggestions =
-    countryFocused && countrySuggestions.length > 0;
   const notificationPermissionLabel =
     notificationPermission === "unsupported"
       ? "Unsupported"
@@ -752,7 +594,9 @@ export default function SettingsPage() {
             summary:
               settings.cityName && settings.country
                 ? `${settings.cityName}, ${settings.country}`
-                : "City and country not set",
+                : settings.cityName
+                  ? settings.cityName
+                  : "City not set",
             icon: Sparkles,
           },
           {
@@ -890,17 +734,22 @@ export default function SettingsPage() {
           <div className="pt-5">
             {activePanel === "general" ? (
               featureFlags.prayerTimings ? (
-                <div className="space-y-0">
+                <div className="space-y-5">
+                  {locationError ? (
+                    <p className="rounded-md border border-destructive/35 bg-destructive/8 px-3 py-2 text-sm text-destructive">
+                      {locationError}
+                    </p>
+                  ) : null}
                   <section className="flex flex-col gap-4">
                     <div className="space-y-1">
                       <h3 className="text-sm font-semibold">Manual Location</h3>
                       <p className="text-sm leading-6 text-muted-foreground">
-                        Set your city and country manually for the most reliable
-                        local prayer timings.
+                        Search and select your city. Country is filled
+                        automatically from the selected city.
                       </p>
                     </div>
 
-                    <div className="grid gap-5 md:grid-cols-2">
+                    <div className="grid gap-5">
                       <div className="relative space-y-2">
                         <label
                           className="text-sm font-medium text-foreground"
@@ -926,10 +775,11 @@ export default function SettingsPage() {
                             }}
                             onChange={(event) => {
                               setCityInteracted(true);
-                              setLocationOptionsChanged(true);
                               setSettings((prev) => ({
                                 ...prev,
                                 cityName: event.target.value,
+                                country: "",
+                                countryCode: "",
                               }));
                             }}
                             onKeyDown={(event) => {
@@ -989,100 +839,6 @@ export default function SettingsPage() {
                           </div>
                         ) : null}
                       </div>
-
-                      <div className="relative space-y-2">
-                        <label
-                          className="text-sm font-medium text-foreground"
-                          htmlFor="country"
-                        >
-                          Country
-                        </label>
-                        <p className="text-xs leading-5 text-muted-foreground">
-                          Country narrows city matching and validates your
-                          location pair.
-                        </p>
-                        <div className="relative">
-                          <input
-                            autoComplete="off"
-                            className="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex min-h-10 w-full rounded-md border bg-background px-3 py-2.5 pr-10 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px]"
-                            id="country"
-                            name="country"
-                            onBlur={() => {
-                              window.setTimeout(
-                                () => setCountryFocused(false),
-                                120,
-                              );
-                            }}
-                            onChange={(event) => {
-                              setCountryInteracted(true);
-                              setLocationOptionsChanged(true);
-                              setSettings((prev) => ({
-                                ...prev,
-                                cityName: "",
-                                country: event.target.value,
-                                countryCode: "",
-                              }));
-                            }}
-                            onFocus={() => setCountryFocused(true)}
-                            placeholder="Start typing your country..."
-                            required
-                            type="text"
-                            value={settings.country}
-                          />
-                          <Sparkles className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                        </div>
-
-                        {countryFocused && countryLoading ? (
-                          <SuggestionsSkeleton withCode />
-                        ) : null}
-
-                        <div className="min-h-5">
-                          {countrySearchError ? (
-                            <p className="text-sm text-destructive">
-                              {countrySearchError}
-                            </p>
-                          ) : null}
-                        </div>
-                        <div className="min-h-5">
-                          {comboValidation === "checking" ? (
-                            <p className="text-sm text-muted-foreground">
-                              Checking city/country combination...
-                            </p>
-                          ) : null}
-                          {comboWarning ? (
-                            <p className="text-sm text-destructive">
-                              {comboWarning}
-                            </p>
-                          ) : null}
-                          {comboValidation === "valid" ? (
-                            <p className="text-sm text-primary">
-                              City and country combination looks good.
-                            </p>
-                          ) : null}
-                        </div>
-
-                        {showCountrySuggestions ? (
-                          <div className="bg-popover absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border p-1 shadow-md">
-                            {countrySuggestions.map((country) => (
-                              <button
-                                className="hover:bg-accent hover:text-accent-foreground flex w-full items-start justify-between rounded-md px-2.5 py-2 text-left transition-colors"
-                                key={country.countryCode}
-                                onMouseDown={() =>
-                                  selectCountrySuggestion(country)
-                                }
-                                type="button"
-                              >
-                                <span className="break-words text-sm leading-snug font-medium">
-                                  {country.countryName}
-                                </span>
-                                <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                                  {country.countryCode}
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
                     </div>
                   </section>
 
@@ -1121,11 +877,6 @@ export default function SettingsPage() {
                     </div>
                     {locationStatus ? (
                       <p className="text-sm text-primary">{locationStatus}</p>
-                    ) : null}
-                    {locationError ? (
-                      <p className="text-sm text-destructive">
-                        {locationError}
-                      </p>
                     ) : null}
                   </section>
                 </div>
