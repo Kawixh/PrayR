@@ -10,6 +10,10 @@ import {
   resolvePrayerMethodByCountryCode,
 } from "@/lib/prayer-calculation-method";
 import {
+  notifyPrayerSettingsUpdated,
+  PRAYER_SETTINGS_STORAGE_KEY,
+} from "../_utils/prayer-settings-storage";
+import {
   AlertTriangle,
   CheckCircle2,
   Clock3,
@@ -55,7 +59,6 @@ type InitialLoadStage =
   | "calculatingLocation"
   | "calculatingPrayerTimings";
 
-const SETTINGS_STORAGE_KEY = "prayerSettings";
 const CACHE_STORAGE_KEY = "prayerTimesCacheV3";
 const FIRST_VISIT_STEP_LOADER_DONE_STORAGE_KEY =
   "prayerFirstVisitStepLoaderDoneV1";
@@ -117,7 +120,7 @@ function getSettingsCacheKey(settings: PrayerSettings): string {
 }
 
 function readSettingsFromStorage(): PrayerSettings | null {
-  const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
+  const savedSettings = localStorage.getItem(PRAYER_SETTINGS_STORAGE_KEY);
 
   if (!savedSettings) {
     return null;
@@ -132,7 +135,7 @@ function readSettingsFromStorage(): PrayerSettings | null {
 
 function writeSettingsToStorage(settings: PrayerSettings, countryCode = ""): void {
   localStorage.setItem(
-    SETTINGS_STORAGE_KEY,
+    PRAYER_SETTINGS_STORAGE_KEY,
     JSON.stringify({
       cityName: settings.cityName,
       country: settings.country,
@@ -142,6 +145,7 @@ function writeSettingsToStorage(settings: PrayerSettings, countryCode = ""): voi
       school: String(settings.school),
     }),
   );
+  notifyPrayerSettingsUpdated();
 }
 
 function readPrayerCache(): PrayerTimesCache | null {

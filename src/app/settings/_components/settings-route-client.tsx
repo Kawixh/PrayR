@@ -43,6 +43,10 @@ import {
   normalizeShowHomepageSeoContent,
 } from "../../_utils/homepage-seo-content";
 import {
+  notifyPrayerSettingsUpdated,
+  PRAYER_SETTINGS_STORAGE_KEY,
+} from "../../_utils/prayer-settings-storage";
+import {
   getLocalNotificationPermission,
   showLocalNotification,
   type LocalNotificationPermission,
@@ -322,7 +326,7 @@ function getInitialSettings(): PrayerSettingsState {
     return EMPTY_SETTINGS;
   }
 
-  const savedSettings = localStorage.getItem("prayerSettings");
+  const savedSettings = localStorage.getItem(PRAYER_SETTINGS_STORAGE_KEY);
 
   if (!savedSettings) {
     return EMPTY_SETTINGS;
@@ -446,7 +450,8 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
   >(null);
 
   useEffect(() => {
-    localStorage.setItem("prayerSettings", JSON.stringify(settings));
+    localStorage.setItem(PRAYER_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    notifyPrayerSettingsUpdated();
     document.cookie = createHomepageSeoContentCookie(
       settings.showHomepageSeoContent,
     );

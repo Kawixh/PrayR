@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  PRAYER_SETTINGS_STORAGE_KEY,
+  PRAYER_SETTINGS_UPDATED_EVENT,
+} from "@/app/_utils/prayer-settings-storage";
 import { useEffect, useState } from "react";
 
 type StoredPrayerSettings = {
@@ -11,7 +15,7 @@ function readCityNameFromStorage(): string | null {
     return null;
   }
 
-  const savedSettings = window.localStorage.getItem("prayerSettings");
+  const savedSettings = window.localStorage.getItem(PRAYER_SETTINGS_STORAGE_KEY);
 
   if (!savedSettings) {
     return null;
@@ -37,9 +41,11 @@ export function TodayCityHeading() {
 
     syncFromStorage();
     window.addEventListener("storage", syncFromStorage);
+    window.addEventListener(PRAYER_SETTINGS_UPDATED_EVENT, syncFromStorage);
 
     return () => {
       window.removeEventListener("storage", syncFromStorage);
+      window.removeEventListener(PRAYER_SETTINGS_UPDATED_EVENT, syncFromStorage);
     };
   }, []);
 
