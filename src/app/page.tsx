@@ -8,10 +8,14 @@ import {
   SITE_LOCALE,
 } from "@/lib/seo/site";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import {
+  HOMEPAGE_SEO_CONTENT_COOKIE_KEY,
+  parseHomepageSeoContentCookie,
+} from "./_utils/homepage-seo-content";
 import { PrayerTimesWrapper } from "./_components/prayer-times-wrapper";
 
 const siteUrl = getSiteBaseUrl();
@@ -215,6 +219,10 @@ export const metadata: Metadata = {
 export default async function Page() {
   const featureFlags = await getServerFeatureFlags();
   const requestHeaders = await headers();
+  const requestCookies = await cookies();
+  const showHomepageSeoContent = parseHomepageSeoContentCookie(
+    requestCookies.get(HOMEPAGE_SEO_CONTENT_COOKIE_KEY)?.value,
+  );
   const googlebotHomepageResult = featureFlags.prayerTimings
     ? await resolveGooglebotHomepageResult(requestHeaders)
     : {
@@ -242,65 +250,69 @@ export default async function Page() {
           />
         </section>
 
-        <section
-          aria-labelledby="settings-meaning-heading"
-          className="glass-panel space-y-4 rounded-3xl border-border/80 p-5 sm:p-6"
-        >
-          <h2
-            className="text-xl font-semibold sm:text-2xl"
-            id="settings-meaning-heading"
-          >
-            What Each Setting Means
-          </h2>
-          <p className="text-muted-foreground text-sm leading-6 sm:text-base">
-            Simple definitions for each settings option.
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {settingMeaningItems.map((item) => (
-              <article
-                className="rounded-xl border border-border/75 bg-background/90 px-4 py-3"
-                key={item.name}
+        {showHomepageSeoContent ? (
+          <>
+            <section
+              aria-labelledby="settings-meaning-heading"
+              className="glass-panel space-y-4 rounded-3xl border-border/80 p-5 sm:p-6"
+            >
+              <h2
+                className="text-xl font-semibold sm:text-2xl"
+                id="settings-meaning-heading"
               >
-                <h3 className="text-base leading-tight font-semibold">
-                  {item.name}
-                </h3>
-                <p className="text-muted-foreground mt-2 text-sm leading-6">
-                  {item.meaning}
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
+                What Each Setting Means
+              </h2>
+              <p className="text-muted-foreground text-sm leading-6 sm:text-base">
+                Simple definitions for each settings option.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {settingMeaningItems.map((item) => (
+                  <article
+                    className="rounded-xl border border-border/75 bg-background/90 px-4 py-3"
+                    key={item.name}
+                  >
+                    <h3 className="text-base leading-tight font-semibold">
+                      {item.name}
+                    </h3>
+                    <p className="text-muted-foreground mt-2 text-sm leading-6">
+                      {item.meaning}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </section>
 
-        <section
-          aria-labelledby="homepage-faq-heading"
-          className="glass-panel space-y-4 rounded-3xl border-border/80 p-5 sm:p-6"
-        >
-          <h2
-            className="text-xl font-semibold sm:text-2xl"
-            id="homepage-faq-heading"
-          >
-            Frequently Asked Questions
-          </h2>
-          <p className="text-muted-foreground text-sm leading-6 sm:text-base">
-            Common questions and answers about prayer times and this page.
-          </p>
-          <div className="space-y-3">
-            {faqEntries.map((item) => (
-              <details
-                className="rounded-xl border border-border/75 bg-background/90 px-4 py-3"
-                key={item.question}
+            <section
+              aria-labelledby="homepage-faq-heading"
+              className="glass-panel space-y-4 rounded-3xl border-border/80 p-5 sm:p-6"
+            >
+              <h2
+                className="text-xl font-semibold sm:text-2xl"
+                id="homepage-faq-heading"
               >
-                <summary className="cursor-pointer list-none text-sm leading-6 font-semibold [&::-webkit-details-marker]:hidden">
-                  {item.question}
-                </summary>
-                <p className="text-muted-foreground mt-2 text-sm leading-6">
-                  {item.answer}
-                </p>
-              </details>
-            ))}
-          </div>
-        </section>
+                Frequently Asked Questions
+              </h2>
+              <p className="text-muted-foreground text-sm leading-6 sm:text-base">
+                Common questions and answers about prayer times and this page.
+              </p>
+              <div className="space-y-3">
+                {faqEntries.map((item) => (
+                  <details
+                    className="rounded-xl border border-border/75 bg-background/90 px-4 py-3"
+                    key={item.question}
+                  >
+                    <summary className="cursor-pointer list-none text-sm leading-6 font-semibold [&::-webkit-details-marker]:hidden">
+                      {item.question}
+                    </summary>
+                    <p className="text-muted-foreground mt-2 text-sm leading-6">
+                      {item.answer}
+                    </p>
+                  </details>
+                ))}
+              </div>
+            </section>
+          </>
+        ) : null}
 
         <section className="glass-panel rounded-3xl border-border/80 p-4 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

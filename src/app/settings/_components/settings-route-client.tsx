@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   readClientFeatureOverrides,
   writeClientFeatureOverrides,
@@ -31,6 +32,11 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
+import {
+  createHomepageSeoContentCookie,
+  DEFAULT_SHOW_HOMEPAGE_SEO_CONTENT,
+  normalizeShowHomepageSeoContent,
+} from "../../_utils/homepage-seo-content";
 import {
   getLocalNotificationPermission,
   showLocalNotification,
@@ -271,6 +277,7 @@ type PrayerSettingsState = {
   countryCode: string;
   hijriDateAdjustment: string;
   method: string;
+  showHomepageSeoContent: boolean;
   school: string;
 };
 
@@ -299,6 +306,7 @@ const EMPTY_SETTINGS: PrayerSettingsState = {
   countryCode: "",
   hijriDateAdjustment: DEFAULT_HIJRI_DATE_ADJUSTMENT,
   method: "",
+  showHomepageSeoContent: DEFAULT_SHOW_HOMEPAGE_SEO_CONTENT,
   school: "",
 };
 const DEV_MENU_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEV_MENU !== "0";
@@ -326,6 +334,9 @@ function getInitialSettings(): PrayerSettingsState {
         parsed.hijriDateAdjustment,
       ),
       method: parsed.method ?? "",
+      showHomepageSeoContent: normalizeShowHomepageSeoContent(
+        parsed.showHomepageSeoContent,
+      ),
       school: parsed.school ?? "",
     };
   } catch {
@@ -418,6 +429,9 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
 
   useEffect(() => {
     localStorage.setItem("prayerSettings", JSON.stringify(settings));
+    document.cookie = createHomepageSeoContentCookie(
+      settings.showHomepageSeoContent,
+    );
   }, [settings]);
 
   useEffect(() => {
@@ -717,6 +731,15 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
     HIJRI_DATE_ADJUSTMENT_OPTIONS.find(
       (option) => option.value === settings.hijriDateAdjustment,
     )?.label ?? "No adjustment";
+  const homepageSeoContentLabel = settings.showHomepageSeoContent
+    ? "SEO cards visible"
+    : "SEO cards hidden";
+  const generalLocationSummary =
+    settings.cityName && settings.country
+      ? `${settings.cityName}, ${settings.country}`
+      : settings.cityName
+        ? settings.cityName
+        : "City not set";
   const menuItems: SettingsMenuItem[] = [
     ...(featureFlags.prayerTimings
       ? [
@@ -724,12 +747,7 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
             id: "general" as const,
             label: "General",
             description: "Location and automatic detection.",
-            summary:
-              settings.cityName && settings.country
-                ? `${settings.cityName}, ${settings.country}`
-                : settings.cityName
-                  ? settings.cityName
-                  : "City not set",
+            summary: `${generalLocationSummary} / ${homepageSeoContentLabel}`,
             icon: Sparkles,
           },
           {
@@ -1019,14 +1037,38 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
                     ) : null}
                   </section>
 
-                  <section className="border-t pt-3">
+                  <section className="pt-5 border-t flex items-center">
+                    <div className="mb-1">
+                      <h3 className="text-sm font-semibold">
+                        Homepage SEO Content
+                      </h3>
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        Show or hide the homepage "What Each Setting Means" and
+                        FAQ sections in this browser.
+                      </p>
+                    </div>
+
+                    <Switch
+                      aria-label="Toggle homepage SEO content sections"
+                      checked={settings.showHomepageSeoContent}
+                      onCheckedChange={(checked) =>
+                        setSettings((prev) => ({
+                          ...prev,
+                          showHomepageSeoContent: checked,
+                        }))
+                      }
+                    />
+                  </section>
+
+                  <section className="border-t pt-5">
                     <div className="mb-2">
                       <h3 className="text-sm font-semibold text-destructive">
                         Danger Zone
                       </h3>
                       <p className="text-sm leading-6 text-muted-foreground">
                         Reset all settings to defaults. This clears your
-                        location, method, dashboard view, and feature toggles.
+                        location, method, dashboard view, feature toggles, and
+                        homepage SEO content preference.
                       </p>
                     </div>
                     <Button
