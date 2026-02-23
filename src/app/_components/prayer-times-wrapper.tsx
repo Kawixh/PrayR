@@ -377,6 +377,9 @@ export function PrayerTimesWrapper({
   featureFlags,
   initialPrayerDay = null,
 }: PrayerTimesWrapperProps) {
+  const showMergedFastingCard = featureFlags.sehrAndIftarTimes;
+  const showStandaloneIslamicDateCard =
+    featureFlags.islamicCalendar && !showMergedFastingCard;
   const [prayerDay, setPrayerDay] = useState<AlAdhanDayData | null>(initialPrayerDay);
   const [hijriDateAdjustment, setHijriDateAdjustment] = useState(
     DEFAULT_HIJRI_DATE_ADJUSTMENT,
@@ -551,7 +554,7 @@ export function PrayerTimesWrapper({
 
     return (
       <section aria-busy="true" aria-live="polite" className="space-y-5">
-        {featureFlags.sehrAndIftarTimes ? (
+        {showMergedFastingCard ? (
           <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
             <div className="space-y-3">
               <div className="h-4 w-24 animate-pulse rounded bg-muted/70" />
@@ -576,7 +579,7 @@ export function PrayerTimesWrapper({
           </div>
         </Card>
 
-        {featureFlags.islamicCalendar ? (
+        {showStandaloneIslamicDateCard ? (
           <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
             <div className="space-y-3">
               <div className="h-5 w-40 animate-pulse rounded bg-muted/80" />
@@ -661,11 +664,14 @@ export function PrayerTimesWrapper({
 
   return (
     <section className="space-y-5">
-      {featureFlags.sehrAndIftarTimes ? (
-        <SeharIftarHighlightsCard dateInfo={adjustedDateInfo} timings={prayerDay.timings} />
+      {showMergedFastingCard ? (
+        <SeharIftarHighlightsCard
+          dateInfo={adjustedDateInfo}
+          timings={prayerDay.timings}
+        />
       ) : null}
       <CurrentPrayerStatusCard timings={prayerDay.timings} />
-      {featureFlags.islamicCalendar ? (
+      {showStandaloneIslamicDateCard ? (
         <IslamicDateCalendarCard dateInfo={adjustedDateInfo} />
       ) : null}
       {featureFlags.adhkars && featureFlags.adhkarOfTheDay ? <DailyAdhkarCard /> : null}
