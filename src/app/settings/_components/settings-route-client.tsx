@@ -48,139 +48,121 @@ const calculationMethods = [
     value: "0",
     label: "Jafari / Shia Ithna-Ashari",
     description:
-      "Ja'fari fiqh preset commonly used by Shia communities, with different twilight handling than most Sunni presets.",
+      "Ja'fari preset commonly used by Shia communities.",
   },
   {
     value: "1",
     label: "University of Islamic Sciences, Karachi",
     description:
-      "South Asia-focused preset used by many Hanafi-influenced calendars in Pakistan, India, and nearby regions.",
+      "Karachi preset, common in South Asia.",
   },
   {
     value: "2",
     label: "Islamic Society of North America",
-    description:
-      "North America-oriented preset used by many mosques and apps as a US/Canada default.",
+    description: "ISNA preset, common in the US and Canada.",
   },
   {
     value: "3",
     label: "Muslim World League",
     description:
-      "Widely used international preset from MWL; common fallback when a country-specific authority is not selected.",
+      "MWL preset, widely used internationally.",
   },
   {
     value: "4",
     label: "Umm Al-Qura University, Makkah",
-    description:
-      "Saudi Arabia standard preset; commonly matches official Makkah/Kingdom timetables.",
+    description: "Umm al-Qura preset, standard in Saudi Arabia.",
   },
   {
     value: "5",
     label: "Egyptian General Authority of Survey",
-    description:
-      "Preset from the Egyptian survey authority, often used in Egypt and parts of Africa.",
+    description: "Egyptian survey preset, common in Egypt.",
   },
   {
     value: "7",
     label: "Institute of Geophysics, University of Tehran",
-    description:
-      "Iran-focused preset associated with Tehran calculations and often used where Iranian timetables are followed.",
+    description: "Tehran preset, commonly used in Iran.",
   },
   {
     value: "8",
     label: "Gulf Region",
     description:
-      "General Gulf-region preset for communities following Gulf-style schedules without a specific country preset.",
+      "General Gulf-region preset.",
   },
   {
     value: "9",
     label: "Kuwait",
-    description:
-      "Kuwait authority preset designed to align with commonly published Kuwaiti prayer calendars.",
+    description: "Kuwait national preset.",
   },
   {
     value: "10",
     label: "Qatar",
-    description:
-      "Qatar-focused preset intended to match official or commonly used Qatari prayer schedules.",
+    description: "Qatar national preset.",
   },
   {
     value: "11",
     label: "Majlis Ugama Islam Singapura, Singapore",
-    description:
-      "MUIS preset for Singapore, usually the best match for Singapore local mosque timetables.",
+    description: "MUIS preset for Singapore.",
   },
   {
     value: "12",
     label: "Union Organization islamic de France",
-    description:
-      "French community preset used by many organizations in France.",
+    description: "French community preset (UOIF).",
   },
   {
     value: "13",
     label: "Diyanet İşleri Başkanlığı, Turkey",
-    description:
-      "Official Turkish Diyanet preset, generally matching prayer calendars used across Turkey.",
+    description: "Diyanet preset, standard in Turkey.",
   },
   {
     value: "14",
     label: "Spiritual Administration of Muslims of Russia",
-    description:
-      "Russian Muslim administration preset tailored for common Russia-based timetable practices.",
+    description: "Russian Muslim administration preset.",
   },
   {
     value: "15",
     label: "Moonsighting Committee Worldwide (requires shafaq parameter)",
     description:
-      "Moon-sighting-oriented preset; choose this when your community follows MCW guidance (requires `shafaq`).",
+      "Moonsighting Committee preset (requires `shafaq`).",
   },
   {
     value: "16",
     label: "Dubai (experimental)",
-    description:
-      "Dubai-specific experimental preset; use only if your local Dubai timetable explicitly matches it.",
+    description: "Dubai-specific experimental preset.",
   },
   {
     value: "17",
     label: "Jabatan Kemajuan Islam Malaysia (JAKIM)",
-    description:
-      "Official JAKIM preset used in Malaysia and usually the most accurate local choice there.",
+    description: "Official JAKIM preset for Malaysia.",
   },
   {
     value: "18",
     label: "Tunisia",
-    description:
-      "Tunisia authority preset designed to align with Tunisian national prayer calendars.",
+    description: "Tunisia national preset.",
   },
   {
     value: "19",
     label: "Algeria",
-    description:
-      "Algeria authority preset intended for common Algerian schedule conventions.",
+    description: "Algeria national preset.",
   },
   {
     value: "20",
     label: "KEMENAG - Kementerian Agama Republik Indonesia",
-    description:
-      "Official Indonesian Ministry of Religious Affairs preset (KEMENAG).",
+    description: "Official KEMENAG preset for Indonesia.",
   },
   {
     value: "21",
     label: "Morocco",
-    description:
-      "Moroccan authority preset commonly matching official prayer calendars in Morocco.",
+    description: "Morocco national preset.",
   },
   {
     value: "22",
     label: "Comunidade Islamica de Lisboa",
-    description:
-      "Lisbon Islamic community preset for Portugal-based timetables.",
+    description: "Lisbon Islamic community preset.",
   },
   {
     value: "23",
     label: "Ministry of Awqaf, Islamic Affairs and Holy Places, Jordan",
-    description:
-      "Official Jordanian Awqaf preset for communities that follow Jordan ministry schedules.",
+    description: "Official Jordan Awqaf preset.",
   },
 ] as const satisfies ReadonlyArray<{
   description: string;
@@ -1062,21 +1044,25 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
                           ))}
                         </SelectContent>
                       </Select>
-                      <div className="space-y-2 text-xs leading-5 text-muted-foreground">
-                        <p>Current method: {selectedMethodLabel}</p>
-                        <div className="space-y-2 rounded-md border border-border/70 bg-muted/20 p-3">
-                          <p className="font-medium text-foreground">
-                            Note: What each method does
+                      <div className="space-y-3 text-sm leading-6 text-muted-foreground">
+                        <p>
+                          Current method:{" "}
+                          <span className="font-medium text-foreground">
+                            {selectedMethodLabel}
+                          </span>
+                        </p>
+                        <div className="space-y-3 rounded-lg border border-border/70 bg-muted/20 p-4">
+                          <p className="text-sm font-semibold text-foreground">
+                            Quick Method Guide
                           </p>
-                          <p>
-                            Each method applies a different authority preset for
-                            Fajr and Isha calculations. Use the one your local
-                            masjid follows.
+                          <p className="text-sm leading-6">
+                            These presets mostly change Fajr and Isha timing
+                            rules. Use the one your local masjid follows.
                           </p>
-                          <ul className="space-y-1">
+                          <ul className="space-y-2">
                             {calculationMethods.map((method) => (
                               <li key={method.value}>
-                                <span className="font-medium text-foreground">
+                                <span className="font-semibold text-foreground">
                                   {method.label}:
                                 </span>{" "}
                                 {method.description}
