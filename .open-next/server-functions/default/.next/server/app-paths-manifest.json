@@ -1,0 +1,23 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/adhkars/page": "app/adhkars/page.js",
+  "/adkars/page": "app/adkars/page.js",
+  "/api/adhkar/categories/route": "app/api/adhkar/categories/route.js",
+  "/api/adhkar/category/[id]/route": "app/api/adhkar/category/[id]/route.js",
+  "/api/adhkar/daily/route": "app/api/adhkar/daily/route.js",
+  "/api/places/from-ip/route": "app/api/places/from-ip/route.js",
+  "/api/places/reverse/route": "app/api/places/reverse/route.js",
+  "/api/places/suggest/route": "app/api/places/suggest/route.js",
+  "/api/places/validate/route": "app/api/places/validate/route.js",
+  "/api/prayer-times/route": "app/api/prayer-times/route.js",
+  "/fallback/page": "app/fallback/page.js",
+  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
+  "/opengraph-image/route": "app-edge-has-no-entrypoint",
+  "/page": "app/page.js",
+  "/resources/page": "app/resources/page.js",
+  "/robots.txt/route": "app/robots.txt/route.js",
+  "/settings/page": "app/settings/page.js",
+  "/sitemap.xml/route": "app/sitemap.xml/route.js",
+  "/twitter-image/route": "app-edge-has-no-entrypoint"
+}
