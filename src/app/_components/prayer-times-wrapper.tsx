@@ -4,6 +4,12 @@ import { type AlAdhanDayData, type AlAdhanTimingsResponse } from "@/backend/type
 import { Card } from "@/components/ui/card";
 import { type FeatureFlags } from "@/features/definitions";
 import {
+  DEFAULT_PRAYER_SCHOOL,
+  parsePrayerMethod,
+  parsePrayerSchool,
+  resolvePrayerMethodByCountryCode,
+} from "@/lib/prayer-calculation-method";
+import {
   AlertTriangle,
   CheckCircle2,
   Clock3,
@@ -53,8 +59,6 @@ const SETTINGS_STORAGE_KEY = "prayerSettings";
 const CACHE_STORAGE_KEY = "prayerTimesCacheV3";
 const FIRST_VISIT_STEP_LOADER_DONE_STORAGE_KEY =
   "prayerFirstVisitStepLoaderDoneV1";
-const DEFAULT_PRAYER_METHOD = 2;
-const DEFAULT_PRAYER_SCHOOL = 0;
 
 type IpLocationResponse = {
   city: string;
@@ -70,6 +74,7 @@ function normalizeSettings(raw: unknown): PrayerSettings | null {
   const candidate = raw as {
     cityName?: unknown;
     country?: unknown;
+    countryCode?: unknown;
     hijriDateAdjustment?: unknown;
     method?: unknown;
     school?: unknown;
@@ -79,17 +84,19 @@ function normalizeSettings(raw: unknown): PrayerSettings | null {
     typeof candidate.cityName === "string" ? candidate.cityName.trim() : "";
   const country =
     typeof candidate.country === "string" ? candidate.country.trim() : "";
+  const countryCode =
+    typeof candidate.countryCode === "string" ? candidate.countryCode.trim() : "";
 
-  const parsedMethod = Number(candidate.method);
-  const parsedSchool = Number(candidate.school);
+  const parsedMethod = parsePrayerMethod(candidate.method);
+  const parsedSchool = parsePrayerSchool(candidate.school);
   const hijriDateAdjustment = normalizeHijriDateAdjustment(candidate.hijriDateAdjustment);
 
   if (!cityName || !country) {
     return null;
   }
 
-  const method = Number.isFinite(parsedMethod) ? parsedMethod : DEFAULT_PRAYER_METHOD;
-  const school = Number.isFinite(parsedSchool) ? parsedSchool : DEFAULT_PRAYER_SCHOOL;
+  const method = parsedMethod ?? resolvePrayerMethodByCountryCode(countryCode);
+  const school = parsedSchool ?? DEFAULT_PRAYER_SCHOOL;
 
   return {
     cityName,
@@ -479,7 +486,7 @@ export function PrayerTimesWrapper({
             cityName: location.city,
             country: location.country,
             hijriDateAdjustment: DEFAULT_HIJRI_DATE_ADJUSTMENT,
-            method: DEFAULT_PRAYER_METHOD,
+            method: resolvePrayerMethodByCountryCode(location.countryCode),
             school: DEFAULT_PRAYER_SCHOOL,
           };
           writeSettingsToStorage(settings, location.countryCode ?? "");

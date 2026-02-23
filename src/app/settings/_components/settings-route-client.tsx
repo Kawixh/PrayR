@@ -17,6 +17,10 @@ import {
 } from "@/features/client";
 import { type FeatureFlags } from "@/features/definitions";
 import { resolveFeatureFlags } from "@/features/resolve";
+import {
+  parsePrayerMethod,
+  resolvePrayerMethodByCountryCode,
+} from "@/lib/prayer-calculation-method";
 import { cn } from "@/lib/utils";
 import {
   BellRing,
@@ -326,15 +330,28 @@ function getInitialSettings(): PrayerSettingsState {
 
   try {
     const parsed = JSON.parse(savedSettings) as Partial<PrayerSettingsState>;
+    const cityName =
+      typeof parsed.cityName === "string" ? parsed.cityName.trim() : "";
+    const country =
+      typeof parsed.country === "string" ? parsed.country.trim() : "";
+    const countryCode =
+      typeof parsed.countryCode === "string" ? parsed.countryCode.trim() : "";
+    const parsedMethod = parsePrayerMethod(parsed.method);
+    const method =
+      parsedMethod !== null
+        ? String(parsedMethod)
+        : cityName && country
+          ? String(resolvePrayerMethodByCountryCode(countryCode))
+          : "";
 
     return {
-      cityName: parsed.cityName ?? "",
-      country: parsed.country ?? "",
-      countryCode: parsed.countryCode ?? "",
+      cityName,
+      country,
+      countryCode,
       hijriDateAdjustment: normalizeHijriDateAdjustmentValue(
         parsed.hijriDateAdjustment,
       ),
-      method: parsed.method ?? "",
+      method,
       showHomepageSeoContent: normalizeShowHomepageSeoContent(
         parsed.showHomepageSeoContent,
       ),
@@ -541,6 +558,10 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
       cityName: resolvedCity,
       country: location.country,
       countryCode: location.countryCode,
+      method:
+        parsePrayerMethod(prev.method) !== null
+          ? prev.method
+          : String(resolvePrayerMethodByCountryCode(location.countryCode)),
     }));
     setLocationError(null);
     setLocationStatus(
@@ -612,6 +633,10 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
       cityName: city.name,
       country: city.countryName,
       countryCode: city.countryCode,
+      method:
+        parsePrayerMethod(prev.method) !== null
+          ? prev.method
+          : String(resolvePrayerMethodByCountryCode(city.countryCode)),
     }));
     setLocationError(null);
     setLocationStatus(null);
