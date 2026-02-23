@@ -19,7 +19,7 @@ type PrayerTimeCardProps = {
   timings: PrayerTimings;
 };
 
-type PrayerPanelProps = {
+type PrayerRowProps = {
   title: string;
   headline: string;
   description: string;
@@ -37,7 +37,7 @@ type DayWindow = {
   start: Date;
 };
 
-function PrayerPanel({
+function PrayerRow({
   description,
   headline,
   prayerName,
@@ -45,67 +45,57 @@ function PrayerPanel({
   title,
   tone = "default",
   highlight = false,
-}: PrayerPanelProps) {
+}: PrayerRowProps) {
+  const statusLabel =
+    tone === "makruh" ? "Makruh Window" : highlight ? "Current Prayer" : "Scheduled";
+
   return (
-    <Card
-      className={
+    <li
+      className={cn(
+        "flex flex-col gap-3 px-4 py-3 sm:px-5",
         highlight
-          ? "relative overflow-hidden border-primary/35 bg-gradient-to-br from-primary/20 via-card to-accent/20 p-5 sm:p-6"
+          ? "bg-primary/8"
           : tone === "makruh"
-            ? "border-amber-500/35 bg-amber-500/10 p-5 sm:p-6"
-            : "glass-panel border-border/80 p-5 sm:p-6"
-      }
+            ? "bg-amber-500/8"
+            : "bg-transparent",
+      )}
     >
-      {highlight ? (
-        <>
-          <div className="pointer-events-none absolute -right-14 -top-14 size-36 rounded-full bg-primary/30 blur-2xl" />
-          <div className="pointer-events-none absolute -left-20 bottom-0 size-36 rounded-full bg-accent/30 blur-2xl" />
-        </>
-      ) : null}
-
-      <div className="relative z-10 flex h-full flex-col gap-4">
-        <div className="flex items-center justify-between gap-2">
-          <p className="soft-chip">{title}</p>
-          {tone === "makruh" ? (
-            <TriangleAlert className="size-4 text-amber-700 dark:text-amber-300" />
-          ) : highlight ? (
-            <div className="flex items-center gap-1 text-xs text-primary">
-              <Sparkles className="size-3.5" />
-              <span>Live</span>
-            </div>
-          ) : (
-            <Clock3 className="size-4 text-muted-foreground" />
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-balance font-display text-3xl leading-tight sm:text-4xl">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            {title}
+          </p>
+          <p className="mt-1 font-display text-3xl leading-tight sm:text-4xl">
             {headline}
           </p>
-          <p className="text-sm leading-6 text-muted-foreground sm:text-base">
-            {description}
-          </p>
         </div>
 
-        {showAdhkarLink && prayerName ? (
-          <Button
-            asChild
-            className={cn(
-              "mt-auto min-h-9 w-fit rounded-full px-3 py-2 text-sm",
-              tone === "makruh"
-                ? "border-amber-500/45 bg-amber-500/15 hover:bg-amber-500/20"
-                : undefined,
-            )}
-            size="sm"
-            variant="outline"
-          >
+        <div className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+          {tone === "makruh" ? (
+            <TriangleAlert className="size-3.5 text-amber-700 dark:text-amber-300" />
+          ) : highlight ? (
+            <Sparkles className="size-3.5 text-primary" />
+          ) : (
+            <Clock3 className="size-3.5" />
+          )}
+          <span>{statusLabel}</span>
+        </div>
+      </div>
+
+      <p className="text-sm leading-6 text-muted-foreground sm:text-base">
+        {description}
+      </p>
+
+      {showAdhkarLink && prayerName ? (
+        <div className="pt-1">
+          <Button asChild className="min-h-9 rounded-full px-3 py-2 text-sm" size="sm" variant="outline">
             <Link href={`/adhkars?prayer=${encodeURIComponent(prayerName)}`}>
               View Adhkars
             </Link>
           </Button>
-        ) : null}
-      </div>
-    </Card>
+        </div>
+      ) : null}
+    </li>
   );
 }
 
@@ -207,87 +197,101 @@ export function PrayerTimeCard({
 
   return (
     <section className="space-y-4">
-      <div className="grid w-full gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <PrayerPanel
-          description="Fajr starts here. Sehar cutoff aligns with Fajr."
-          headline={formatTo12Hour(timings.Fajr)}
-          highlight={currentPrayer === "Fajr"}
-          prayerName="Fajr"
-          showAdhkarLink={showAdhkarLinks}
-          title="Fajr / Sehar"
-        />
+      <Card className="glass-panel overflow-hidden rounded-3xl border-border/80 p-0">
+        <header className="flex items-center justify-between gap-3 border-b border-border/80 px-4 py-3 sm:px-5">
+          <div>
+            <h2 className="text-base font-semibold sm:text-lg">Today&apos;s Schedule</h2>
+            <p className="text-xs text-muted-foreground sm:text-sm">
+              Prayer times and Makruh windows in chronological order.
+            </p>
+          </div>
+          <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            Local Time
+          </p>
+        </header>
 
-        <PrayerPanel
-          description="Sunrise Makruh window starts at sunrise and lasts for 15 minutes."
-          headline={formatWindow(windows.sunriseMakruh)}
-          highlight={isWindowActive(windows.sunriseMakruh)}
-          showAdhkarLink={false}
-          title="Makruh Waqt"
-          tone="makruh"
-        />
+        <ul className="divide-y divide-border/75">
+          <PrayerRow
+            description="Fajr starts here. Sehar cutoff aligns with Fajr."
+            headline={formatTo12Hour(timings.Fajr)}
+            highlight={currentPrayer === "Fajr"}
+            prayerName="Fajr"
+            showAdhkarLink={showAdhkarLinks}
+            title="Fajr / Sehar"
+          />
 
-        <PrayerPanel
-          description="Duha prayer window after sunrise Makruh until before Dhuhr Makruh."
-          headline={formatWindow(windows.duhaWindow)}
-          highlight={isWindowActive(windows.duhaWindow)}
-          showAdhkarLink={false}
-          title="Duha Window"
-        />
+          <PrayerRow
+            description="Sunrise Makruh window starts at sunrise and lasts for 15 minutes."
+            headline={formatWindow(windows.sunriseMakruh)}
+            highlight={isWindowActive(windows.sunriseMakruh)}
+            showAdhkarLink={false}
+            title="Makruh Waqt"
+            tone="makruh"
+          />
 
-        <PrayerPanel
-          description="Avoid voluntary prayers shortly before Dhuhr."
-          headline={formatWindow(windows.beforeDhuhrMakruh)}
-          highlight={isWindowActive(windows.beforeDhuhrMakruh)}
-          showAdhkarLink={false}
-          title="Makruh Before Dhuhr"
-          tone="makruh"
-        />
+          <PrayerRow
+            description="Duha prayer window after sunrise Makruh until before Dhuhr Makruh."
+            headline={formatWindow(windows.duhaWindow)}
+            highlight={isWindowActive(windows.duhaWindow)}
+            showAdhkarLink={false}
+            title="Duha Window"
+          />
 
-        <PrayerPanel
-          description="Dhuhr obligatory prayer starts at this time."
-          headline={formatTo12Hour(timings.Dhuhr)}
-          highlight={currentPrayer === "Dhuhr"}
-          prayerName="Dhuhr"
-          showAdhkarLink={showAdhkarLinks}
-          title="Dhuhr"
-        />
+          <PrayerRow
+            description="Avoid voluntary prayers shortly before Dhuhr."
+            headline={formatWindow(windows.beforeDhuhrMakruh)}
+            highlight={isWindowActive(windows.beforeDhuhrMakruh)}
+            showAdhkarLink={false}
+            title="Makruh Before Dhuhr"
+            tone="makruh"
+          />
 
-        <PrayerPanel
-          description="Asr obligatory prayer starts at this time."
-          headline={formatTo12Hour(timings.Asr)}
-          highlight={currentPrayer === "Asr"}
-          prayerName="Asr"
-          showAdhkarLink={showAdhkarLinks}
-          title="Asr"
-        />
+          <PrayerRow
+            description="Dhuhr obligatory prayer starts at this time."
+            headline={formatTo12Hour(timings.Dhuhr)}
+            highlight={currentPrayer === "Dhuhr"}
+            prayerName="Dhuhr"
+            showAdhkarLink={showAdhkarLinks}
+            title="Dhuhr"
+          />
 
-        <PrayerPanel
-          description="Final minutes before Maghrib are Makruh for voluntary prayer."
-          headline={formatWindow(windows.beforeMaghribMakruh)}
-          highlight={isWindowActive(windows.beforeMaghribMakruh)}
-          showAdhkarLink={false}
-          title="Makruh Waqt"
-          tone="makruh"
-        />
+          <PrayerRow
+            description="Asr obligatory prayer starts at this time."
+            headline={formatTo12Hour(timings.Asr)}
+            highlight={currentPrayer === "Asr"}
+            prayerName="Asr"
+            showAdhkarLink={showAdhkarLinks}
+            title="Asr"
+          />
 
-        <PrayerPanel
-          description="Maghrib starts and Iftar time begins."
-          headline={formatTo12Hour(timings.Maghrib)}
-          highlight={currentPrayer === "Maghrib"}
-          prayerName="Maghrib"
-          showAdhkarLink={showAdhkarLinks}
-          title="Maghrib / Iftar"
-        />
+          <PrayerRow
+            description="Final minutes before Maghrib are Makruh for voluntary prayer."
+            headline={formatWindow(windows.beforeMaghribMakruh)}
+            highlight={isWindowActive(windows.beforeMaghribMakruh)}
+            showAdhkarLink={false}
+            title="Makruh Waqt"
+            tone="makruh"
+          />
 
-        <PrayerPanel
-          description="Isha obligatory prayer starts at this time."
-          headline={formatTo12Hour(timings.Isha)}
-          highlight={currentPrayer === "Isha"}
-          prayerName="Isha"
-          showAdhkarLink={showAdhkarLinks}
-          title="Isha"
-        />
-      </div>
+          <PrayerRow
+            description="Maghrib starts and Iftar time begins."
+            headline={formatTo12Hour(timings.Maghrib)}
+            highlight={currentPrayer === "Maghrib"}
+            prayerName="Maghrib"
+            showAdhkarLink={showAdhkarLinks}
+            title="Maghrib / Iftar"
+          />
+
+          <PrayerRow
+            description="Isha obligatory prayer starts at this time."
+            headline={formatTo12Hour(timings.Isha)}
+            highlight={currentPrayer === "Isha"}
+            prayerName="Isha"
+            showAdhkarLink={showAdhkarLinks}
+            title="Isha"
+          />
+        </ul>
+      </Card>
     </section>
   );
 }

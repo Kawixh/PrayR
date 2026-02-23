@@ -12,6 +12,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { WhatsNewBanner } from "./_components/whats-new-banner";
 import { PrayerTimesWrapper } from "./_components/prayer-times-wrapper";
 
 const siteUrl = getSiteBaseUrl();
@@ -231,18 +232,38 @@ export default async function Page() {
 
   return (
     <>
-      <div className="homepage-clean space-y-6">
-        <section aria-labelledby="dashboard-heading" className="space-y-4">
-          <h2
-            className="text-2xl font-semibold sm:text-3xl"
-            id="dashboard-heading"
-          >
-            Today&apos;s Prayer Dashboard
+      <div className="homepage-clean space-y-4">
+        <section aria-label="Prayer dashboard intro" className="glass-panel rounded-3xl border-border/80 p-5 sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                Daily Salah
+              </p>
+              <h1 className="font-display text-2xl leading-tight sm:text-3xl">
+                Prayer Dashboard
+              </h1>
+              <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+                View prayer timings, Makruh windows, and adhkar shortcuts from one clean daily view.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild className="rounded-full px-5" variant="outline">
+                <Link href="/settings">Location & Method</Link>
+              </Button>
+              <Button asChild className="rounded-full px-5" variant="outline">
+                <Link href="/resources">Ramadan Resources</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <WhatsNewBanner />
+
+        <section aria-labelledby="dashboard-heading" className="space-y-2">
+          <h2 className="text-base font-semibold sm:text-lg" id="dashboard-heading">
+            Today
           </h2>
-          <p className="text-muted-foreground max-w-3xl text-sm leading-6 sm:text-base">
-            Daily prayer schedule and timeline based on your saved location and
-            preferences.
-          </p>
           <PrayerTimesWrapper
             featureFlags={featureFlags}
             initialPrayerDay={googlebotHomepageResult.initialPrayerDay}
@@ -251,10 +272,10 @@ export default async function Page() {
 
         <section
           aria-labelledby="settings-meaning-heading"
-          className="space-y-4 rounded-2xl border border-border/80 bg-card p-5 sm:p-6"
+          className="glass-panel space-y-4 rounded-3xl border-border/80 p-5 sm:p-6"
         >
           <h2
-            className="text-2xl font-semibold sm:text-3xl"
+            className="text-xl font-semibold sm:text-2xl"
             id="settings-meaning-heading"
           >
             What Each Setting Means
@@ -265,7 +286,7 @@ export default async function Page() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {settingMeaningItems.map((item) => (
               <article
-                className="rounded-lg border border-border/70 bg-background px-4 py-3"
+                className="rounded-xl border border-border/75 bg-background/90 px-4 py-3"
                 key={item.name}
               >
                 <h3 className="text-base leading-tight font-semibold">
@@ -281,10 +302,10 @@ export default async function Page() {
 
         <section
           aria-labelledby="homepage-faq-heading"
-          className="space-y-4 rounded-2xl border border-border/80 bg-card p-5 sm:p-6"
+          className="glass-panel space-y-4 rounded-3xl border-border/80 p-5 sm:p-6"
         >
           <h2
-            className="text-2xl font-semibold sm:text-3xl"
+            className="text-xl font-semibold sm:text-2xl"
             id="homepage-faq-heading"
           >
             Frequently Asked Questions
@@ -295,7 +316,7 @@ export default async function Page() {
           <div className="space-y-3">
             {faqEntries.map((item) => (
               <details
-                className="rounded-lg border border-border/70 bg-background px-4 py-3"
+                className="rounded-xl border border-border/75 bg-background/90 px-4 py-3"
                 key={item.question}
               >
                 <summary className="cursor-pointer list-none text-sm leading-6 font-semibold [&::-webkit-details-marker]:hidden">
@@ -309,7 +330,7 @@ export default async function Page() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5">
+        <section className="glass-panel rounded-3xl border-border/80 p-4 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold sm:text-2xl">Resources</h2>
@@ -323,7 +344,6 @@ export default async function Page() {
             </Button>
           </div>
         </section>
-
       </div>
 
       <JsonLdScript data={webPageJsonLd} id="homepage-webpage-jsonld" />

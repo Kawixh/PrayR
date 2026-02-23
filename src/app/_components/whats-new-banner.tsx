@@ -5,7 +5,7 @@ import {
   readBannerDismissed,
   writeBannerDismissed,
 } from "@/app/_utils/banner-preferences";
-import { ArrowRight, X } from "lucide-react";
+import { ArrowRight, Megaphone, X } from "lucide-react";
 import { useState } from "react";
 
 const NEW_FEATURES = [
@@ -38,14 +38,17 @@ export function WhatsNewBanner() {
   return (
     <section
       aria-label="What's new"
-      className="animate-in fade-in slide-in-from-top-2 duration-500 rounded-2xl border border-border/80 bg-card"
+      className="app-banner-subtle animate-in fade-in slide-in-from-top-2 duration-500 border-l-4"
     >
-      <div className="flex items-center justify-between border-b border-border/70 px-4 py-3 sm:px-5">
-        <div className="flex items-center gap-2">
-          <p className="rounded-md border border-border/80 bg-muted/60 px-2 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase">
-            Update
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold sm:text-base">
+            <Megaphone className="size-3.5 text-primary" />
+            New in PrayR
+          </h2>
+          <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+            Updated dashboard flow and cleaner settings experience.
           </p>
-          <h2 className="text-sm font-semibold sm:text-base">New in PrayR</h2>
         </div>
         <button
           aria-label="Dismiss what's new banner"
@@ -57,13 +60,13 @@ export function WhatsNewBanner() {
         </button>
       </div>
 
-      <ul className="grid gap-2 p-4 sm:grid-cols-2 sm:px-5 sm:py-4">
+      <ul className="mt-3 grid gap-1.5 border-t border-border/70 pt-3 sm:grid-cols-2">
         {NEW_FEATURES.map((item) => (
           <li
-            className="flex items-center gap-2 rounded-lg border border-border/70 bg-background/65 px-3 py-2 text-sm"
+            className="flex items-center gap-2 rounded-lg bg-background/65 px-2.5 py-1.5 text-sm"
             key={item}
           >
-            <ArrowRight className="size-3.5 text-muted-foreground" />
+            <ArrowRight className="size-3.5 text-primary" />
             <span>{item}</span>
           </li>
         ))}

@@ -1,10 +1,11 @@
 "use client";
 
-import { type FeatureFlags, type FeatureKey } from "@/features/definitions";
 import { ModeToggle } from "@/components/theme-manager";
 import { Button } from "@/components/ui/button";
+import { type FeatureFlags, type FeatureKey } from "@/features/definitions";
 import { cn } from "@/lib/utils";
 import {
+  BookOpenText,
   Home,
   type LucideIcon,
   NotebookTabs,
@@ -12,7 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
 
 type NavItem = {
   href: string;
@@ -31,6 +32,13 @@ const navItems: NavItem[] = [
     featureKey: "prayerTimings",
   },
   {
+    href: "/adhkars",
+    label: "Adhkars",
+    icon: BookOpenText,
+    matches: (pathname: string) => pathname.startsWith("/adhkars"),
+    featureKey: "adhkars",
+  },
+  {
     href: "/resources",
     label: "Resources",
     icon: NotebookTabs,
@@ -47,7 +55,6 @@ const navItems: NavItem[] = [
 
 export const Navbar = ({ featureFlags }: { featureFlags: FeatureFlags }) => {
   const pathname = usePathname();
-  const navPanelRef = useRef<HTMLDivElement>(null);
   const visibleNavItems = useMemo(
     () =>
       navItems.filter(
@@ -56,83 +63,48 @@ export const Navbar = ({ featureFlags }: { featureFlags: FeatureFlags }) => {
     [featureFlags],
   );
 
-  useEffect(() => {
-    const navPanel = navPanelRef.current;
-    if (!navPanel) {
-      return;
-    }
-
-    const root = document.documentElement;
-    const updateReserve = () => {
-      const panelHeight = navPanel.getBoundingClientRect().height;
-      const reserve = Math.ceil(panelHeight + 24);
-      root.style.setProperty("--bottom-nav-reserve", `${reserve}px`);
-    };
-
-    updateReserve();
-
-    let observer: ResizeObserver | null = null;
-    if ("ResizeObserver" in window) {
-      observer = new ResizeObserver(updateReserve);
-      observer.observe(navPanel);
-    }
-
-    window.addEventListener("resize", updateReserve);
-
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", updateReserve);
-      root.style.removeProperty("--bottom-nav-reserve");
-    };
-  }, []);
-
   return (
     <nav
       aria-label="Primary"
-      className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-50"
+      className="sticky top-[calc(env(safe-area-inset-top)+0.35rem)] z-40"
     >
-      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div
-          className="pointer-events-auto glass-panel max-h-[min(72svh,30rem)] overflow-y-auto rounded-2xl border-border/80 p-2 sm:p-2.5"
-          ref={navPanelRef}
-        >
-          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-            <div className="grid min-w-0 gap-2 [grid-template-columns:repeat(auto-fit,minmax(min(12ch,100%),1fr))]">
-              {visibleNavItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = item.matches(pathname);
+      <div className="rounded-2xl border border-border/85 bg-card p-1.5 shadow-[0_1px_1px_color-mix(in_oklab,var(--foreground)_8%,transparent),0_10px_20px_-18px_color-mix(in_oklab,var(--foreground)_35%,transparent)]">
+        <div className="grid gap-1.5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+          <div className="grid min-w-0 gap-1.5 [grid-template-columns:repeat(auto-fit,minmax(min(10ch,100%),1fr))]">
+            {visibleNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = item.matches(pathname);
 
-                return (
-                  <Button
-                    asChild
-                    className={cn(
-                      "min-h-11 h-auto rounded-xl px-2.5 py-2 whitespace-normal sm:px-3",
-                      isActive
-                        ? "border-primary/35 bg-primary/16 text-foreground shadow-sm"
-                        : "border-transparent bg-transparent text-muted-foreground hover:border-border/80 hover:bg-background/60 hover:text-foreground",
-                    )}
-                    key={item.href}
-                    size="sm"
-                    variant="outline"
+              return (
+                <Button
+                  asChild
+                  className={cn(
+                    "min-h-10 h-auto rounded-xl border px-2.5 py-2 whitespace-normal sm:px-3",
+                    isActive
+                      ? "border-primary/35 bg-primary/12 text-primary"
+                      : "border-transparent bg-transparent text-muted-foreground hover:border-border/70 hover:bg-muted/45 hover:text-foreground",
+                  )}
+                  key={item.href}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Link
+                    aria-current={isActive ? "page" : undefined}
+                    className="flex w-full items-center justify-center gap-1.5 text-center leading-tight"
+                    href={item.href}
                   >
-                    <Link
-                      aria-current={isActive ? "page" : undefined}
-                      className="flex w-full items-center justify-center gap-1.5 text-center leading-tight sm:flex-col sm:gap-1"
-                      href={item.href}
-                    >
-                      <Icon className="size-4 shrink-0" />
-                      <span className="text-[0.8125rem] leading-tight font-semibold tracking-normal [overflow-wrap:anywhere]">
-                        {item.label}
-                      </span>
-                    </Link>
-                  </Button>
-                );
-              })}
-            </div>
+                    <Icon className="size-4 shrink-0" />
+                    <span className="text-[0.8125rem] leading-tight font-semibold tracking-normal [overflow-wrap:anywhere]">
+                      {item.label}
+                    </span>
+                  </Link>
+                </Button>
+              );
+            })}
+          </div>
 
-            <div className="flex justify-end">
-              <ModeToggle className="shrink-0" />
-            </div>
+          <div className="flex justify-end">
+            <ModeToggle className="shrink-0 rounded-xl border-border/80 bg-background hover:border-primary/30 hover:bg-muted/45" />
           </div>
         </div>
       </div>

@@ -12,17 +12,17 @@ import {
   SITE_NAME,
 } from "@/lib/seo/site";
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Manrope } from "next/font/google";
+import { Plus_Jakarta_Sans, Sora } from "next/font/google";
 import { Navbar } from "./_components/navbar";
 import { PwaInstallBanner } from "./_components/pwa-install-banner";
 import "./globals.css";
 
-const bodyFont = Manrope({
+const bodyFont = Plus_Jakarta_Sans({
   variable: "--font-manrope",
   subsets: ["latin"],
 });
 
-const displayFont = Fraunces({
+const displayFont = Sora({
   variable: "--font-fraunces",
   subsets: ["latin"],
 });
@@ -151,7 +151,7 @@ export const metadata: Metadata = {
   },
   other: {
     "msapplication-config": "/browserconfig.xml",
-    "msapplication-TileColor": "#6db7ba",
+    "msapplication-TileColor": "#5f72d8",
     "mobile-web-app-capable": "yes",
     ...getLanguageMetaTags(),
   },
@@ -159,8 +159,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#e9f9f7" },
-    { media: "(prefers-color-scheme: dark)", color: "#10232a" },
+    { media: "(prefers-color-scheme: light)", color: "#f5f6fa" },
+    { media: "(prefers-color-scheme: dark)", color: "#121318" },
   ],
   minimumScale: 1,
   maximumScale: 5,
@@ -201,14 +201,13 @@ export default async function RootLayout({
           >
             <TooltipProvider delayDuration={120}>
               <div className="app-canvas">
-                <div className="mx-auto flex min-h-svh w-full max-w-5xl flex-col gap-4 px-4 pb-[calc(var(--bottom-nav-reserve,8rem)+env(safe-area-inset-bottom))] pt-4 sm:px-6 lg:px-8">
+                <div className="mx-auto flex min-h-svh w-full max-w-5xl flex-col gap-4 px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 lg:px-8">
                   <PwaInstallBanner />
+                  <Navbar featureFlags={featureFlags} />
 
                   <RootLayoutClient>
                     <main className="flex-1 space-y-6">{children}</main>
                   </RootLayoutClient>
-
-                  <Navbar featureFlags={featureFlags} />
                 </div>
               </div>
             </TooltipProvider>

@@ -27,6 +27,7 @@ import { DailyAdhkarCard } from "./daily-adhkar-card";
 import { CurrentPrayerStatusCard } from "./current-prayer-status-card";
 import { IslamicDateCalendarCard } from "./islamic-date-calendar-card";
 import { SeharIftarHighlightsCard } from "./sehar-iftar-highlights-card";
+import { RamadanMubarakBanner } from "./ramadan-mubarak-banner";
 import { PrayerTimeCard } from "./prayer-time-card";
 import { PrayerTimeline } from "./prayer-timeline";
 
@@ -272,123 +273,102 @@ function FirstVisitStepLoader({ stage }: { stage: InitialLoadStage }) {
   const progressPercent = ((activeStepIndex + 1) / steps.length) * 100;
 
   return (
-    <section aria-busy="true" aria-live="polite" className="space-y-5">
-      <Card className="overflow-hidden border-primary/35 bg-linear-to-br from-primary/18 via-card to-accent/14 p-0">
-        <div className="relative px-4 py-5 sm:px-6 sm:py-6">
-          <div className="pointer-events-none absolute -top-16 right-2 size-40 rounded-full bg-primary/25 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-16 -left-8 size-40 rounded-full bg-primary/12 blur-3xl" />
-
-          <div className="relative z-10 flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">
-                First Visit Setup
-              </p>
-              <h2 className="font-display mt-2 text-balance text-2xl leading-tight sm:text-3xl">
-                Preparing your prayer dashboard
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-                {activeStep.detail}
-              </p>
-            </div>
-            <span className="rounded-full border border-primary/35 bg-background/75 p-2.5 text-primary">
-              <Loader2 className="size-5 animate-spin" />
-            </span>
-          </div>
-
-          <div className="relative z-10 mt-5">
-            <div className="h-2 w-full overflow-hidden rounded-full bg-primary/15">
-              <div
-                className="h-full rounded-full bg-linear-to-r from-primary via-primary/80 to-primary transition-all duration-500 ease-out"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-            <p className="mt-2 text-xs font-medium text-muted-foreground">
-              {Math.round(progressPercent)}% complete
+    <section aria-busy="true" aria-live="polite" className="space-y-4">
+      <Card className="glass-panel rounded-2xl border-border/80 p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+              First Visit Setup
+            </p>
+            <h2 className="font-display mt-2 text-balance text-2xl leading-tight sm:text-3xl">
+              Preparing your prayer dashboard
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+              {activeStep.detail}
             </p>
           </div>
+          <span className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-background px-3 py-1 text-xs font-semibold text-primary">
+            <Loader2 className="size-3.5 animate-spin" />
+            {Math.round(progressPercent)}%
+          </span>
+        </div>
 
-          <div className="relative z-10 mt-4 grid gap-2">
-            {steps.map((step, index) => {
-              const isCompleted = index < activeStepIndex;
-              const isActive = index === activeStepIndex;
-              const Icon = step.icon;
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-primary/18">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+      </Card>
 
-              return (
+      <Card className="glass-panel rounded-2xl border-border/80 p-4 sm:p-5">
+        <ol className="space-y-3">
+          {steps.map((step, index) => {
+            const isCompleted = index < activeStepIndex;
+            const isActive = index === activeStepIndex;
+            const Icon = step.icon;
+
+            return (
+              <li className="relative" key={step.id}>
                 <article
                   className={
                     isActive
-                      ? "rounded-xl border border-primary/35 bg-background/80 px-3 py-3 shadow-sm"
-                      : "rounded-xl border border-border/80 bg-background/45 px-3 py-3"
+                      ? "rounded-xl border border-primary/35 bg-primary/10 px-3 py-3"
+                      : "rounded-xl border border-border/75 bg-background/80 px-3 py-3"
                   }
-                  key={step.id}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-start gap-3">
-                      <span
-                        className={
-                          isCompleted
-                            ? "mt-0.5 text-primary"
-                            : isActive
-                              ? "mt-0.5 text-primary"
-                              : "mt-0.5 text-muted-foreground"
-                        }
-                      >
-                        {isCompleted ? (
-                          <CheckCircle2 className="size-4" />
-                        ) : isActive ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : (
-                          <Icon className="size-4" />
-                        )}
-                      </span>
-                      <div className="min-w-0">
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={
+                        isCompleted || isActive
+                          ? "mt-0.5 inline-flex size-6 items-center justify-center rounded-full border border-primary/35 bg-background text-primary"
+                          : "mt-0.5 inline-flex size-6 items-center justify-center rounded-full border border-border/75 bg-background text-muted-foreground"
+                      }
+                    >
+                      {isCompleted ? (
+                        <CheckCircle2 className="size-3.5" />
+                      ) : isActive ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <Icon className="size-3.5" />
+                      )}
+                    </span>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <p
                           className={
                             isCompleted || isActive
-                              ? "text-sm font-medium text-foreground"
-                              : "text-sm text-muted-foreground"
+                              ? "text-sm font-semibold"
+                              : "text-sm font-medium text-muted-foreground"
                           }
                         >
                           {step.label}
                         </p>
-                        <p className="text-xs text-muted-foreground">{step.detail}</p>
+                        <span
+                          className={
+                            isCompleted
+                              ? "rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"
+                              : isActive
+                                ? "rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"
+                                : "rounded-full border border-border/70 bg-background/90 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+                          }
+                        >
+                          {isCompleted ? "Done" : isActive ? "In progress" : "Waiting"}
+                        </span>
                       </div>
+                      <p className="mt-1 text-xs text-muted-foreground">{step.detail}</p>
                     </div>
-                    <span
-                      className={
-                        isCompleted
-                          ? "rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"
-                          : isActive
-                            ? "rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"
-                            : "rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
-                      }
-                    >
-                      {isCompleted ? "Done" : isActive ? "In progress" : "Waiting"}
-                    </span>
                   </div>
                 </article>
-              );
-            })}
-          </div>
-        </div>
-      </Card>
 
-      <Card className="glass-panel border-border/80 p-4 sm:p-5">
-        <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-          Loading Preview
-        </p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-border/80 bg-background/55 p-3">
-            <div className="h-4 w-28 animate-pulse rounded bg-muted/70" />
-            <div className="mt-3 h-10 w-44 animate-pulse rounded bg-muted/80" />
-            <div className="mt-2 h-4 w-full animate-pulse rounded bg-muted/70" />
-          </div>
-          <div className="rounded-xl border border-border/80 bg-background/55 p-3">
-            <div className="h-4 w-24 animate-pulse rounded bg-muted/70" />
-            <div className="mt-3 h-10 w-36 animate-pulse rounded bg-muted/80" />
-            <div className="mt-2 h-4 w-5/6 animate-pulse rounded bg-muted/70" />
-          </div>
-        </div>
+                {index < steps.length - 1 ? (
+                  <div className="mx-auto mt-1 h-3 w-px bg-border/80" />
+                ) : null}
+              </li>
+            );
+          })}
+        </ol>
       </Card>
     </section>
   );
@@ -571,31 +551,48 @@ export function PrayerTimesWrapper({
     }
 
     return (
-      <section className="space-y-5">
-        <Card className="glass-panel rounded-2xl border-border/80 p-4">
+      <section className="space-y-4">
+        <div className="app-banner-subtle">
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 rounded-full bg-primary/15 p-2 text-primary">
-              <Clock3 className="size-4" />
+            <div className="mt-0.5 rounded-full border border-primary/30 bg-primary/10 p-2 text-primary">
+              <Loader2 className="size-4 animate-spin" />
             </div>
             <div className="w-full space-y-2">
-              <div className="h-6 w-52 animate-pulse rounded bg-muted/80" />
-              <div className="h-4 w-full animate-pulse rounded bg-muted/70" />
+              <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                Loading
+              </p>
+              <p className="text-lg font-semibold sm:text-xl">Refreshing prayer dashboard</p>
+              <p className="text-sm text-muted-foreground">
+                Fetching latest timings and preparing today&apos;s summary.
+              </p>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/15">
+                <div className="h-full w-2/3 animate-pulse rounded-full bg-primary/70" />
+              </div>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card className="glass-panel border-border/80 p-5 sm:p-6">
-          <div className="space-y-3">
-            <div className="h-8 w-40 animate-pulse rounded bg-muted/80" />
-            <div className="h-4 w-full animate-pulse rounded bg-muted/70" />
-            <div className="h-4 w-4/5 animate-pulse rounded bg-muted/70" />
+        <Card className="glass-panel rounded-2xl border-border/80 p-4 sm:p-5">
+          <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            Preparing Sections
+          </p>
+          <div className="mt-3 space-y-2.5">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div
+                className="flex items-center gap-3 rounded-lg border border-border/75 bg-background/80 px-3 py-2.5"
+                key={`loading-step-${index}`}
+              >
+                <div className="size-2 rounded-full bg-primary/55" />
+                <div className="h-4 flex-1 animate-pulse rounded bg-muted/70" />
+              </div>
+            ))}
           </div>
         </Card>
 
-        <div className="grid w-full gap-4 lg:grid-cols-2">
+        <div className="grid w-full gap-4 md:grid-cols-2">
           {Array.from({ length: 2 }).map((_, index) => (
             <Card
-              className="glass-panel border-border/80 p-5 sm:p-6"
+              className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6"
               key={`prayer-panel-skeleton-${index}`}
             >
               <div className="space-y-5">
@@ -613,7 +610,6 @@ export function PrayerTimesWrapper({
             </Card>
           ))}
         </div>
-
       </section>
     );
   }
@@ -640,6 +636,11 @@ export function PrayerTimesWrapper({
 
   return (
     <section className="space-y-5">
+      <RamadanMubarakBanner
+        dateInfo={adjustedDateInfo}
+        showSeharAndIftarTimes={featureFlags.sehrAndIftarTimes}
+        timings={prayerDay.timings}
+      />
       {featureFlags.sehrAndIftarTimes ? (
         <SeharIftarHighlightsCard dateInfo={adjustedDateInfo} timings={prayerDay.timings} />
       ) : null}

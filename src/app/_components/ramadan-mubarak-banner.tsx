@@ -84,14 +84,20 @@ export function RamadanMubarakBanner({
   const FastingIcon = isSehar ? MoonStar : Sunset;
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-primary/35 bg-primary/8">
-      <div className="flex items-start justify-between gap-3 px-4 py-3 sm:px-5">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <MoonStar className="size-4 text-primary" />
-            <p className="text-sm font-semibold">Ramadan-ul-Mubarak</p>
+    <section className="app-banner">
+      <div className="flex items-start justify-between gap-3 border-b border-primary/25 pb-3">
+        <div className="min-w-0 space-y-2">
+          <p className="inline-flex w-fit items-center gap-1.5 rounded-full border border-primary/35 bg-background/85 px-2.5 py-1 text-[11px] font-semibold tracking-[0.16em] uppercase text-primary">
+            <MoonStar className="size-3.5" />
+            Ramadan
+          </p>
+
+          <div>
+            <h2 className="text-sm font-semibold sm:text-base">Ramadan-ul-Mubarak</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+              {hijriDateLabel}
+            </p>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">{hijriDateLabel}</p>
         </div>
         <button
           aria-label="Dismiss Ramadan banner"
@@ -107,8 +113,8 @@ export function RamadanMubarakBanner({
       </div>
 
       {fastingBannerState !== "hidden" ? (
-        <div className="border-t border-primary/20 bg-card/55 p-3 sm:px-5 sm:py-4">
-          <article className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-background/65 px-3 py-3">
+        <div className="mt-3">
+          <article className="flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-background/90 px-3 py-3 sm:px-4">
             <div>
               <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                 {fastingLabel}
@@ -116,7 +122,7 @@ export function RamadanMubarakBanner({
               <p className="mt-1 text-xl font-semibold">{fastingTime}</p>
               <p className="text-xs text-muted-foreground">{fastingPrayerLabel}</p>
             </div>
-            <span className="rounded-full border border-primary/30 bg-background/80 p-2 text-primary">
+            <span className="rounded-full border border-primary/35 bg-primary/10 p-2 text-primary">
               <FastingIcon className="size-4" />
             </span>
           </article>

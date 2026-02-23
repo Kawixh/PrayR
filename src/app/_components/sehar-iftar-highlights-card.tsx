@@ -55,46 +55,39 @@ export function SeharIftarHighlightsCard({
   const hijriMetaLabel = `${dateInfo.hijri.weekday.en} • ${dateInfo.hijri.month.ar}`;
 
   return (
-    <Card className="overflow-hidden border-primary/35 bg-linear-to-br from-primary/12 via-primary/7 to-card p-0">
-      <div className="relative px-4 py-4 sm:px-5 sm:py-5">
-        <div className="pointer-events-none absolute -top-10 -right-4 size-28 rounded-full bg-primary/25 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-12 -left-8 size-28 rounded-full bg-primary/10 blur-2xl" />
+    <Card className="glass-panel rounded-2xl border-primary/30 p-4 sm:p-5">
+      <p className="soft-chip inline-flex">Ramadan Dashboard</p>
 
-        <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
-          Ramadan Dashboard
-        </p>
+      <div className="mt-3 grid gap-2 min-[580px]:grid-cols-2">
+        <article className="min-w-0 rounded-xl border border-border/75 bg-background/85 px-3.5 py-3.5 sm:px-4">
+          <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+            Islamic Date
+          </p>
+          <p className="font-display mt-1 text-balance text-2xl leading-tight break-words sm:text-3xl">
+            {hijriDateLabel}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">{hijriMetaLabel}</p>
+        </article>
 
-        <div className="mt-3 grid gap-2 min-[580px]:grid-cols-2">
-          <article className="min-w-0 rounded-xl border border-border/75 bg-background/65 px-3.5 py-3.5 sm:px-4">
-            <p className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-              Islamic Date
-            </p>
-            <p className="font-display mt-1 text-balance text-2xl leading-tight break-words sm:text-3xl">
-              {hijriDateLabel}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">{hijriMetaLabel}</p>
-          </article>
-
-          <article className="min-w-0 rounded-xl border border-primary/35 bg-background/70 px-3.5 py-3.5 sm:px-4">
-            <div className="flex items-end justify-between gap-3">
-              <div className="min-w-0">
-                <h2 className="font-display text-3xl leading-tight break-words sm:text-4xl">
-                  {label}
-                </h2>
-                <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                  {prayerLabel}
-                </p>
-              </div>
-              <span className="rounded-full border border-primary/35 bg-background/80 p-2.5 text-primary">
-                <Icon className="size-5" />
-              </span>
+        <article className="min-w-0 rounded-xl border border-primary/32 bg-primary/8 px-3.5 py-3.5 sm:px-4">
+          <div className="flex items-end justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="font-display text-3xl leading-tight break-words sm:text-4xl">
+                {label}
+              </h2>
+              <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                {prayerLabel}
+              </p>
             </div>
+            <span className="rounded-full border border-primary/35 bg-background/85 p-2.5 text-primary">
+              <Icon className="size-5" />
+            </span>
+          </div>
 
-            <p className="mt-4 text-3xl font-semibold tracking-tight break-words sm:text-4xl">
-              {value}
-            </p>
-          </article>
-        </div>
+          <p className="mt-4 text-3xl font-semibold tracking-tight break-words sm:text-4xl">
+            {value}
+          </p>
+        </article>
       </div>
     </Card>
   );

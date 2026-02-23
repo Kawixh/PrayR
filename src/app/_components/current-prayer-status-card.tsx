@@ -47,8 +47,8 @@ export function CurrentPrayerStatusCard({ timings }: CurrentPrayerStatusCardProp
     <Card
       className={
         activeMakruh
-          ? "border-amber-500/35 bg-amber-500/10 p-5 sm:p-6"
-          : "glass-panel border-border/80 p-5 sm:p-6"
+          ? "border-amber-500/35 border-l-4 border-l-amber-500 bg-amber-500/10 p-5 sm:p-6"
+          : "glass-panel border-primary/25 border-l-4 border-l-primary bg-primary/6 p-5 sm:p-6"
       }
     >
       <div className="space-y-4">
@@ -71,7 +71,7 @@ export function CurrentPrayerStatusCard({ timings }: CurrentPrayerStatusCardProp
           </p>
         </div>
 
-        <p className="font-display text-3xl leading-tight sm:text-5xl">{headline}</p>
+        <p className="font-display text-3xl leading-tight sm:text-4xl">{headline}</p>
 
         <div className="space-y-1.5">
           {activeMakruh ? (

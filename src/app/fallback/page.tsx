@@ -31,7 +31,7 @@ export default function Fallback() {
 
   return (
     <section className="flex min-h-[60svh] items-center justify-center">
-      <div className="glass-panel w-full max-w-xl rounded-3xl p-6 text-center sm:p-8">
+      <div className="app-banner-subtle w-full max-w-xl text-center">
         <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-primary/15 text-primary">
           {isOnline ? <Wifi className="size-5" /> : <WifiOff className="size-5" />}
         </div>

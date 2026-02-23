@@ -148,11 +148,8 @@ export function AdhkarBrowser({
 
   return (
     <section className="space-y-5">
-      <Card className="relative overflow-hidden rounded-3xl border-border/80 p-5 sm:p-6">
-        <div className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-primary/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -left-16 size-52 rounded-full bg-accent/25 blur-3xl" />
-
-        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <Card className="glass-panel rounded-3xl border-primary/25 bg-primary/8 p-5 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-3">
             <p className="soft-chip inline-flex w-fit items-center gap-2">
               <Sparkles className="size-3.5" />

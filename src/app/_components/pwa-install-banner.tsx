@@ -113,47 +113,39 @@ export function PwaInstallBanner() {
     <div
       aria-label={showAndroidBanner ? "Install PrayR" : undefined}
       className={cn(
-        "glass-panel animate-in fade-in slide-in-from-top-2 duration-500 rounded-2xl p-4",
-        showAndroidBanner
-          ? "cursor-pointer border-primary/35 bg-gradient-to-r from-primary/15 via-card to-accent/15"
-          : "border-border/80",
+        "animate-in fade-in slide-in-from-top-2 duration-500 border-l-4",
+        showAndroidBanner ? "app-banner cursor-pointer" : "app-banner-subtle",
       )}
       onClick={showAndroidBanner ? () => void installOnAndroid() : undefined}
       onKeyDown={handleBannerKeyDown}
       role={showAndroidBanner ? "button" : undefined}
       tabIndex={showAndroidBanner ? 0 : undefined}
     >
-      <div className="flex items-start gap-3">
-        <div className="mt-0.5 rounded-full border border-primary/25 bg-primary/15 p-2 text-primary">
-          {showAndroidBanner ? (
-            <Download className="size-4" />
-          ) : (
-            <Sparkles className="size-4" />
-          )}
-        </div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 gap-2.5">
+          <span className="mt-0.5 text-primary">
+            {showAndroidBanner ? (
+              <Download className="size-4" />
+            ) : (
+              <Sparkles className="size-4" />
+            )}
+          </span>
 
-        <div className="min-w-0 flex-1 space-y-1">
-          <p className="font-display text-xl leading-tight">
-            {showAndroidBanner ? "Install PrayR" : "Use PrayR as an App"}
-          </p>
-          <p className="break-words text-sm leading-6 text-muted-foreground">
-            {showIosBanner
-              ? "this is a PWA and add to homescreen from safari to make this an app"
-              : "Tap this card to install the app directly on Android for a smoother, faster experience."}
-          </p>
-
-          {showAndroidBanner ? (
-            <p className="text-xs text-muted-foreground">
-              {deferredPrompt
-                ? "Install prompt is ready"
-                : "Preparing install prompt..."}
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold">
+              {showAndroidBanner ? "Install PrayR" : "Use PrayR as an App"}
             </p>
-          ) : null}
+            <p className="mt-0.5 break-words text-xs leading-5 text-muted-foreground sm:text-sm">
+              {showIosBanner
+                ? "Open Safari share menu and tap Add to Home Screen."
+                : "Install on Android for faster launch and home screen access."}
+            </p>
+          </div>
         </div>
 
         <button
           aria-label="Dismiss install banner"
-          className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground"
+          className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           onClick={(event) => {
             event.stopPropagation();
             setDismissed(true);
@@ -165,7 +157,7 @@ export function PwaInstallBanner() {
       </div>
 
       {showAndroidBanner ? (
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-3 flex flex-col gap-2 border-t border-border/70 pt-3 sm:flex-row sm:items-center sm:justify-between">
           <Button
             className="min-h-10 w-full rounded-full px-5 py-2.5 sm:w-auto"
             onClick={(event) => {
@@ -184,6 +176,8 @@ export function PwaInstallBanner() {
               If prompt does not appear, open in Chrome and use
               &quot;Install app&quot; from the menu.
             </p>
+          ) : deferredPrompt ? (
+            <p className="text-xs text-muted-foreground">Install prompt is ready.</p>
           ) : null}
         </div>
       ) : null}

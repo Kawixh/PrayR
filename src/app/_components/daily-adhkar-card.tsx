@@ -112,11 +112,8 @@ export function DailyAdhkarCard() {
   }
 
   return (
-    <Card className="relative overflow-hidden rounded-2xl border-primary/30 bg-gradient-to-br from-primary/15 via-card to-accent/20 p-5 sm:p-6">
-      <div className="pointer-events-none absolute -right-14 -top-12 size-44 rounded-full bg-primary/25 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-16 -left-12 size-44 rounded-full bg-accent/25 blur-3xl" />
-
-      <div className="relative z-10 space-y-4">
+    <Card className="glass-panel rounded-2xl border-primary/30 bg-primary/8 p-5 sm:p-6">
+      <div className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="soft-chip mb-2 inline-flex">Adhkar of the Day</p>
@@ -158,4 +155,3 @@ export function DailyAdhkarCard() {
     </Card>
   );
 }
-
