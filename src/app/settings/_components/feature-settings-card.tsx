@@ -2,14 +2,7 @@
 
 import { resetBannerPreferencesToDefaults } from "@/app/_utils/banner-preferences";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { readClientFeatureOverrides, writeClientFeatureOverrides } from "@/features/client";
 import {
   DEPRECATED_FRONTEND_FEATURE_KEY_SET,
@@ -21,7 +14,7 @@ import {
 } from "@/features/definitions";
 import { resolveFeatureFlags } from "@/features/resolve";
 import { cn } from "@/lib/utils";
-import { ChevronDown, RefreshCw } from "lucide-react";
+import { ChevronRight, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
@@ -47,72 +40,15 @@ function isToggleBlocked(featureFlags: FeatureFlags, featureKey: FeatureKey): bo
   return hasDisabledDependency && !isEnabled;
 }
 
-type FeatureSwitchProps = {
-  featureFlags: FeatureFlags;
-  featureKey: FeatureKey;
-  isPending: boolean;
-  onToggleFeature: (featureKey: FeatureKey) => void;
-  style: "main" | "sub";
-};
-
-function FeatureSwitch({
-  featureFlags,
-  featureKey,
-  isPending,
-  onToggleFeature,
-  style,
-}: FeatureSwitchProps) {
-  const definition = FEATURE_DEFINITIONS[featureKey];
-  const blocked = isToggleBlocked(featureFlags, featureKey);
-  const dependencies = definition.dependsOn ?? [];
-  const isEnabled = featureFlags[featureKey];
-
-  return (
-    <article
-      className={cn(
-        "rounded-xl border p-3 sm:p-4",
-        style === "main" ? "border-border/80 bg-card/70" : "border-dashed bg-muted/35",
-      )}
-    >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-1.5">
-          <h3 className={cn("font-semibold", style === "main" ? "text-base" : "text-sm")}>
-            {definition.title}
-          </h3>
-          <p className="text-sm text-muted-foreground">{definition.description}</p>
-          {dependencies.length > 0 ? (
-            <p className="text-xs text-muted-foreground">
-              Requires: {getDependencyTitles(featureKey)}
-            </p>
-          ) : null}
-          {blocked ? (
-            <p className="text-xs text-primary">
-              Enable {getDependencyTitles(featureKey)} first.
-            </p>
-          ) : null}
-        </div>
-
-        <Button
-          aria-pressed={isEnabled}
-          className="w-full sm:w-auto"
-          disabled={blocked || isPending}
-          onClick={() => onToggleFeature(featureKey)}
-          size="sm"
-          type="button"
-          variant={isEnabled ? "secondary" : "outline"}
-        >
-          {isEnabled ? "On" : "Off"}
-        </Button>
-      </div>
-    </article>
-  );
-}
-
 type FeatureSettingsCardProps = {
+  className?: string;
   onFeatureFlagsChange?: (featureFlags: FeatureFlags) => void;
 };
 
-export function FeatureSettingsCard({ onFeatureFlagsChange }: FeatureSettingsCardProps) {
+export function FeatureSettingsCard({
+  className,
+  onFeatureFlagsChange,
+}: FeatureSettingsCardProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [overrides, setOverrides] = useState<FeatureOverrides>(readClientFeatureOverrides);
@@ -123,10 +59,28 @@ export function FeatureSettingsCard({ onFeatureFlagsChange }: FeatureSettingsCar
       !DEPRECATED_FRONTEND_FEATURE_KEY_SET.has(featureKey) &&
       FEATURE_DEFINITIONS[featureKey].tier === "main",
   );
+  const featureTree = useMemo(
+    () =>
+      mainFeatureKeys.map((mainFeatureKey) => ({
+        mainFeatureKey,
+        subFeatureKeys: getSubFeatures(mainFeatureKey),
+      })),
+    [mainFeatureKeys],
+  );
+  const navigableFeatureKeys = useMemo(
+    () => featureTree.flatMap(({ mainFeatureKey, subFeatureKeys }) => [mainFeatureKey, ...subFeatureKeys]),
+    [featureTree],
+  );
+  const [requestedActiveFeatureKey, setRequestedActiveFeatureKey] = useState<FeatureKey>(
+    () => navigableFeatureKeys[0] ?? "prayerTimings",
+  );
 
   useEffect(() => {
     onFeatureFlagsChange?.(featureFlags);
   }, [featureFlags, onFeatureFlagsChange]);
+  const activeFeatureKey = navigableFeatureKeys.includes(requestedActiveFeatureKey)
+    ? requestedActiveFeatureKey
+    : (navigableFeatureKeys[0] ?? "prayerTimings");
 
   const applyOverrides = (nextOverrides: FeatureOverrides) => {
     writeClientFeatureOverrides(nextOverrides);
@@ -147,78 +101,212 @@ export function FeatureSettingsCard({ onFeatureFlagsChange }: FeatureSettingsCar
     resetBannerPreferencesToDefaults();
     applyOverrides({});
   };
+  const activeDefinition = FEATURE_DEFINITIONS[activeFeatureKey];
+  const activeDependencies = activeDefinition.dependsOn ?? [];
+  const activeBlocked = isToggleBlocked(featureFlags, activeFeatureKey);
+  const activeEnabled = featureFlags[activeFeatureKey];
+  const activeSubFeatureKeys =
+    activeDefinition.tier === "main" ? getSubFeatures(activeFeatureKey) : [];
+  const activeParentKey =
+    activeDefinition.tier === "sub" ? activeDefinition.parent : undefined;
+  const activeParentTitle =
+    activeParentKey ? FEATURE_DEFINITIONS[activeParentKey].title : null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Feature Settings</CardTitle>
-        <CardDescription>
-          Structured feature controls with parent features and collapsible sub features.
-        </CardDescription>
-        <CardAction>
-          <Button
-            disabled={isPending}
-            onClick={resetToDefaults}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            <RefreshCw className={cn("size-4", isPending ? "animate-spin" : undefined)} />
-            Reset defaults
-          </Button>
-        </CardAction>
-      </CardHeader>
+    <section className={cn("space-y-4", className)}>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h3 className="text-lg font-semibold">Feature Settings</h3>
+          <p className="text-sm text-muted-foreground">
+            Select one feature from the tree and configure it in the detail pane.
+          </p>
+        </div>
+        <Button
+          disabled={isPending}
+          onClick={resetToDefaults}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          <RefreshCw className={cn("size-4", isPending ? "animate-spin" : undefined)} />
+          Reset defaults
+        </Button>
+      </header>
 
-      <CardContent className="space-y-3">
-        {mainFeatureKeys.map((featureKey) => {
-          const subFeatures = getSubFeatures(featureKey);
-          const hasSubFeatures = subFeatures.length > 0;
+      <div className="grid gap-4 md:grid-cols-[17rem_minmax(0,1fr)]">
+        <aside className="rounded-2xl border border-border/80 bg-muted/20 p-3 sm:p-4">
+          <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            Feature Tree
+          </p>
 
-          return (
-            <section className="rounded-2xl border border-border/80 p-3 sm:p-4" key={featureKey}>
-              <div className="mb-2 flex items-center justify-between">
-                <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-                  Main Feature
-                </p>
-                {hasSubFeatures ? (
-                  <p className="text-xs text-muted-foreground">
-                    {subFeatures.length} sub feature{subFeatures.length === 1 ? "" : "s"}
-                  </p>
-                ) : null}
-              </div>
+          <ul className="mt-3 space-y-3 border-l border-border/80 pl-3">
+            {featureTree.map(({ mainFeatureKey, subFeatureKeys }) => (
+              <li className="space-y-1.5" key={mainFeatureKey}>
+                <button
+                  className={cn(
+                    "focus-visible:ring-ring/50 flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left outline-none transition-colors focus-visible:ring-[3px]",
+                    activeFeatureKey === mainFeatureKey
+                      ? "bg-accent text-accent-foreground"
+                      : "hover:bg-accent/60",
+                  )}
+                  onClick={() => setRequestedActiveFeatureKey(mainFeatureKey)}
+                  type="button"
+                >
+                  <ChevronRight
+                    className={cn(
+                      "mt-0.5 size-3.5 shrink-0",
+                      activeFeatureKey === mainFeatureKey
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                    )}
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium">
+                      {FEATURE_DEFINITIONS[mainFeatureKey].title}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {featureFlags[mainFeatureKey] ? "Enabled" : "Disabled"}
+                    </span>
+                  </span>
+                </button>
 
-              <FeatureSwitch
-                featureFlags={featureFlags}
-                featureKey={featureKey}
-                isPending={isPending}
-                onToggleFeature={toggleFeature}
-                style="main"
-              />
-
-              {hasSubFeatures ? (
-                <details className="group mt-3 rounded-xl border border-border/70 bg-background/55 p-3">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold">
-                    <span>Sub Features</span>
-                    <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
-                  </summary>
-                  <div className="mt-3 space-y-2.5">
-                    {subFeatures.map((subFeatureKey) => (
-                      <FeatureSwitch
-                        featureFlags={featureFlags}
-                        featureKey={subFeatureKey}
-                        isPending={isPending}
-                        key={subFeatureKey}
-                        onToggleFeature={toggleFeature}
-                        style="sub"
-                      />
+                {subFeatureKeys.length > 0 ? (
+                  <ul className="space-y-1 border-l border-border/70 pl-2">
+                    {subFeatureKeys.map((subFeatureKey) => (
+                      <li key={subFeatureKey}>
+                        <button
+                          className={cn(
+                            "focus-visible:ring-ring/50 flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left outline-none transition-colors focus-visible:ring-[3px]",
+                            activeFeatureKey === subFeatureKey
+                              ? "bg-accent text-accent-foreground"
+                              : "hover:bg-accent/60",
+                          )}
+                          onClick={() => setRequestedActiveFeatureKey(subFeatureKey)}
+                          type="button"
+                        >
+                          <ChevronRight
+                            className={cn(
+                              "mt-0.5 size-3.5 shrink-0",
+                              activeFeatureKey === subFeatureKey
+                                ? "text-primary"
+                                : "text-muted-foreground",
+                            )}
+                          />
+                          <span className="min-w-0">
+                            <span className="block text-sm font-medium">
+                              {FEATURE_DEFINITIONS[subFeatureKey].title}
+                            </span>
+                            <span className="mt-0.5 block text-xs text-muted-foreground">
+                              {featureFlags[subFeatureKey] ? "Enabled" : "Disabled"}
+                            </span>
+                          </span>
+                        </button>
+                      </li>
                     ))}
-                  </div>
-                </details>
+                  </ul>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </aside>
+
+        <section className="space-y-5 rounded-2xl border border-border/80 p-4 sm:p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                {activeDefinition.tier === "main" ? "Main Feature" : "Sub Feature"}
+              </p>
+              <h4 className="text-lg font-semibold">{activeDefinition.title}</h4>
+              <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+                {activeDefinition.description}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5 rounded-xl border border-border/70 bg-background/75 px-2.5 py-2">
+              <div className="text-right">
+                <p className="text-xs font-semibold text-foreground">
+                  {activeEnabled ? "Enabled" : "Disabled"}
+                </p>
+                <p className="text-[11px] leading-4 text-muted-foreground">
+                  {activeBlocked
+                    ? `Requires ${getDependencyTitles(activeFeatureKey)}`
+                    : activeEnabled
+                      ? "Feature is active."
+                      : "Feature is inactive."}
+                </p>
+              </div>
+              <Switch
+                aria-label={`Toggle ${activeDefinition.title}`}
+                checked={activeEnabled}
+                disabled={activeBlocked || isPending}
+                onCheckedChange={() => toggleFeature(activeFeatureKey)}
+              />
+            </div>
+          </div>
+
+          {activeDependencies.length > 0 ? (
+            <div className="space-y-1.5 rounded-xl border border-border/70 bg-muted/20 p-3">
+              <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                Dependencies
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Requires: {getDependencyTitles(activeFeatureKey)}
+              </p>
+              {activeBlocked ? (
+                <p className="text-sm text-primary">
+                  Enable {getDependencyTitles(activeFeatureKey)} first.
+                </p>
               ) : null}
-            </section>
-          );
-        })}
-      </CardContent>
-    </Card>
+            </div>
+          ) : null}
+
+          {activeParentKey && activeParentTitle ? (
+            <div className="space-y-1.5 rounded-xl border border-border/70 bg-muted/20 p-3">
+              <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                Parent Feature
+              </p>
+              <button
+                className="text-sm font-medium text-primary hover:underline"
+                onClick={() => setRequestedActiveFeatureKey(activeParentKey)}
+                type="button"
+              >
+                {activeParentTitle}
+              </button>
+            </div>
+          ) : null}
+
+          {activeSubFeatureKeys.length > 0 ? (
+            <div className="space-y-2 rounded-xl border border-border/70 bg-muted/20 p-3">
+              <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                Sub Features
+              </p>
+              <ul className="space-y-1.5">
+                {activeSubFeatureKeys.map((subFeatureKey) => (
+                  <li key={subFeatureKey}>
+                    <button
+                      className="hover:bg-accent/60 focus-visible:ring-ring/50 flex w-full items-start justify-between gap-2 rounded-lg px-2 py-1.5 text-left outline-none focus-visible:ring-[3px]"
+                      onClick={() => setRequestedActiveFeatureKey(subFeatureKey)}
+                      type="button"
+                    >
+                      <span>
+                        <span className="block text-sm font-medium">
+                          {FEATURE_DEFINITIONS[subFeatureKey].title}
+                        </span>
+                        <span className="mt-0.5 block text-xs text-muted-foreground">
+                          {FEATURE_DEFINITIONS[subFeatureKey].description}
+                        </span>
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {featureFlags[subFeatureKey] ? "Enabled" : "Disabled"}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </section>
+      </div>
+    </section>
   );
 }

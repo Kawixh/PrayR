@@ -1,17 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  CardAction,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { readClientFeatureOverrides } from "@/features/client";
-import { type FeatureFlags } from "@/features/definitions";
-import { resolveFeatureFlags } from "@/features/resolve";
+import { CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -19,28 +9,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { readClientFeatureOverrides } from "@/features/client";
+import { type FeatureFlags } from "@/features/definitions";
+import { resolveFeatureFlags } from "@/features/resolve";
 import { cn } from "@/lib/utils";
 import {
   BellRing,
+  ChevronRight,
   FlaskConical,
   LocateFixed,
   MapPin,
   Search,
+  SlidersHorizontal,
   Sparkles,
+  type LucideIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
-  readPrayerDashboardViewFromStorage,
-  type PrayerDashboardView,
-  writePrayerDashboardViewToStorage,
-} from "../_utils/prayer-dashboard-view";
-import {
   getLocalNotificationPermission,
-  type LocalNotificationPermission,
   showLocalNotification,
+  type LocalNotificationPermission,
 } from "../_utils/local-notifications";
+import {
+  readPrayerDashboardViewFromStorage,
+  writePrayerDashboardViewToStorage,
+  type PrayerDashboardView,
+} from "../_utils/prayer-dashboard-view";
 import { FeatureSettingsCard } from "./_components/feature-settings-card";
-import { SettingsSection } from "./_components/settings-section";
 
 const calculationMethods = [
   { value: "0", label: "Jafari / Shia Ithna-Ashari" },
@@ -75,9 +70,19 @@ const calculationMethods = [
 ];
 
 const schools = [
-  { value: "0", label: "Shafi (general Sunni school)" },
-  { value: "1", label: "Hanafi" },
-];
+  {
+    value: "0",
+    label: "Shafi (general Sunni school)",
+    description:
+      "Default for most Sunni communities. Asr begins when shadow length equals object height.",
+  },
+  {
+    value: "1",
+    label: "Hanafi",
+    description:
+      "Uses a later Asr timing. Select this when your local masjid follows Hanafi fiqh.",
+  },
+] as const;
 
 const dashboardViewOptions: Array<{
   description: string;
@@ -93,19 +98,55 @@ const dashboardViewOptions: Array<{
   {
     value: "timeline",
     label: "Vertical timeline",
-    description: "Shows full day events in a vertical timeline with prayers and Makrooh blocks.",
+    description:
+      "Shows full day events in a vertical timeline with prayers and Makrooh blocks.",
   },
 ];
 
 const HIJRI_DATE_ADJUSTMENT_OPTIONS = [
-  { value: "-2", label: "-2 days" },
-  { value: "-1", label: "-1 day" },
-  { value: "0", label: "No adjustment" },
-  { value: "1", label: "+1 day" },
-  { value: "2", label: "+2 days" },
+  {
+    value: "-2",
+    label: "-2 days",
+    description: "Use when your local moon-sighting starts two days earlier.",
+  },
+  {
+    value: "-1",
+    label: "-1 day",
+    description: "Move the Hijri date one day earlier for local calendars.",
+  },
+  {
+    value: "0",
+    label: "No adjustment",
+    description: "Keep the default astronomical Hijri date.",
+  },
+  {
+    value: "1",
+    label: "+1 day",
+    description: "Move the Hijri date one day forward to match your community.",
+  },
+  {
+    value: "2",
+    label: "+2 days",
+    description: "Use only if your local calendar is two days ahead.",
+  },
 ] as const;
 
 const DEFAULT_HIJRI_DATE_ADJUSTMENT = "0";
+
+type SettingsPanelId =
+  | "general"
+  | "prayers"
+  | "display"
+  | "features"
+  | "developer";
+
+type SettingsMenuItem = {
+  description: string;
+  icon: LucideIcon;
+  id: SettingsPanelId;
+  label: string;
+  summary: string;
+};
 
 function normalizeHijriDateAdjustmentValue(value: unknown): string {
   const parsed = Number(value);
@@ -168,8 +209,7 @@ const EMPTY_SETTINGS: PrayerSettingsState = {
   method: "",
   school: "",
 };
-const DEV_MENU_ENABLED =
-  process.env.NEXT_PUBLIC_ENABLE_DEV_MENU !== "0";
+const DEV_MENU_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEV_MENU !== "0";
 const DEFAULT_FEATURE_FLAGS = resolveFeatureFlags();
 
 function getInitialSettings(): PrayerSettingsState {
@@ -252,8 +292,11 @@ function SuggestionsSkeleton({ withCode = false }: { withCode?: boolean }) {
 }
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<PrayerSettingsState>(getInitialSettings);
-  const [featureFlags, setFeatureFlags] = useState<FeatureFlags>(getInitialFeatureFlags);
+  const [settings, setSettings] =
+    useState<PrayerSettingsState>(getInitialSettings);
+  const [featureFlags, setFeatureFlags] = useState<FeatureFlags>(
+    getInitialFeatureFlags,
+  );
   const [dashboardView, setDashboardView] = useState<PrayerDashboardView>(
     getInitialDashboardView,
   );
@@ -281,8 +324,8 @@ export default function SettingsPage() {
   const [resolving, setResolving] = useState<"gps" | "ip" | null>(null);
   const [notificationPermission, setNotificationPermission] =
     useState<LocalNotificationPermission>(getLocalNotificationPermission);
+  const [activePanel, setActivePanel] = useState<SettingsPanelId>("general");
   const [sendingMockNotification, setSendingMockNotification] = useState(false);
-  const [isDevMenuExpanded, setIsDevMenuExpanded] = useState(false);
   const [mockNotificationStatus, setMockNotificationStatus] = useState<
     string | null
   >(null);
@@ -448,7 +491,12 @@ export default function SettingsPage() {
       controller.abort();
       window.clearTimeout(timeoutId);
     };
-  }, [locationOptionsChanged, settings.cityName, settings.country, settings.countryCode]);
+  }, [
+    locationOptionsChanged,
+    settings.cityName,
+    settings.country,
+    settings.countryCode,
+  ]);
 
   useEffect(() => {
     if (!DEV_MENU_ENABLED || typeof window === "undefined") {
@@ -469,6 +517,22 @@ export default function SettingsPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const nextAvailablePanels: SettingsPanelId[] = featureFlags.prayerTimings
+      ? [
+          "general",
+          "prayers",
+          "display",
+          "features",
+          ...(DEV_MENU_ENABLED ? ["developer" as const] : []),
+        ]
+      : ["features", ...(DEV_MENU_ENABLED ? ["developer" as const] : [])];
+
+    if (!nextAvailablePanels.includes(activePanel)) {
+      setActivePanel(nextAvailablePanels[0]);
+    }
+  }, [activePanel, featureFlags.prayerTimings]);
+
   const applyResolvedLocation = (location: LocationResult) => {
     setLocationOptionsChanged(true);
     setSettings((prev) => ({
@@ -478,7 +542,9 @@ export default function SettingsPage() {
       countryCode: location.countryCode,
     }));
     setLocationError(null);
-    setLocationStatus(`Location updated to ${location.city}, ${location.country}.`);
+    setLocationStatus(
+      `Location updated to ${location.city}, ${location.country}.`,
+    );
   };
 
   const resolveFromGps = () => {
@@ -590,7 +656,9 @@ export default function SettingsPage() {
     setMockNotificationError(null);
 
     if (notificationPermission === "unsupported") {
-      setMockNotificationError("Notifications are not supported on this device.");
+      setMockNotificationError(
+        "Notifications are not supported on this device.",
+      );
       return;
     }
 
@@ -602,7 +670,9 @@ export default function SettingsPage() {
       return;
     }
 
-    setMockNotificationError("Permission not granted. Enable notifications to test.");
+    setMockNotificationError(
+      "Permission not granted. Enable notifications to test.",
+    );
   };
 
   const sendMockNotification = async () => {
@@ -613,12 +683,16 @@ export default function SettingsPage() {
     setNotificationPermission(currentPermission);
 
     if (currentPermission === "unsupported") {
-      setMockNotificationError("Notifications are not supported on this device.");
+      setMockNotificationError(
+        "Notifications are not supported on this device.",
+      );
       return;
     }
 
     if (currentPermission !== "granted") {
-      setMockNotificationError("Grant notification permission before sending a test.");
+      setMockNotificationError(
+        "Grant notification permission before sending a test.",
+      );
       return;
     }
 
@@ -645,7 +719,8 @@ export default function SettingsPage() {
   };
 
   const showCitySuggestions = cityFocused && citySuggestions.length > 0;
-  const showCountrySuggestions = countryFocused && countrySuggestions.length > 0;
+  const showCountrySuggestions =
+    countryFocused && countrySuggestions.length > 0;
   const notificationPermissionLabel =
     notificationPermission === "unsupported"
       ? "Unsupported"
@@ -654,464 +729,695 @@ export default function SettingsPage() {
         : notificationPermission === "denied"
           ? "Denied"
           : "Default";
+  const selectedMethodLabel =
+    calculationMethods.find((method) => method.value === settings.method)
+      ?.label ?? "Method not selected";
+  const selectedSchoolLabel =
+    schools.find((school) => school.value === settings.school)?.label ??
+    "School not selected";
+  const selectedDashboardViewLabel =
+    dashboardViewOptions.find((option) => option.value === dashboardView)
+      ?.label ?? "View not selected";
+  const selectedHijriAdjustmentLabel =
+    HIJRI_DATE_ADJUSTMENT_OPTIONS.find(
+      (option) => option.value === settings.hijriDateAdjustment,
+    )?.label ?? "No adjustment";
+  const menuItems: SettingsMenuItem[] = [
+    ...(featureFlags.prayerTimings
+      ? [
+          {
+            id: "general" as const,
+            label: "General",
+            description: "Location and automatic detection.",
+            summary:
+              settings.cityName && settings.country
+                ? `${settings.cityName}, ${settings.country}`
+                : "City and country not set",
+            icon: Sparkles,
+          },
+          {
+            id: "prayers" as const,
+            label: "Prayers",
+            description: "Method and school selection.",
+            summary: selectedSchoolLabel,
+            icon: MapPin,
+          },
+          {
+            id: "display" as const,
+            label: "Display",
+            description: "Dashboard and Hijri date behavior.",
+            summary: `${selectedDashboardViewLabel} / ${selectedHijriAdjustmentLabel}`,
+            icon: SlidersHorizontal,
+          },
+        ]
+      : []),
+    {
+      id: "features",
+      label: "Features",
+      description: "Feature flag modules and app toggles.",
+      summary: `Prayer timings: ${featureFlags.prayerTimings ? "Enabled" : "Disabled"}`,
+      icon: Search,
+    },
+    ...(DEV_MENU_ENABLED
+      ? [
+          {
+            id: "developer" as const,
+            label: "Developer",
+            description: "Notification permission and local tests.",
+            summary: `Notification: ${notificationPermissionLabel}`,
+            icon: FlaskConical,
+          },
+        ]
+      : []),
+  ];
+  const panelMeta: Record<
+    SettingsPanelId,
+    { description: string; title: string }
+  > = {
+    general: {
+      title: "General",
+      description: "Manage location and automatic device detection.",
+    },
+    prayers: {
+      title: "Prayers",
+      description: "Set calculation method and fiqh school for prayer times.",
+    },
+    display: {
+      title: "Display",
+      description: "Control dashboard layout and Hijri date adjustment.",
+    },
+    features: {
+      title: "Features",
+      description: "Toggle product modules and advanced capabilities.",
+    },
+    developer: {
+      title: "Developer",
+      description: "Notification permission and test delivery helpers.",
+    },
+  };
+  const activePanelMeta = panelMeta[activePanel];
 
   return (
     <section className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl sm:text-3xl">Settings</CardTitle>
-          <CardDescription>
-            Update your location, prayer calculation, and display preferences. Changes
-            save automatically.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <header className="space-y-1">
+        <h1 className="text-2xl font-semibold sm:text-3xl">Settings</h1>
+        <p className="text-sm text-muted-foreground">
+          Manage prayer timings, display behavior, and feature access. Changes
+          save automatically.
+        </p>
+      </header>
 
-      {featureFlags.prayerTimings ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Prayer Timings</CardTitle>
-            <CardDescription>
-              Configure your location and viewing preferences for accurate daily timings.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-8">
-            <SettingsSection
-              description="Set your city and country for local prayer timings."
-              title="Location"
-            >
-              <div className="grid gap-5 md:grid-cols-2">
-                <div className="relative space-y-2">
-                  <label className="text-sm font-medium text-foreground" htmlFor="cityName">
-                    City
-                  </label>
-                  <div className="relative">
-                    <input
-                      autoComplete="off"
-                      className="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex min-h-10 w-full rounded-md border bg-background px-3 py-2.5 pr-10 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px]"
-                      id="cityName"
-                      name="cityName"
-                      onBlur={() => {
-                        window.setTimeout(() => setCityFocused(false), 120);
-                      }}
-                      onChange={(event) => {
-                        setCityInteracted(true);
-                        setLocationOptionsChanged(true);
-                        setSettings((prev) => ({
-                          ...prev,
-                          cityName: event.target.value,
-                        }));
-                      }}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" && citySuggestions.length > 0) {
-                          event.preventDefault();
-                          selectCitySuggestion(citySuggestions[0]);
-                        }
-                      }}
-                      onFocus={() => setCityFocused(true)}
-                      placeholder="Start typing your city..."
-                      required
-                      type="text"
-                      value={settings.cityName}
-                    />
-                    <Search className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                  </div>
+      <div className="grid gap-3 md:grid-cols-[17rem_minmax(0,1fr)] ">
+        <aside className="self-start md:sticky md:top-24">
+          <CardContent className="p-0!">
+            <nav aria-label="Settings categories" className="space-y-1">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const selected = activePanel === item.id;
 
-                  <div className="min-h-5">
-                    {citySearchError ? (
-                      <p className="text-sm text-destructive">{citySearchError}</p>
-                    ) : null}
-                  </div>
-
-                  {cityFocused && cityLoading ? <SuggestionsSkeleton withCode /> : null}
-
-                  {showCitySuggestions ? (
-                    <div className="bg-popover absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border p-1 shadow-md">
-                      {citySuggestions.map((city) => (
-                        <button
-                          className="hover:bg-accent hover:text-accent-foreground flex w-full items-start justify-between rounded-md px-2.5 py-2 text-left transition-colors"
-                          key={city.geonameId}
-                          onMouseDown={() => selectCitySuggestion(city)}
-                          type="button"
-                        >
-                          <div className="min-w-0">
-                            <p className="break-words text-sm leading-snug font-medium">
-                              {city.name}
-                            </p>
-                            <p className="break-words text-sm text-muted-foreground">
-                              {[city.adminName1, city.countryName]
-                                .filter(Boolean)
-                                .join(", ")}
-                            </p>
-                          </div>
-                          <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                            {city.countryCode}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="relative space-y-2">
-                  <label className="text-sm font-medium text-foreground" htmlFor="country">
-                    Country
-                  </label>
-                  <div className="relative">
-                    <input
-                      autoComplete="off"
-                      className="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex min-h-10 w-full rounded-md border bg-background px-3 py-2.5 pr-10 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px]"
-                      id="country"
-                      name="country"
-                      onBlur={() => {
-                        window.setTimeout(() => setCountryFocused(false), 120);
-                      }}
-                      onChange={(event) => {
-                        setCountryInteracted(true);
-                        setLocationOptionsChanged(true);
-                        setSettings((prev) => ({
-                          ...prev,
-                          cityName: "",
-                          country: event.target.value,
-                          countryCode: "",
-                        }));
-                      }}
-                      onFocus={() => setCountryFocused(true)}
-                      placeholder="Start typing your country..."
-                      required
-                      type="text"
-                      value={settings.country}
-                    />
-                    <Sparkles className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                  </div>
-
-                  {countryFocused && countryLoading ? (
-                    <SuggestionsSkeleton withCode />
-                  ) : null}
-
-                  <div className="min-h-5">
-                    {countrySearchError ? (
-                      <p className="text-sm text-destructive">{countrySearchError}</p>
-                    ) : null}
-                  </div>
-                  <div className="min-h-5">
-                    {comboValidation === "checking" ? (
-                      <p className="text-sm text-muted-foreground">
-                        Checking city/country combination...
-                      </p>
-                    ) : null}
-                    {comboWarning ? (
-                      <p className="text-sm text-destructive">{comboWarning}</p>
-                    ) : null}
-                    {comboValidation === "valid" ? (
-                      <p className="text-sm text-primary">
-                        City and country combination looks good.
-                      </p>
-                    ) : null}
-                  </div>
-
-                  {showCountrySuggestions ? (
-                    <div className="bg-popover absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border p-1 shadow-md">
-                      {countrySuggestions.map((country) => (
-                        <button
-                          className="hover:bg-accent hover:text-accent-foreground flex w-full items-start justify-between rounded-md px-2.5 py-2 text-left transition-colors"
-                          key={country.countryCode}
-                          onMouseDown={() => selectCountrySuggestion(country)}
-                          type="button"
-                        >
-                          <span className="break-words text-sm leading-snug font-medium">
-                            {country.countryName}
-                          </span>
-                          <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
-                            {country.countryCode}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </SettingsSection>
-
-            <SettingsSection
-              description="Quickly fill location fields using your device location or IP."
-              title="Use GPS or IP Address"
-            >
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <Button
-                  disabled={resolving !== null}
-                  onClick={resolveFromGps}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  <LocateFixed className="size-4" />
-                  {resolving === "gps" ? "Getting GPS..." : "Use GPS"}
-                </Button>
-                <Button
-                  disabled={resolving !== null}
-                  onClick={() => void resolveFromIp()}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  <MapPin className="size-4" />
-                  {resolving === "ip" ? "Checking IP..." : "Use IP"}
-                </Button>
-              </div>
-              {locationStatus ? (
-                <p className="text-sm text-primary">{locationStatus}</p>
-              ) : null}
-              {locationError ? (
-                <p className="text-sm text-destructive">{locationError}</p>
-              ) : null}
-            </SettingsSection>
-
-            <SettingsSection
-              description="Choose your method and school for accurate local prayer boundaries."
-              title="Calculation"
-            >
-              <div className="space-y-5">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground" htmlFor="method">
-                    Calculation Method
-                  </label>
-                  <Select
-                    key={settings.method}
-                    onValueChange={(value) =>
-                      setSettings((prev) => ({ ...prev, method: value }))
-                    }
-                    value={settings.method || undefined}
+                return (
+                  <button
+                    className={cn(
+                      "focus-visible:ring-ring/50 w-full rounded-sm border px-3 py-2 text-left outline-none transition-colors focus-visible:ring-[3px]",
+                      selected
+                        ? "border-border bg-accent/70 text-foreground"
+                        : "border-transparent hover:bg-accent/45",
+                    )}
+                    key={item.id}
+                    onClick={() => setActivePanel(item.id)}
+                    type="button"
                   >
-                    <SelectTrigger className="min-h-10">
-                      <SelectValue placeholder="Select calculation method" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-72">
-                      {calculationMethods.map((method) => (
-                        <SelectItem
-                          className="h-auto whitespace-normal py-2 leading-snug"
-                          key={method.value}
-                          value={method.value}
-                        >
-                          {method.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-3">
-                  <p className="text-sm font-medium text-foreground">School</p>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {schools.map((school) => {
-                      const selected = settings.school === school.value;
-
-                      return (
-                        <label
-                          className={cn(
-                            "flex cursor-pointer items-start justify-between gap-2 rounded-md border px-3 py-2.5 text-sm transition-colors",
-                            selected
-                              ? "border-primary bg-accent text-foreground"
-                              : "border-input text-muted-foreground hover:bg-accent",
-                          )}
-                          htmlFor={`school-${school.value}`}
-                          key={school.value}
-                        >
-                          <span>{school.label}</span>
-                          <input
-                            checked={selected}
-                            className="sr-only"
-                            id={`school-${school.value}`}
-                            name="school"
-                            onChange={(event) =>
-                              setSettings((prev) => ({
-                                ...prev,
-                                school: event.target.value,
-                              }))
-                            }
-                            type="radio"
-                            value={school.value}
-                          />
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </SettingsSection>
-
-            <SettingsSection
-              description="Select how prayer data is presented on the home dashboard."
-              title="Display"
-            >
-              <div className="space-y-5">
-                <div className="grid gap-2 md:grid-cols-2">
-                  {dashboardViewOptions.map((option) => {
-                    const selected = dashboardView === option.value;
-
-                    return (
-                      <label
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <Icon className="size-4 shrink-0 text-muted-foreground" />
+                        <span className="truncate text-sm font-medium">
+                          {item.label}
+                        </span>
+                      </span>
+                      <ChevronRight
                         className={cn(
-                          "flex cursor-pointer items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                          "size-4 shrink-0 transition-transform",
                           selected
-                            ? "border-primary bg-accent text-foreground"
-                            : "border-input text-muted-foreground hover:bg-accent",
+                            ? "translate-x-0.5 text-foreground"
+                            : "text-muted-foreground",
                         )}
-                        htmlFor={`dashboard-view-${option.value}`}
-                        key={option.value}
-                      >
-                        <div className="min-w-0">
-                          <p className="font-medium text-foreground">{option.label}</p>
-                          <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">
-                            {option.description}
-                          </p>
-                        </div>
-                        <input
-                          checked={selected}
-                          className="sr-only"
-                          id={`dashboard-view-${option.value}`}
-                          name="dashboardView"
-                          onChange={() => changeDashboardView(option.value)}
-                          type="radio"
-                          value={option.value}
-                        />
-                      </label>
-                    );
-                  })}
-                </div>
+                      />
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
 
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-foreground">Hijri Date Adjustment</p>
-                  <p className="text-xs text-muted-foreground">
-                    Use this when your local moon-sighting differs (for example UAE vs Pakistan).
-                  </p>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-                    {HIJRI_DATE_ADJUSTMENT_OPTIONS.map((option) => {
-                      const selected = settings.hijriDateAdjustment === option.value;
+            {!featureFlags.prayerTimings ? (
+              <p className="mt-3 rounded-xl border border-border/80 bg-muted/30 px-3 py-2 text-xs leading-5 text-muted-foreground">
+                Prayer settings are hidden while Prayer Timings is disabled in
+                Features.
+              </p>
+            ) : null}
+          </CardContent>
+        </aside>
 
-                      return (
+        <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-[0_1px_1px_color-mix(in_oklab,var(--foreground)_8%,transparent),0_8px_18px_-16px_color-mix(in_oklab,var(--foreground)_24%,transparent)] sm:p-6">
+          <header className="border-b border-border/70 pb-4">
+            <h2 className="text-xl font-semibold sm:text-2xl">
+              {activePanelMeta.title}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {activePanelMeta.description}
+            </p>
+          </header>
+
+          <div className="pt-5">
+            {activePanel === "general" ? (
+              featureFlags.prayerTimings ? (
+                <div className="space-y-0">
+                  <section className="flex flex-col gap-4">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold">Manual Location</h3>
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        Set your city and country manually for the most reliable
+                        local prayer timings.
+                      </p>
+                    </div>
+
+                    <div className="grid gap-5 md:grid-cols-2">
+                      <div className="relative space-y-2">
                         <label
-                          className={cn(
-                            "flex cursor-pointer items-center justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
-                            selected
-                              ? "border-primary bg-accent text-foreground"
-                              : "border-input text-muted-foreground hover:bg-accent",
-                          )}
-                          htmlFor={`hijri-date-adjustment-${option.value}`}
-                          key={option.value}
+                          className="text-sm font-medium text-foreground"
+                          htmlFor="cityName"
                         >
-                          <span className="font-medium">{option.label}</span>
+                          City
+                        </label>
+                        <p className="text-xs leading-5 text-muted-foreground">
+                          Used to match your nearest city timetable and
+                          timezone.
+                        </p>
+                        <div className="relative">
                           <input
-                            checked={selected}
-                            className="sr-only"
-                            id={`hijri-date-adjustment-${option.value}`}
-                            name="hijriDateAdjustment"
-                            onChange={(event) =>
+                            autoComplete="off"
+                            className="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex min-h-10 w-full rounded-md border bg-background px-3 py-2.5 pr-10 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px]"
+                            id="cityName"
+                            name="cityName"
+                            onBlur={() => {
+                              window.setTimeout(
+                                () => setCityFocused(false),
+                                120,
+                              );
+                            }}
+                            onChange={(event) => {
+                              setCityInteracted(true);
+                              setLocationOptionsChanged(true);
                               setSettings((prev) => ({
                                 ...prev,
-                                hijriDateAdjustment: event.target.value,
-                              }))
-                            }
-                            type="radio"
-                            value={option.value}
+                                cityName: event.target.value,
+                              }));
+                            }}
+                            onKeyDown={(event) => {
+                              if (
+                                event.key === "Enter" &&
+                                citySuggestions.length > 0
+                              ) {
+                                event.preventDefault();
+                                selectCitySuggestion(citySuggestions[0]);
+                              }
+                            }}
+                            onFocus={() => setCityFocused(true)}
+                            placeholder="Start typing your city..."
+                            required
+                            type="text"
+                            value={settings.cityName}
                           />
+                          <Search className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                        </div>
+
+                        <div className="min-h-5">
+                          {citySearchError ? (
+                            <p className="text-sm text-destructive">
+                              {citySearchError}
+                            </p>
+                          ) : null}
+                        </div>
+
+                        {cityFocused && cityLoading ? (
+                          <SuggestionsSkeleton withCode />
+                        ) : null}
+
+                        {showCitySuggestions ? (
+                          <div className="bg-popover absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border p-1 shadow-md">
+                            {citySuggestions.map((city) => (
+                              <button
+                                className="hover:bg-accent hover:text-accent-foreground flex w-full items-start justify-between rounded-md px-2.5 py-2 text-left transition-colors"
+                                key={city.geonameId}
+                                onMouseDown={() => selectCitySuggestion(city)}
+                                type="button"
+                              >
+                                <div className="min-w-0">
+                                  <p className="break-words text-sm leading-snug font-medium">
+                                    {city.name}
+                                  </p>
+                                  <p className="break-words text-sm text-muted-foreground">
+                                    {[city.adminName1, city.countryName]
+                                      .filter(Boolean)
+                                      .join(", ")}
+                                  </p>
+                                </div>
+                                <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                                  {city.countryCode}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <div className="relative space-y-2">
+                        <label
+                          className="text-sm font-medium text-foreground"
+                          htmlFor="country"
+                        >
+                          Country
                         </label>
-                      );
-                    })}
-                  </div>
+                        <p className="text-xs leading-5 text-muted-foreground">
+                          Country narrows city matching and validates your
+                          location pair.
+                        </p>
+                        <div className="relative">
+                          <input
+                            autoComplete="off"
+                            className="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex min-h-10 w-full rounded-md border bg-background px-3 py-2.5 pr-10 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px]"
+                            id="country"
+                            name="country"
+                            onBlur={() => {
+                              window.setTimeout(
+                                () => setCountryFocused(false),
+                                120,
+                              );
+                            }}
+                            onChange={(event) => {
+                              setCountryInteracted(true);
+                              setLocationOptionsChanged(true);
+                              setSettings((prev) => ({
+                                ...prev,
+                                cityName: "",
+                                country: event.target.value,
+                                countryCode: "",
+                              }));
+                            }}
+                            onFocus={() => setCountryFocused(true)}
+                            placeholder="Start typing your country..."
+                            required
+                            type="text"
+                            value={settings.country}
+                          />
+                          <Sparkles className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                        </div>
+
+                        {countryFocused && countryLoading ? (
+                          <SuggestionsSkeleton withCode />
+                        ) : null}
+
+                        <div className="min-h-5">
+                          {countrySearchError ? (
+                            <p className="text-sm text-destructive">
+                              {countrySearchError}
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="min-h-5">
+                          {comboValidation === "checking" ? (
+                            <p className="text-sm text-muted-foreground">
+                              Checking city/country combination...
+                            </p>
+                          ) : null}
+                          {comboWarning ? (
+                            <p className="text-sm text-destructive">
+                              {comboWarning}
+                            </p>
+                          ) : null}
+                          {comboValidation === "valid" ? (
+                            <p className="text-sm text-primary">
+                              City and country combination looks good.
+                            </p>
+                          ) : null}
+                        </div>
+
+                        {showCountrySuggestions ? (
+                          <div className="bg-popover absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-md border p-1 shadow-md">
+                            {countrySuggestions.map((country) => (
+                              <button
+                                className="hover:bg-accent hover:text-accent-foreground flex w-full items-start justify-between rounded-md px-2.5 py-2 text-left transition-colors"
+                                key={country.countryCode}
+                                onMouseDown={() =>
+                                  selectCountrySuggestion(country)
+                                }
+                                type="button"
+                              >
+                                <span className="break-words text-sm leading-snug font-medium">
+                                  {country.countryName}
+                                </span>
+                                <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                                  {country.countryCode}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="flex flex-col gap-3">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold">
+                        Auto Detect Location
+                      </h3>
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        Use GPS or IP lookup to fill city and country quickly.
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <Button
+                        disabled={resolving !== null}
+                        onClick={resolveFromGps}
+                        size="sm"
+                        className="rounded-sm"
+                        type="button"
+                        variant="outline"
+                      >
+                        <LocateFixed className="size-4" />
+                        {resolving === "gps" ? "Getting GPS..." : "Use GPS"}
+                      </Button>
+                      <Button
+                        disabled={resolving !== null}
+                        onClick={() => void resolveFromIp()}
+                        size="sm"
+                        className="rounded-sm"
+                        type="button"
+                        variant="outline"
+                      >
+                        <MapPin className="size-4" />
+                        {resolving === "ip" ? "Checking IP..." : "Use IP"}
+                      </Button>
+                    </div>
+                    {locationStatus ? (
+                      <p className="text-sm text-primary">{locationStatus}</p>
+                    ) : null}
+                    {locationError ? (
+                      <p className="text-sm text-destructive">
+                        {locationError}
+                      </p>
+                    ) : null}
+                  </section>
                 </div>
-              </div>
-            </SettingsSection>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Prayer Timings Disabled</CardTitle>
-            <CardDescription>
-              Enable the Prayer Timings feature below to configure location, calculation,
-              and display options.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
-
-      <FeatureSettingsCard onFeatureFlagsChange={setFeatureFlags} />
-
-      {DEV_MENU_ENABLED ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Dev Settings</CardTitle>
-            <CardDescription>
-              Notification permission and test delivery helpers.
-            </CardDescription>
-            <CardAction>
-              <Button
-                onClick={() => setIsDevMenuExpanded((prev) => !prev)}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
-                {isDevMenuExpanded ? "Hide" : "Show"}
-              </Button>
-            </CardAction>
-          </CardHeader>
-
-          {isDevMenuExpanded ? (
-            <CardContent className="space-y-3">
-              <p
-                className={cn(
-                  "text-sm font-medium",
-                  notificationPermission === "granted"
-                    ? "text-primary"
-                    : notificationPermission === "denied"
-                      ? "text-destructive"
-                      : "text-muted-foreground",
-                )}
-              >
-                Permission: {notificationPermissionLabel}
-              </p>
-
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button
-                  disabled={notificationPermission === "unsupported"}
-                  onClick={() => void requestDevNotificationPermission()}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  <BellRing className="size-4" />
-                  Request permission
-                </Button>
-                <Button
-                  disabled={
-                    sendingMockNotification ||
-                    notificationPermission === "unsupported"
-                  }
-                  onClick={() => void sendMockNotification()}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  <FlaskConical className="size-4" />
-                  {sendingMockNotification
-                    ? "Sending notification..."
-                    : "Send mock notification"}
-                </Button>
-              </div>
-
-              {mockNotificationStatus ? (
-                <p className="text-sm text-primary">
-                  {mockNotificationStatus}
+              ) : (
+                <p className="rounded-xl border border-border/80 bg-muted/25 px-3 py-2 text-sm leading-6 text-muted-foreground">
+                  Prayer Timings is disabled. Turn it on in Features to manage
+                  location settings.
                 </p>
-              ) : null}
-              {mockNotificationError ? (
-                <p className="text-sm text-destructive">{mockNotificationError}</p>
-              ) : null}
-            </CardContent>
-          ) : null}
-        </Card>
-      ) : null}
+              )
+            ) : null}
+
+            {activePanel === "prayers" ? (
+              featureFlags.prayerTimings ? (
+                <div className="space-y-5">
+                  <section className="space-y-4 rounded-xl border border-border/70 bg-background/50 p-4 sm:p-5">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold">
+                        Calculation Method
+                      </h3>
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        Choose the authority and angle rules used to calculate
+                        prayer times.
+                      </p>
+                    </div>
+                    <div className="max-w-2xl space-y-4">
+                      <label
+                        className="text-sm font-medium text-foreground"
+                        htmlFor="method"
+                      >
+                        Calculation Method
+                      </label>
+                      <Select
+                        key={settings.method}
+                        onValueChange={(value) =>
+                          setSettings((prev) => ({ ...prev, method: value }))
+                        }
+                        value={settings.method || undefined}
+                      >
+                        <SelectTrigger className="min-h-10">
+                          <SelectValue placeholder="Select calculation method" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-72">
+                          {calculationMethods.map((method) => (
+                            <SelectItem
+                              className="h-auto whitespace-normal py-2 leading-snug"
+                              key={method.value}
+                              value={method.value}
+                            >
+                              {method.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs leading-5 text-muted-foreground">
+                        Current method: {selectedMethodLabel}
+                      </p>
+                    </div>
+                  </section>
+
+                  <section className="space-y-4 rounded-xl border border-border/70 bg-background/50 p-4 sm:p-5">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold">School</h3>
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        School mainly affects Asr timing boundaries. Pick the
+                        setting your local masjid follows.
+                      </p>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {schools.map((school) => {
+                        const selected = settings.school === school.value;
+
+                        return (
+                          <label
+                            className={cn(
+                              "flex cursor-pointer items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                              selected
+                                ? "border-primary bg-accent text-foreground"
+                                : "border-input text-muted-foreground hover:bg-accent",
+                            )}
+                            htmlFor={`school-${school.value}`}
+                            key={school.value}
+                          >
+                            <span className="min-w-0">
+                              <span className="block font-medium text-foreground">
+                                {school.label}
+                              </span>
+                              <span className="mt-1 block break-words text-xs leading-5 text-muted-foreground">
+                                {school.description}
+                              </span>
+                            </span>
+                            <input
+                              checked={selected}
+                              className="sr-only"
+                              id={`school-${school.value}`}
+                              name="school"
+                              onChange={(event) =>
+                                setSettings((prev) => ({
+                                  ...prev,
+                                  school: event.target.value,
+                                }))
+                              }
+                              type="radio"
+                              value={school.value}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </section>
+                </div>
+              ) : (
+                <p className="rounded-xl border border-border/80 bg-muted/25 px-3 py-2 text-sm leading-6 text-muted-foreground">
+                  Prayer Timings is disabled. Turn it on in Features to manage
+                  prayer rules.
+                </p>
+              )
+            ) : null}
+
+            {activePanel === "display" ? (
+              featureFlags.prayerTimings ? (
+                <div className="space-y-5">
+                  <section className="space-y-4 rounded-xl border border-border/70 bg-background/50 p-4 sm:p-5">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold">
+                        Dashboard Layout
+                      </h3>
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        Choose how prayer data appears on your homepage.
+                      </p>
+                    </div>
+                    <div className="grid gap-2 md:grid-cols-2">
+                      {dashboardViewOptions.map((option) => {
+                        const selected = dashboardView === option.value;
+
+                        return (
+                          <label
+                            className={cn(
+                              "flex cursor-pointer items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                              selected
+                                ? "border-primary bg-accent text-foreground"
+                                : "border-input text-muted-foreground hover:bg-accent",
+                            )}
+                            htmlFor={`dashboard-view-${option.value}`}
+                            key={option.value}
+                          >
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground">
+                                {option.label}
+                              </p>
+                              <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">
+                                {option.description}
+                              </p>
+                            </div>
+                            <input
+                              checked={selected}
+                              className="sr-only"
+                              id={`dashboard-view-${option.value}`}
+                              name="dashboardView"
+                              onChange={() => changeDashboardView(option.value)}
+                              type="radio"
+                              value={option.value}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </section>
+
+                  <section className="space-y-4 rounded-xl border border-border/70 bg-background/50 p-4 sm:p-5">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold">
+                        Hijri Date Adjustment
+                      </h3>
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        Use this only when your local moon-sighting differs from
+                        the default date.
+                      </p>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                      {HIJRI_DATE_ADJUSTMENT_OPTIONS.map((option) => {
+                        const selected =
+                          settings.hijriDateAdjustment === option.value;
+
+                        return (
+                          <label
+                            className={cn(
+                              "flex cursor-pointer items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                              selected
+                                ? "border-primary bg-accent text-foreground"
+                                : "border-input text-muted-foreground hover:bg-accent",
+                            )}
+                            htmlFor={`hijri-date-adjustment-${option.value}`}
+                            key={option.value}
+                          >
+                            <span className="min-w-0">
+                              <span className="block font-medium text-foreground">
+                                {option.label}
+                              </span>
+                              <span className="mt-1 block break-words text-xs leading-5 text-muted-foreground">
+                                {option.description}
+                              </span>
+                            </span>
+                            <input
+                              checked={selected}
+                              className="sr-only"
+                              id={`hijri-date-adjustment-${option.value}`}
+                              name="hijriDateAdjustment"
+                              onChange={(event) =>
+                                setSettings((prev) => ({
+                                  ...prev,
+                                  hijriDateAdjustment: event.target.value,
+                                }))
+                              }
+                              type="radio"
+                              value={option.value}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </section>
+                </div>
+              ) : (
+                <p className="rounded-xl border border-border/80 bg-muted/25 px-3 py-2 text-sm leading-6 text-muted-foreground">
+                  Prayer Timings is disabled. Turn it on in Features to manage
+                  display settings.
+                </p>
+              )
+            ) : null}
+
+            {activePanel === "features" ? (
+              <FeatureSettingsCard onFeatureFlagsChange={setFeatureFlags} />
+            ) : null}
+
+            {activePanel === "developer" && DEV_MENU_ENABLED ? (
+              <div className="space-y-4 rounded-xl border border-border/70 bg-background/50 p-4 sm:p-5">
+                <p
+                  className={cn(
+                    "text-sm font-medium",
+                    notificationPermission === "granted"
+                      ? "text-primary"
+                      : notificationPermission === "denied"
+                        ? "text-destructive"
+                        : "text-muted-foreground",
+                  )}
+                >
+                  Permission: {notificationPermissionLabel}
+                </p>
+
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button
+                    disabled={notificationPermission === "unsupported"}
+                    onClick={() => void requestDevNotificationPermission()}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    <BellRing className="size-4" />
+                    Request permission
+                  </Button>
+                  <Button
+                    disabled={
+                      sendingMockNotification ||
+                      notificationPermission === "unsupported"
+                    }
+                    onClick={() => void sendMockNotification()}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    <FlaskConical className="size-4" />
+                    {sendingMockNotification
+                      ? "Sending notification..."
+                      : "Send mock notification"}
+                  </Button>
+                </div>
+
+                {mockNotificationStatus ? (
+                  <p className="text-sm text-primary">
+                    {mockNotificationStatus}
+                  </p>
+                ) : null}
+                {mockNotificationError ? (
+                  <p className="text-sm text-destructive">
+                    {mockNotificationError}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
