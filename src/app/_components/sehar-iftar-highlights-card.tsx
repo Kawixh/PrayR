@@ -47,11 +47,9 @@ export function SeharIftarHighlightsCard({
 
   const isSehar = bannerState === "sehar";
   const label = isSehar ? "Sehar" : "Iftar";
-  const prayerLabel = isSehar ? "Fajr" : "Maghrib";
   const value = formatTo12Hour(isSehar ? timings.Fajr : timings.Maghrib);
   const Icon = isSehar ? MoonStar : Sunset;
   const hijriDateLabel = `${dateInfo.hijri.day} ${dateInfo.hijri.month.en} ${dateInfo.hijri.year} AH`;
-  const hijriMetaLabel = `${dateInfo.hijri.weekday.en} • ${dateInfo.hijri.month.ar}`;
 
   return (
     <section>
