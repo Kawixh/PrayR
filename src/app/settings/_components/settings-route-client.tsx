@@ -44,36 +44,149 @@ import {
 import { FeatureSettingsCard } from "./feature-settings-card";
 
 const calculationMethods = [
-  { value: "0", label: "Jafari / Shia Ithna-Ashari" },
-  { value: "1", label: "University of Islamic Sciences, Karachi" },
-  { value: "2", label: "Islamic Society of North America" },
-  { value: "3", label: "Muslim World League" },
-  { value: "4", label: "Umm Al-Qura University, Makkah" },
-  { value: "5", label: "Egyptian General Authority of Survey" },
-  { value: "7", label: "Institute of Geophysics, University of Tehran" },
-  { value: "8", label: "Gulf Region" },
-  { value: "9", label: "Kuwait" },
-  { value: "10", label: "Qatar" },
-  { value: "11", label: "Majlis Ugama Islam Singapura, Singapore" },
-  { value: "12", label: "Union Organization islamic de France" },
-  { value: "13", label: "Diyanet İşleri Başkanlığı, Turkey" },
-  { value: "14", label: "Spiritual Administration of Muslims of Russia" },
+  {
+    value: "0",
+    label: "Jafari / Shia Ithna-Ashari",
+    description:
+      "Ja'fari fiqh preset commonly used by Shia communities, with different twilight handling than most Sunni presets.",
+  },
+  {
+    value: "1",
+    label: "University of Islamic Sciences, Karachi",
+    description:
+      "South Asia-focused preset used by many Hanafi-influenced calendars in Pakistan, India, and nearby regions.",
+  },
+  {
+    value: "2",
+    label: "Islamic Society of North America",
+    description:
+      "North America-oriented preset used by many mosques and apps as a US/Canada default.",
+  },
+  {
+    value: "3",
+    label: "Muslim World League",
+    description:
+      "Widely used international preset from MWL; common fallback when a country-specific authority is not selected.",
+  },
+  {
+    value: "4",
+    label: "Umm Al-Qura University, Makkah",
+    description:
+      "Saudi Arabia standard preset; commonly matches official Makkah/Kingdom timetables.",
+  },
+  {
+    value: "5",
+    label: "Egyptian General Authority of Survey",
+    description:
+      "Preset from the Egyptian survey authority, often used in Egypt and parts of Africa.",
+  },
+  {
+    value: "7",
+    label: "Institute of Geophysics, University of Tehran",
+    description:
+      "Iran-focused preset associated with Tehran calculations and often used where Iranian timetables are followed.",
+  },
+  {
+    value: "8",
+    label: "Gulf Region",
+    description:
+      "General Gulf-region preset for communities following Gulf-style schedules without a specific country preset.",
+  },
+  {
+    value: "9",
+    label: "Kuwait",
+    description:
+      "Kuwait authority preset designed to align with commonly published Kuwaiti prayer calendars.",
+  },
+  {
+    value: "10",
+    label: "Qatar",
+    description:
+      "Qatar-focused preset intended to match official or commonly used Qatari prayer schedules.",
+  },
+  {
+    value: "11",
+    label: "Majlis Ugama Islam Singapura, Singapore",
+    description:
+      "MUIS preset for Singapore, usually the best match for Singapore local mosque timetables.",
+  },
+  {
+    value: "12",
+    label: "Union Organization islamic de France",
+    description:
+      "French community preset used by many organizations in France.",
+  },
+  {
+    value: "13",
+    label: "Diyanet İşleri Başkanlığı, Turkey",
+    description:
+      "Official Turkish Diyanet preset, generally matching prayer calendars used across Turkey.",
+  },
+  {
+    value: "14",
+    label: "Spiritual Administration of Muslims of Russia",
+    description:
+      "Russian Muslim administration preset tailored for common Russia-based timetable practices.",
+  },
   {
     value: "15",
     label: "Moonsighting Committee Worldwide (requires shafaq parameter)",
+    description:
+      "Moon-sighting-oriented preset; choose this when your community follows MCW guidance (requires `shafaq`).",
   },
-  { value: "16", label: "Dubai (experimental)" },
-  { value: "17", label: "Jabatan Kemajuan Islam Malaysia (JAKIM)" },
-  { value: "18", label: "Tunisia" },
-  { value: "19", label: "Algeria" },
-  { value: "20", label: "KEMENAG - Kementerian Agama Republik Indonesia" },
-  { value: "21", label: "Morocco" },
-  { value: "22", label: "Comunidade Islamica de Lisboa" },
+  {
+    value: "16",
+    label: "Dubai (experimental)",
+    description:
+      "Dubai-specific experimental preset; use only if your local Dubai timetable explicitly matches it.",
+  },
+  {
+    value: "17",
+    label: "Jabatan Kemajuan Islam Malaysia (JAKIM)",
+    description:
+      "Official JAKIM preset used in Malaysia and usually the most accurate local choice there.",
+  },
+  {
+    value: "18",
+    label: "Tunisia",
+    description:
+      "Tunisia authority preset designed to align with Tunisian national prayer calendars.",
+  },
+  {
+    value: "19",
+    label: "Algeria",
+    description:
+      "Algeria authority preset intended for common Algerian schedule conventions.",
+  },
+  {
+    value: "20",
+    label: "KEMENAG - Kementerian Agama Republik Indonesia",
+    description:
+      "Official Indonesian Ministry of Religious Affairs preset (KEMENAG).",
+  },
+  {
+    value: "21",
+    label: "Morocco",
+    description:
+      "Moroccan authority preset commonly matching official prayer calendars in Morocco.",
+  },
+  {
+    value: "22",
+    label: "Comunidade Islamica de Lisboa",
+    description:
+      "Lisbon Islamic community preset for Portugal-based timetables.",
+  },
   {
     value: "23",
     label: "Ministry of Awqaf, Islamic Affairs and Holy Places, Jordan",
+    description:
+      "Official Jordanian Awqaf preset for communities that follow Jordan ministry schedules.",
   },
-] as const satisfies ReadonlyArray<{ label: string; value: string }>;
+] as const satisfies ReadonlyArray<{
+  description: string;
+  label: string;
+  value: string;
+}>;
 
 const schools = [
   {
@@ -393,20 +506,17 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
     };
   }, []);
 
-  const availablePanels = useMemo<SettingsPanelId[]>(
-    () => {
-      const panels: SettingsPanelId[] = featureFlags.prayerTimings
-        ? ["general", "prayers", "display", "features"]
-        : ["features"];
+  const availablePanels = useMemo<SettingsPanelId[]>(() => {
+    const panels: SettingsPanelId[] = featureFlags.prayerTimings
+      ? ["general", "prayers", "display", "features"]
+      : ["features"];
 
-      if (DEV_MENU_ENABLED) {
-        panels.push("developer");
-      }
+    if (DEV_MENU_ENABLED) {
+      panels.push("developer");
+    }
 
-      return panels;
-    },
-    [featureFlags.prayerTimings],
-  );
+    return panels;
+  }, [featureFlags.prayerTimings]);
   const fallbackPanel = availablePanels[0] ?? "features";
   const resolvedActivePanel = availablePanels.includes(activePanel)
     ? activePanel
@@ -919,23 +1029,17 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
             {resolvedActivePanel === "prayers" ? (
               featureFlags.prayerTimings ? (
                 <div className="space-y-5">
-                  <section className="space-y-4 rounded-xl border border-border/70 bg-background/50 p-4 sm:p-5">
-                    <div className="space-y-1">
+                  <section>
+                    <div className="mb-2">
                       <h3 className="text-sm font-semibold">
                         Calculation Method
                       </h3>
-                      <p className="text-sm leading-6 text-muted-foreground">
+                      <p className="text-sm  text-muted-foreground">
                         Choose the authority and angle rules used to calculate
                         prayer times.
                       </p>
                     </div>
                     <div className="max-w-2xl space-y-4">
-                      <label
-                        className="text-sm font-medium text-foreground"
-                        htmlFor="method"
-                      >
-                        Calculation Method
-                      </label>
                       <Select
                         key={settings.method}
                         onValueChange={(value) =>
@@ -958,14 +1062,34 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
                           ))}
                         </SelectContent>
                       </Select>
-                      <p className="text-xs leading-5 text-muted-foreground">
-                        Current method: {selectedMethodLabel}
-                      </p>
+                      <div className="space-y-2 text-xs leading-5 text-muted-foreground">
+                        <p>Current method: {selectedMethodLabel}</p>
+                        <div className="space-y-2 rounded-md border border-border/70 bg-muted/20 p-3">
+                          <p className="font-medium text-foreground">
+                            Note: What each method does
+                          </p>
+                          <p>
+                            Each method applies a different authority preset for
+                            Fajr and Isha calculations. Use the one your local
+                            masjid follows.
+                          </p>
+                          <ul className="space-y-1">
+                            {calculationMethods.map((method) => (
+                              <li key={method.value}>
+                                <span className="font-medium text-foreground">
+                                  {method.label}:
+                                </span>{" "}
+                                {method.description}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
                     </div>
                   </section>
 
-                  <section className="space-y-4 rounded-xl border border-border/70 bg-background/50 p-4 sm:p-5">
-                    <div className="space-y-1">
+                  <section>
+                    <div className="mb-3">
                       <h3 className="text-sm font-semibold">School</h3>
                       <p className="text-sm leading-6 text-muted-foreground">
                         School mainly affects Asr timing boundaries. Pick the
