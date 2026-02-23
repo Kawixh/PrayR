@@ -550,65 +550,91 @@ export function PrayerTimesWrapper({
     }
 
     return (
-      <section className="space-y-4">
-        <div className="app-banner-subtle">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 rounded-full border border-primary/30 bg-primary/10 p-2 text-primary">
-              <Loader2 className="size-4 animate-spin" />
+      <section aria-busy="true" aria-live="polite" className="space-y-5">
+        {featureFlags.sehrAndIftarTimes ? (
+          <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
+            <div className="space-y-3">
+              <div className="h-4 w-24 animate-pulse rounded bg-muted/70" />
+              <div className="h-9 w-36 animate-pulse rounded bg-muted/80" />
+              <div className="h-4 w-28 animate-pulse rounded bg-muted/70" />
             </div>
-            <div className="w-full space-y-2">
-              <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-                Loading
-              </p>
-              <p className="text-lg font-semibold sm:text-xl">Refreshing prayer dashboard</p>
-              <p className="text-sm text-muted-foreground">
-                Fetching latest timings and preparing today&apos;s summary.
-              </p>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/15">
-                <div className="h-full w-2/3 animate-pulse rounded-full bg-primary/70" />
-              </div>
-            </div>
-          </div>
-        </div>
+          </Card>
+        ) : null}
 
-        <Card className="glass-panel rounded-2xl border-border/80 p-4 sm:p-5">
-          <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-            Preparing Sections
-          </p>
-          <div className="mt-3 space-y-2.5">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                className="flex items-center gap-3 rounded-lg border border-border/75 bg-background/80 px-3 py-2.5"
-                key={`loading-step-${index}`}
-              >
-                <div className="size-2 rounded-full bg-primary/55" />
-                <div className="h-4 flex-1 animate-pulse rounded bg-muted/70" />
-              </div>
-            ))}
+        <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="h-6 w-36 animate-pulse rounded bg-muted/80" />
+              <div className="size-5 animate-pulse rounded bg-muted/70" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-10 w-40 animate-pulse rounded bg-muted/80" />
+              <div className="h-7 w-28 animate-pulse rounded bg-muted/70" />
+            </div>
+            <div className="h-4 w-48 animate-pulse rounded bg-muted/70" />
+            <div className="h-10 w-32 animate-pulse rounded-full bg-muted/70" />
           </div>
         </Card>
 
-        <div className="grid w-full gap-4 md:grid-cols-2">
-          {Array.from({ length: 2 }).map((_, index) => (
-            <Card
-              className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6"
-              key={`prayer-panel-skeleton-${index}`}
-            >
-              <div className="space-y-5">
-                <div className="flex items-center justify-between">
-                  <div className="h-6 w-24 animate-pulse rounded bg-muted/80" />
-                  <div className="size-4 animate-pulse rounded bg-muted/70" />
+        {featureFlags.islamicCalendar ? (
+          <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
+            <div className="space-y-3">
+              <div className="h-5 w-40 animate-pulse rounded bg-muted/80" />
+              <div className="h-4 w-56 animate-pulse rounded bg-muted/70" />
+              <div className="h-4 w-48 animate-pulse rounded bg-muted/70" />
+            </div>
+          </Card>
+        ) : null}
+
+        {featureFlags.adhkars && featureFlags.adhkarOfTheDay ? (
+          <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
+            <div className="space-y-3">
+              <div className="h-5 w-32 animate-pulse rounded bg-muted/80" />
+              <div className="h-4 w-full animate-pulse rounded bg-muted/70" />
+              <div className="h-4 w-11/12 animate-pulse rounded bg-muted/70" />
+              <div className="h-4 w-10/12 animate-pulse rounded bg-muted/70" />
+            </div>
+          </Card>
+        ) : null}
+
+        {dashboardView === "timeline" ? (
+          <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
+            <div className="space-y-3">
+              <div className="h-6 w-32 animate-pulse rounded bg-muted/80" />
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  className="flex items-center justify-between rounded-lg border border-border/75 bg-background/80 px-3 py-3"
+                  key={`timeline-skeleton-row-${index}`}
+                >
+                  <div className="h-4 w-20 animate-pulse rounded bg-muted/70" />
+                  <div className="h-4 w-16 animate-pulse rounded bg-muted/70" />
                 </div>
-                <div className="space-y-2">
-                  <div className="h-11 w-40 animate-pulse rounded bg-muted/80" />
-                  <div className="h-8 w-28 animate-pulse rounded bg-muted/70" />
+              ))}
+            </div>
+          </Card>
+        ) : (
+          <div className="grid w-full gap-4 md:grid-cols-2">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <Card
+                className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6"
+                key={`prayer-panel-skeleton-${index}`}
+              >
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between">
+                    <div className="h-6 w-24 animate-pulse rounded bg-muted/80" />
+                    <div className="size-4 animate-pulse rounded bg-muted/70" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-11 w-40 animate-pulse rounded bg-muted/80" />
+                    <div className="h-8 w-28 animate-pulse rounded bg-muted/70" />
+                  </div>
+                  <div className="h-4 w-36 animate-pulse rounded bg-muted/70" />
+                  <div className="h-9 w-28 animate-pulse rounded-full bg-muted/70" />
                 </div>
-                <div className="h-4 w-36 animate-pulse rounded bg-muted/70" />
-                <div className="h-9 w-28 animate-pulse rounded-full bg-muted/70" />
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </section>
     );
   }
