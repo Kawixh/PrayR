@@ -1,0 +1,23 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/adhkars/page": "/adhkars",
+  "/adkars/page": "/adkars",
+  "/api/adhkar/categories/route": "/api/adhkar/categories",
+  "/api/adhkar/category/[id]/route": "/api/adhkar/category/[id]",
+  "/api/adhkar/daily/route": "/api/adhkar/daily",
+  "/api/places/from-ip/route": "/api/places/from-ip",
+  "/api/places/reverse/route": "/api/places/reverse",
+  "/api/places/suggest/route": "/api/places/suggest",
+  "/api/places/validate/route": "/api/places/validate",
+  "/api/prayer-times/route": "/api/prayer-times",
+  "/fallback/page": "/fallback",
+  "/manifest.webmanifest/route": "/manifest.webmanifest",
+  "/opengraph-image/route": "/opengraph-image",
+  "/page": "/",
+  "/resources/page": "/resources",
+  "/robots.txt/route": "/robots.txt",
+  "/settings/page": "/settings",
+  "/sitemap.xml/route": "/sitemap.xml",
+  "/twitter-image/route": "/twitter-image"
+}

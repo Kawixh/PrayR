@@ -1,0 +1,3 @@
+module.exports=[89221,a=>{"use strict";a.i(88932),a.i(89869);var b=a.i(22882);let c={alt:"PrayR daily prayer times",contentType:"image/png",runtime:"edge",size:{width:1200,height:630}};async function d(a){let{__metadata_id__:d,...e}=await a.params,f=(0,b.fillMetadataSegment)("/",e,"opengraph-image");return[function(a,b){let c={alt:a.alt,type:a.contentType||"image/png",url:f+"?f76da1bca30d705f"},{size:d}=a;return d&&(c.width=d.width,c.height=d.height),c}(c,0)]}a.s(["default",0,d],89221)}];
+
+//# sourceMappingURL=src_app_opengraph-image--metadata_8494dd1d.js.map

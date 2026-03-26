@@ -1,0 +1,3 @@
+module.exports=[74082,a=>{"use strict";let b={title:"Prayer Settings",description:"Configure your city, country, calculation method, and school for accurate daily prayer times.",alternates:(0,a.i(16787).getPageAlternates)("/settings"),robots:{index:!1,follow:!1}};function c({children:a}){return a}a.s(["default",()=>c,"metadata",0,b])}];
+
+//# sourceMappingURL=src_app_settings_layout_tsx_1552ae82._.js.map
