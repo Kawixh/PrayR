@@ -4,10 +4,14 @@ import {
   resolveLocationFromIp,
 } from "@/lib/ip-location";
 import { getClientIpFromHeaders } from "@/lib/request-ip";
-import { NextRequest, NextResponse } from "next/server";
+import { connection, NextRequest, NextResponse } from "next/server";
 import { reverseGeocode } from "../_lib/geonames";
 
 export async function GET(request: NextRequest) {
+  // Opt into request-time rendering before the try/catch below, which would
+  // otherwise catch and log the prerender bail-out during the build.
+  await connection();
+
   try {
     const ip = getClientIpFromHeaders(request.headers);
     const ipData = await resolveLocationFromIp(ip);

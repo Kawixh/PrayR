@@ -3,7 +3,14 @@ import RootLayoutClient from "@/components/root-layout-client";
 import { JsonLdScript } from "@/components/seo/json-ld-script";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AppSplash } from "@/components/pwa/app-splash";
+import { OfflineBanner } from "@/components/pwa/offline-banner";
+import { resolveFeatureFlags } from "@/features/resolve";
 import { getServerFeatureFlags } from "@/features/server";
+import {
+  APPLE_STARTUP_IMAGES,
+  getAppleStartupImagePath,
+} from "@/lib/pwa/apple-startup-images";
 import {
   getLanguageMetaTags,
   getPageAlternates,
@@ -14,6 +21,7 @@ import {
 import { getOgImageMetadata, getOgImageUrl } from "@/lib/seo/og-image";
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Sora } from "next/font/google";
+import { Suspense } from "react";
 import { Navbar } from "./_components/navbar";
 import { PwaInstallBanner } from "./_components/pwa-install-banner";
 import "./globals.css";
@@ -103,6 +111,10 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: SITE_NAME,
+    startupImage: APPLE_STARTUP_IMAGES.map((image) => ({
+      url: getAppleStartupImagePath(image),
+      media: image.media,
+    })),
   },
   formatDetection: {
     telephone: false,
@@ -186,13 +198,11 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const featureFlags = await getServerFeatureFlags();
-
   return (
     <html lang={SITE_LOCALE} suppressHydrationWarning>
       <head>
@@ -207,6 +217,7 @@ export default async function RootLayout({
       <body
         className={`${bodyFont.variable} ${displayFont.variable} font-sans antialiased`}
       >
+        <AppSplash />
         <PostHogProvider>
           <JsonLdScript data={websiteJsonLd} id="website-jsonld" />
           <JsonLdScript data={organizationJsonLd} id="organization-jsonld" />
@@ -217,10 +228,15 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <TooltipProvider delayDuration={120}>
+              <OfflineBanner />
               <div className="app-canvas">
                 <div className="mx-auto flex min-h-svh w-full max-w-5xl flex-col gap-4 px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 lg:px-8">
                   <PwaInstallBanner />
-                  <Navbar featureFlags={featureFlags} />
+                  <Suspense
+                    fallback={<Navbar featureFlags={resolveFeatureFlags()} />}
+                  >
+                    <NavbarWithFeatureFlags />
+                  </Suspense>
 
                   <RootLayoutClient>
                     <main className="flex-1 space-y-6">{children}</main>
@@ -233,4 +249,12 @@ export default async function RootLayout({
       </body>
     </html>
   );
+}
+
+// Feature flags can be overridden per user via cookie, so they stream in
+// after the static shell, which renders the navbar with the default flags.
+async function NavbarWithFeatureFlags() {
+  const featureFlags = await getServerFeatureFlags();
+
+  return <Navbar featureFlags={featureFlags} />;
 }

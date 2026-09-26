@@ -1,3 +1,4 @@
+import { resolveFeatureFlags } from "@/features/resolve";
 import { getServerFeatureFlags } from "@/features/server";
 import { JsonLdScript } from "@/components/seo/json-ld-script";
 import { resolveGooglebotHomepageResult } from "@/lib/googlebot-homepage";
@@ -12,12 +13,16 @@ import type { Metadata } from "next";
 import { cookies, headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import {
   HOMEPAGE_SEO_CONTENT_COOKIE_KEY,
   parseHomepageSeoContentCookie,
 } from "./_utils/homepage-seo-content";
-import { PrayerTimesWrapper } from "./_components/prayer-times-wrapper";
+import {
+  PrayerTimesSkeleton,
+  PrayerTimesWrapper,
+} from "./_components/prayer-times-wrapper";
 import { TodayCityHeading } from "./_components/today-city-heading";
 
 const siteUrl = getSiteBaseUrl();
@@ -225,101 +230,27 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function Page() {
-  const featureFlags = await getServerFeatureFlags();
-  const requestHeaders = await headers();
-  const requestCookies = await cookies();
-  const showHomepageSeoContent = parseHomepageSeoContentCookie(
-    requestCookies.get(HOMEPAGE_SEO_CONTENT_COOKIE_KEY)?.value,
-  );
-  const googlebotHomepageResult = featureFlags.prayerTimings
-    ? await resolveGooglebotHomepageResult(requestHeaders)
-    : {
-        initialPrayerDay: null,
-      };
-
-  if (!featureFlags.prayerTimings) {
-    if (featureFlags.adhkars) {
-      redirect("/adhkars");
-    }
-
-    redirect("/settings/general");
-  }
-
+export default function Page() {
   return (
     <>
       <div className="homepage-clean space-y-4">
         <section aria-labelledby="dashboard-heading" className="space-y-2">
           <TodayCityHeading />
-          <PrayerTimesWrapper
-            featureFlags={featureFlags}
-            initialPrayerDay={googlebotHomepageResult.initialPrayerDay}
-          />
+          <Suspense
+            fallback={
+              <PrayerTimesSkeleton
+                dashboardView="cards"
+                featureFlags={resolveFeatureFlags()}
+              />
+            }
+          >
+            <PrayerDashboard />
+          </Suspense>
         </section>
 
-        {showHomepageSeoContent ? (
-          <>
-            <section
-              aria-labelledby="settings-meaning-heading"
-              className="glass-panel space-y-4 rounded-3xl border-border/80 p-5 sm:p-6"
-            >
-              <h2
-                className="text-xl font-semibold sm:text-2xl"
-                id="settings-meaning-heading"
-              >
-                What Each Setting Means
-              </h2>
-              <p className="text-muted-foreground text-sm leading-6 sm:text-base">
-                Simple definitions for each settings option.
-              </p>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {settingMeaningItems.map((item) => (
-                  <article
-                    className="rounded-xl border border-border/75 bg-background/90 px-4 py-3"
-                    key={item.name}
-                  >
-                    <h3 className="text-base leading-tight font-semibold">
-                      {item.name}
-                    </h3>
-                    <p className="text-muted-foreground mt-2 text-sm leading-6">
-                      {item.meaning}
-                    </p>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <section
-              aria-labelledby="homepage-faq-heading"
-              className="glass-panel space-y-4 rounded-3xl border-border/80 p-5 sm:p-6"
-            >
-              <h2
-                className="text-xl font-semibold sm:text-2xl"
-                id="homepage-faq-heading"
-              >
-                Frequently Asked Questions
-              </h2>
-              <p className="text-muted-foreground text-sm leading-6 sm:text-base">
-                Common questions and answers about prayer times and this page.
-              </p>
-              <div className="space-y-3">
-                {faqEntries.map((item) => (
-                  <details
-                    className="rounded-xl border border-border/75 bg-background/90 px-4 py-3"
-                    key={item.question}
-                  >
-                    <summary className="cursor-pointer list-none text-sm leading-6 font-semibold [&::-webkit-details-marker]:hidden">
-                      {item.question}
-                    </summary>
-                    <p className="text-muted-foreground mt-2 text-sm leading-6">
-                      {item.answer}
-                    </p>
-                  </details>
-                ))}
-              </div>
-            </section>
-          </>
-        ) : null}
+        <Suspense fallback={null}>
+          <HomepageSeoContent />
+        </Suspense>
 
         <section className="glass-panel rounded-3xl border-border/80 p-4 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -343,6 +274,104 @@ export default async function Page() {
         id="homepage-software-application-jsonld"
       />
       <JsonLdScript data={faqJsonLd} id="homepage-faq-jsonld" />
+    </>
+  );
+}
+
+async function PrayerDashboard() {
+  const featureFlags = await getServerFeatureFlags();
+
+  if (!featureFlags.prayerTimings) {
+    if (featureFlags.adhkars) {
+      redirect("/adhkars");
+    }
+
+    redirect("/settings/general");
+  }
+
+  const { initialPrayerDay } = await resolveGooglebotHomepageResult(
+    await headers(),
+  );
+
+  return (
+    <PrayerTimesWrapper
+      featureFlags={featureFlags}
+      initialPrayerDay={initialPrayerDay}
+    />
+  );
+}
+
+async function HomepageSeoContent() {
+  const requestCookies = await cookies();
+  const showHomepageSeoContent = parseHomepageSeoContentCookie(
+    requestCookies.get(HOMEPAGE_SEO_CONTENT_COOKIE_KEY)?.value,
+  );
+
+  if (!showHomepageSeoContent) {
+    return null;
+  }
+
+  return (
+    <>
+      <section
+        aria-labelledby="settings-meaning-heading"
+        className="glass-panel space-y-4 rounded-3xl border-border/80 p-5 sm:p-6"
+      >
+        <h2
+          className="text-xl font-semibold sm:text-2xl"
+          id="settings-meaning-heading"
+        >
+          What Each Setting Means
+        </h2>
+        <p className="text-muted-foreground text-sm leading-6 sm:text-base">
+          Simple definitions for each settings option.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {settingMeaningItems.map((item) => (
+            <article
+              className="rounded-xl border border-border/75 bg-background/90 px-4 py-3"
+              key={item.name}
+            >
+              <h3 className="text-base leading-tight font-semibold">
+                {item.name}
+              </h3>
+              <p className="text-muted-foreground mt-2 text-sm leading-6">
+                {item.meaning}
+              </p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section
+        aria-labelledby="homepage-faq-heading"
+        className="glass-panel space-y-4 rounded-3xl border-border/80 p-5 sm:p-6"
+      >
+        <h2
+          className="text-xl font-semibold sm:text-2xl"
+          id="homepage-faq-heading"
+        >
+          Frequently Asked Questions
+        </h2>
+        <p className="text-muted-foreground text-sm leading-6 sm:text-base">
+          Common questions and answers about prayer times and this page.
+        </p>
+        <div className="space-y-3">
+          {faqEntries.map((item) => (
+            <details
+              className="rounded-xl border border-border/75 bg-background/90 px-4 py-3"
+              key={item.question}
+            >
+              <summary className="cursor-pointer list-none text-sm leading-6 font-semibold [&::-webkit-details-marker]:hidden">
+                {item.question}
+              </summary>
+              <p className="text-muted-foreground mt-2 text-sm leading-6">
+                {item.answer}
+              </p>
+            </details>
+          ))}
+        </div>
+      </section>
     </>
   );
 }

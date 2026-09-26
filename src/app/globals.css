@@ -222,3 +222,88 @@ html.light body {
     display: none;
   }
 }
+
+/* Launch splash for installed PWAs. Colors match the manifest and iOS startup images. */
+.app-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  background-color: #f5f6fa;
+  transition: opacity 200ms ease-out;
+  /* Fail-safe in case hydration never happens (e.g. a script error). */
+  animation: app-splash-timeout 0s linear 10s forwards;
+}
+
+@media (display-mode: standalone) {
+  .app-splash {
+    display: flex;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-splash {
+    background-color: #121318;
+  }
+}
+
+html.dark .app-splash {
+  background-color: #121318;
+}
+
+html.light .app-splash {
+  background-color: #f5f6fa;
+}
+
+.app-splash[data-state="leaving"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app-splash-icon {
+  border-radius: 22%;
+  box-shadow: 0 12px 32px rgb(17 19 26 / 0.18);
+}
+
+html.dark .app-splash-icon {
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.14);
+}
+
+.app-splash-spinner {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  border: 2.5px solid color-mix(in oklab, var(--foreground) 14%, transparent);
+  border-top-color: var(--primary);
+  animation: app-splash-spin 700ms linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-splash-spinner {
+    animation: app-splash-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes app-splash-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes app-splash-pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes app-splash-timeout {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}

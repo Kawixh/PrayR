@@ -62,6 +62,9 @@ function parseCategoryId(value: string | null): number | null {
   return parsed;
 }
 
+// Feature-flagged route that 404s via notFound(); block so the status code stays correct.
+export const instant = false;
+
 export const metadata: Metadata = {
   title: "Adhkars Library",
   description:

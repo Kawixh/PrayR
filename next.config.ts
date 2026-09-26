@@ -1,5 +1,10 @@
 module.exports = {
   reactCompiler: true,
+  cacheComponents: true,
+  partialPrefetching: true,
+  experimental: {
+    useOffline: true,
+  },
   async headers() {
     return [
       {

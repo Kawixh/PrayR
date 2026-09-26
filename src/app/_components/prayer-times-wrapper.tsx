@@ -384,6 +384,107 @@ function FirstVisitStepLoader({ stage }: { stage: InitialLoadStage }) {
   );
 }
 
+export function PrayerTimesSkeleton({
+  dashboardView,
+  featureFlags,
+}: {
+  dashboardView: PrayerDashboardView;
+  featureFlags: FeatureFlags;
+}) {
+  const showMergedFastingCard = featureFlags.sehrAndIftarTimes;
+  const showStandaloneIslamicDateCard =
+    featureFlags.islamicCalendar && !showMergedFastingCard;
+
+  return (
+    <section aria-busy="true" aria-live="polite" className="space-y-5">
+      {showMergedFastingCard ? (
+        <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
+          <div className="space-y-3">
+            <div className="h-4 w-24 animate-pulse rounded bg-muted/70" />
+            <div className="h-9 w-36 animate-pulse rounded bg-muted/80" />
+            <div className="h-4 w-28 animate-pulse rounded bg-muted/70" />
+          </div>
+        </Card>
+      ) : null}
+
+      <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <div className="h-6 w-36 animate-pulse rounded bg-muted/80" />
+            <div className="size-5 animate-pulse rounded bg-muted/70" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-10 w-40 animate-pulse rounded bg-muted/80" />
+            <div className="h-7 w-28 animate-pulse rounded bg-muted/70" />
+          </div>
+          <div className="h-4 w-48 animate-pulse rounded bg-muted/70" />
+          <div className="h-10 w-32 animate-pulse rounded-full bg-muted/70" />
+        </div>
+      </Card>
+
+      {showStandaloneIslamicDateCard ? (
+        <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
+          <div className="space-y-3">
+            <div className="h-5 w-40 animate-pulse rounded bg-muted/80" />
+            <div className="h-4 w-56 animate-pulse rounded bg-muted/70" />
+            <div className="h-4 w-48 animate-pulse rounded bg-muted/70" />
+          </div>
+        </Card>
+      ) : null}
+
+      {featureFlags.adhkars && featureFlags.adhkarOfTheDay ? (
+        <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
+          <div className="space-y-3">
+            <div className="h-5 w-32 animate-pulse rounded bg-muted/80" />
+            <div className="h-4 w-full animate-pulse rounded bg-muted/70" />
+            <div className="h-4 w-11/12 animate-pulse rounded bg-muted/70" />
+            <div className="h-4 w-10/12 animate-pulse rounded bg-muted/70" />
+          </div>
+        </Card>
+      ) : null}
+
+      {dashboardView === "timeline" ? (
+        <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
+          <div className="space-y-3">
+            <div className="h-6 w-32 animate-pulse rounded bg-muted/80" />
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                className="flex items-center justify-between rounded-lg border border-border/75 bg-background/80 px-3 py-3"
+                key={`timeline-skeleton-row-${index}`}
+              >
+                <div className="h-4 w-20 animate-pulse rounded bg-muted/70" />
+                <div className="h-4 w-16 animate-pulse rounded bg-muted/70" />
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : (
+        <div className="grid w-full gap-4 md:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <Card
+              className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6"
+              key={`prayer-panel-skeleton-${index}`}
+            >
+              <div className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <div className="h-6 w-24 animate-pulse rounded bg-muted/80" />
+                  <div className="size-4 animate-pulse rounded bg-muted/70" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-11 w-40 animate-pulse rounded bg-muted/80" />
+                  <div className="h-8 w-28 animate-pulse rounded bg-muted/70" />
+                </div>
+                <div className="h-4 w-36 animate-pulse rounded bg-muted/70" />
+                <div className="h-9 w-28 animate-pulse rounded-full bg-muted/70" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function PrayerTimesWrapper({
   featureFlags,
   initialPrayerDay = null,
@@ -564,92 +665,10 @@ export function PrayerTimesWrapper({
     }
 
     return (
-      <section aria-busy="true" aria-live="polite" className="space-y-5">
-        {showMergedFastingCard ? (
-          <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
-            <div className="space-y-3">
-              <div className="h-4 w-24 animate-pulse rounded bg-muted/70" />
-              <div className="h-9 w-36 animate-pulse rounded bg-muted/80" />
-              <div className="h-4 w-28 animate-pulse rounded bg-muted/70" />
-            </div>
-          </Card>
-        ) : null}
-
-        <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
-          <div className="space-y-5">
-            <div className="flex items-center justify-between">
-              <div className="h-6 w-36 animate-pulse rounded bg-muted/80" />
-              <div className="size-5 animate-pulse rounded bg-muted/70" />
-            </div>
-            <div className="space-y-2">
-              <div className="h-10 w-40 animate-pulse rounded bg-muted/80" />
-              <div className="h-7 w-28 animate-pulse rounded bg-muted/70" />
-            </div>
-            <div className="h-4 w-48 animate-pulse rounded bg-muted/70" />
-            <div className="h-10 w-32 animate-pulse rounded-full bg-muted/70" />
-          </div>
-        </Card>
-
-        {showStandaloneIslamicDateCard ? (
-          <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
-            <div className="space-y-3">
-              <div className="h-5 w-40 animate-pulse rounded bg-muted/80" />
-              <div className="h-4 w-56 animate-pulse rounded bg-muted/70" />
-              <div className="h-4 w-48 animate-pulse rounded bg-muted/70" />
-            </div>
-          </Card>
-        ) : null}
-
-        {featureFlags.adhkars && featureFlags.adhkarOfTheDay ? (
-          <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
-            <div className="space-y-3">
-              <div className="h-5 w-32 animate-pulse rounded bg-muted/80" />
-              <div className="h-4 w-full animate-pulse rounded bg-muted/70" />
-              <div className="h-4 w-11/12 animate-pulse rounded bg-muted/70" />
-              <div className="h-4 w-10/12 animate-pulse rounded bg-muted/70" />
-            </div>
-          </Card>
-        ) : null}
-
-        {dashboardView === "timeline" ? (
-          <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
-            <div className="space-y-3">
-              <div className="h-6 w-32 animate-pulse rounded bg-muted/80" />
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div
-                  className="flex items-center justify-between rounded-lg border border-border/75 bg-background/80 px-3 py-3"
-                  key={`timeline-skeleton-row-${index}`}
-                >
-                  <div className="h-4 w-20 animate-pulse rounded bg-muted/70" />
-                  <div className="h-4 w-16 animate-pulse rounded bg-muted/70" />
-                </div>
-              ))}
-            </div>
-          </Card>
-        ) : (
-          <div className="grid w-full gap-4 md:grid-cols-2">
-            {Array.from({ length: 2 }).map((_, index) => (
-              <Card
-                className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6"
-                key={`prayer-panel-skeleton-${index}`}
-              >
-                <div className="space-y-5">
-                  <div className="flex items-center justify-between">
-                    <div className="h-6 w-24 animate-pulse rounded bg-muted/80" />
-                    <div className="size-4 animate-pulse rounded bg-muted/70" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-11 w-40 animate-pulse rounded bg-muted/80" />
-                    <div className="h-8 w-28 animate-pulse rounded bg-muted/70" />
-                  </div>
-                  <div className="h-4 w-36 animate-pulse rounded bg-muted/70" />
-                  <div className="h-9 w-28 animate-pulse rounded-full bg-muted/70" />
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </section>
+      <PrayerTimesSkeleton
+        dashboardView={dashboardView}
+        featureFlags={featureFlags}
+      />
     );
   }
 

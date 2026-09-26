@@ -6,8 +6,6 @@ import {
 } from "@/lib/seo/og-image";
 import { ImageResponse } from "next/og";
 
-export const runtime = "edge";
-export const dynamic = "force-dynamic";
 export const contentType = OG_IMAGE_CONTENT_TYPE;
 
 export function GET(request: Request) {

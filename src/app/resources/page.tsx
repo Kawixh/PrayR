@@ -8,6 +8,7 @@ import {
 } from "@/lib/seo/site";
 import { getOgImageMetadata, getOgImageUrl } from "@/lib/seo/og-image";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 const asimYouTubeResources = [
   {
@@ -144,23 +145,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ResourcesPage() {
-  const featureFlags = await getServerFeatureFlags();
-  const resourcesFaqJsonLd = featureFlags.ramadanResourcesFaq
-    ? {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        mainEntity: ramadanFaqItems.map((item) => ({
-          "@type": "Question",
-          name: item.question,
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: item.answer,
-          },
-        })),
-      }
-    : null;
-
+export default function ResourcesPage() {
   return (
     <>
       <section className="space-y-6">
@@ -303,40 +288,65 @@ export default async function ResourcesPage() {
           </div>
         </section>
 
-        {featureFlags.ramadanResourcesFaq ? (
-          <section className="app-banner-subtle">
-            <h2 className="text-xl font-semibold sm:text-2xl">
-              Common Ramadan Questions
-            </h2>
-            <div className="mt-3 space-y-2.5">
-              {ramadanFaqItems.map((item) => (
-                <article
-                  className="rounded-xl border border-border/70 bg-background/85 p-3"
-                  key={item.question}
-                >
-                  <p className="mb-2 inline-flex rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold tracking-[0.14em] text-primary uppercase">
-                    Ramadan Resources Feature
-                  </p>
-                  <h3 className="text-sm font-semibold sm:text-base">
-                    {item.question}
-                  </h3>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground sm:text-base">
-                    {item.answer}
-                  </p>
-                </article>
-              ))}
-            </div>
-          </section>
-        ) : null}
+        <Suspense fallback={null}>
+          <RamadanFaqSection />
+        </Suspense>
       </section>
       <JsonLdScript data={resourcesWebPageJsonLd} id="resources-webpage-jsonld" />
       <JsonLdScript
         data={resourcesBreadcrumbJsonLd}
         id="resources-breadcrumb-jsonld"
       />
-      {resourcesFaqJsonLd ? (
-        <JsonLdScript data={resourcesFaqJsonLd} id="resources-faq-jsonld" />
-      ) : null}
+    </>
+  );
+}
+
+async function RamadanFaqSection() {
+  const featureFlags = await getServerFeatureFlags();
+
+  if (!featureFlags.ramadanResourcesFaq) {
+    return null;
+  }
+
+  const resourcesFaqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: ramadanFaqItems.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+
+  return (
+    <>
+      <section className="app-banner-subtle">
+        <h2 className="text-xl font-semibold sm:text-2xl">
+          Common Ramadan Questions
+        </h2>
+        <div className="mt-3 space-y-2.5">
+          {ramadanFaqItems.map((item) => (
+            <article
+              className="rounded-xl border border-border/70 bg-background/85 p-3"
+              key={item.question}
+            >
+              <p className="mb-2 inline-flex rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold tracking-[0.14em] text-primary uppercase">
+                Ramadan Resources Feature
+              </p>
+              <h3 className="text-sm font-semibold sm:text-base">
+                {item.question}
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground sm:text-base">
+                {item.answer}
+              </p>
+            </article>
+          ))}
+        </div>
+      </section>
+      <JsonLdScript data={resourcesFaqJsonLd} id="resources-faq-jsonld" />
     </>
   );
 }
