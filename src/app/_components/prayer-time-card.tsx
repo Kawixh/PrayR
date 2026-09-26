@@ -1,15 +1,14 @@
 "use client";
 
 import { type PrayerTimings } from "@/backend/types";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Clock3, Sparkles, TriangleAlert } from "lucide-react";
+import { TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   getCurrentPrayerName,
   getMakruhWindows,
+  getPrayerStatusSnapshot,
   type PrayerName,
 } from "../_utils/prayer-day";
 import { formatTo12Hour, prayerTimeToDate } from "../_utils/time";
@@ -19,84 +18,78 @@ type PrayerTimeCardProps = {
   timings: PrayerTimings;
 };
 
-type PrayerRowProps = {
-  title: string;
-  headline: string;
-  description: string;
-  highlight?: boolean;
-  prayerName?: PrayerName;
-  showAdhkarLink: boolean;
-  tone?: "default" | "makruh";
-};
-
-const SUNRISE_MAKRUH_MINUTES = 15;
-const SOLAR_NOON_MAKRUH_MINUTES = 10;
-
 type DayWindow = {
   end: Date;
   start: Date;
 };
 
-function PrayerRow({
-  description,
-  headline,
-  prayerName,
-  showAdhkarLink,
-  title,
-  tone = "default",
-  highlight = false,
-}: PrayerRowProps) {
-  const statusLabel =
-    tone === "makruh" ? "Makruh Window" : highlight ? "Current Prayer" : "Scheduled";
+type ScheduleRow =
+  | {
+      kind: "prayer";
+      name: PrayerName;
+      note?: string;
+      startsAt: Date;
+      time: string;
+    }
+  | { kind: "duha"; id: string; window: DayWindow }
+  | { kind: "makruh"; id: string; window: DayWindow };
 
-  return (
-    <li
-      className={cn(
-        "flex flex-col gap-3 px-4 py-3 sm:px-5",
-        highlight
-          ? "bg-primary/8"
-          : tone === "makruh"
-            ? "bg-amber-500/8"
-            : "bg-transparent",
-      )}
-    >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-            {title}
-          </p>
-          <p className="mt-1 font-display text-3xl leading-tight sm:text-4xl">
-            {headline}
-          </p>
-        </div>
+const SUNRISE_MAKRUH_MINUTES = 15;
+const SOLAR_NOON_MAKRUH_MINUTES = 10;
 
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
-          {tone === "makruh" ? (
-            <TriangleAlert className="size-3.5 text-amber-700 dark:text-amber-300" />
-          ) : highlight ? (
-            <Sparkles className="size-3.5 text-primary" />
-          ) : (
-            <Clock3 className="size-3.5" />
-          )}
-          <span>{statusLabel}</span>
-        </div>
-      </div>
+const timeFormatter = new Intl.DateTimeFormat(undefined, {
+  hour: "numeric",
+  minute: "2-digit",
+});
 
-      <p className="text-sm leading-6 text-muted-foreground sm:text-base">
-        {description}
-      </p>
+function formatWindow(windowItem: DayWindow): string {
+  return `${timeFormatter.format(windowItem.start)} – ${timeFormatter.format(windowItem.end)}`;
+}
 
-      {showAdhkarLink && prayerName ? (
-        <div className="pt-1">
-          <Button asChild className="min-h-9 rounded-full px-3 py-2 text-sm" size="sm" variant="outline">
-            <Link href={`/adhkars?prayer=${encodeURIComponent(prayerName)}`}>
-              View Adhkars
-            </Link>
-          </Button>
-        </div>
-      ) : null}
-    </li>
+function buildScheduleRows(timings: PrayerTimings, now: Date): ScheduleRow[] | null {
+  const fajr = prayerTimeToDate(timings.Fajr, now);
+  const sunrise = prayerTimeToDate(timings.Sunrise, now);
+  const dhuhr = prayerTimeToDate(timings.Dhuhr, now);
+  const asr = prayerTimeToDate(timings.Asr, now);
+  const maghrib = prayerTimeToDate(timings.Maghrib, now);
+  const isha = prayerTimeToDate(timings.Isha, now);
+  const sunsetMakruh = getMakruhWindows(timings, now).find(
+    (windowItem) => windowItem.id === "sunset",
   );
+
+  if (!fajr || !sunrise || !dhuhr || !asr || !maghrib || !isha || !sunsetMakruh) {
+    return null;
+  }
+
+  const sunriseMakruhEnd = new Date(
+    sunrise.getTime() + SUNRISE_MAKRUH_MINUTES * 60_000,
+  );
+  const solarNoonStart = new Date(
+    dhuhr.getTime() - SOLAR_NOON_MAKRUH_MINUTES * 60_000,
+  );
+  const prayer = (name: PrayerName, startsAt: Date, note?: string): ScheduleRow => ({
+    kind: "prayer",
+    name,
+    note,
+    startsAt,
+    time: formatTo12Hour(timings[name]),
+  });
+
+  return [
+    prayer("Fajr", fajr, "Sehar"),
+    { kind: "makruh", id: "sunrise", window: { start: sunrise, end: sunriseMakruhEnd } },
+    { kind: "duha", id: "duha", window: { start: sunriseMakruhEnd, end: solarNoonStart } },
+    { kind: "makruh", id: "solarNoon", window: { start: solarNoonStart, end: dhuhr } },
+    prayer("Dhuhr", dhuhr),
+    prayer("Asr", asr),
+    {
+      kind: "makruh",
+      id: "sunset",
+      window: { start: sunsetMakruh.start, end: sunsetMakruh.end },
+    },
+    prayer("Maghrib", maghrib, "Iftar"),
+    prayer("Isha", isha),
+  ];
 }
 
 export function PrayerTimeCard({
@@ -119,179 +112,155 @@ export function PrayerTimeCard({
     () => getCurrentPrayerName(timings, currentTime),
     [currentTime, timings],
   );
+  const nextPrayer = useMemo(
+    () => getPrayerStatusSnapshot(timings, currentTime)?.nextPrayer ?? null,
+    [currentTime, timings],
+  );
+  const rows = useMemo(
+    () => buildScheduleRows(timings, currentTime),
+    [currentTime, timings],
+  );
 
-  const windows = useMemo(() => {
-    const fajr = prayerTimeToDate(timings.Fajr, currentTime);
-    const sunrise = prayerTimeToDate(timings.Sunrise, currentTime);
-    const dhuhr = prayerTimeToDate(timings.Dhuhr, currentTime);
-    const asr = prayerTimeToDate(timings.Asr, currentTime);
-    const maghrib = prayerTimeToDate(timings.Maghrib, currentTime);
-    const isha = prayerTimeToDate(timings.Isha, currentTime);
-
-    if (!fajr || !sunrise || !dhuhr || !asr || !maghrib || !isha) {
-      return null;
-    }
-
-    const sunriseMakruhEnd = new Date(
-      sunrise.getTime() + SUNRISE_MAKRUH_MINUTES * 60_000,
-    );
-    const solarNoonStart = new Date(
-      dhuhr.getTime() - SOLAR_NOON_MAKRUH_MINUTES * 60_000,
-    );
-
-    const sunriseMakruh: DayWindow = {
-      start: sunrise,
-      end: sunriseMakruhEnd,
-    };
-    const duhaWindow: DayWindow = {
-      start: sunriseMakruhEnd,
-      end: solarNoonStart,
-    };
-    const beforeDhuhrMakruh: DayWindow = {
-      start: solarNoonStart,
-      end: dhuhr,
-    };
-
-    const makruhWindows = getMakruhWindows(timings, currentTime);
-    const beforeMaghribMakruh = makruhWindows.find(
-      (windowItem) => windowItem.id === "sunset",
-    );
-
-    if (!beforeMaghribMakruh) {
-      return null;
-    }
-
-    return {
-      asr,
-      beforeDhuhrMakruh,
-      beforeMaghribMakruh: {
-        start: beforeMaghribMakruh.start,
-        end: beforeMaghribMakruh.end,
-      },
-      dhuhr,
-      duhaWindow,
-      fajr,
-      isha,
-      maghrib,
-      sunrise,
-      sunriseMakruh,
-    };
-  }, [currentTime, timings]);
-
-  if (!windows) {
+  if (!rows) {
     return null;
   }
 
-  const formatWindow = (windowItem: DayWindow) =>
-    `${new Intl.DateTimeFormat(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(windowItem.start)} - ${new Intl.DateTimeFormat(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(windowItem.end)}`;
-
-  const isWindowActive = (windowItem: DayWindow) =>
-    currentTime.getTime() >= windowItem.start.getTime() &&
-    currentTime.getTime() < windowItem.end.getTime();
+  const now = currentTime.getTime();
+  const isActive = (windowItem: DayWindow) =>
+    now >= windowItem.start.getTime() && now < windowItem.end.getTime();
+  const isNextToday = (name: PrayerName) =>
+    nextPrayer?.name === name &&
+    nextPrayer.date.toDateString() === currentTime.toDateString();
 
   return (
-    <section className="space-y-4">
-      <Card className="glass-panel overflow-hidden rounded-3xl border-border/80 p-0">
-        <header className="flex items-center justify-between gap-3 border-b border-border/80 px-4 py-3 sm:px-5">
-          <div>
-            <h2 className="text-base font-semibold sm:text-lg">Today&apos;s Schedule</h2>
-            <p className="text-xs text-muted-foreground sm:text-sm">
-              Prayer times and Makruh windows in chronological order.
-            </p>
-          </div>
-          <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-            Local Time
-          </p>
-        </header>
+    <section aria-labelledby="schedule-heading" className="space-y-2">
+      <h2 className="sr-only" id="schedule-heading">
+        Today&apos;s schedule
+      </h2>
 
-        <ul className="divide-y divide-border/75">
-          <PrayerRow
-            description="Fajr starts here. Sehar cutoff aligns with Fajr."
-            headline={formatTo12Hour(timings.Fajr)}
-            highlight={currentPrayer === "Fajr"}
-            prayerName="Fajr"
-            showAdhkarLink={showAdhkarLinks}
-            title="Fajr / Sehar"
-          />
+      <ol className="divide-y divide-border/50 overflow-hidden rounded-3xl border border-border/70 bg-card">
+        {rows.map((row) => {
+          if (row.kind === "makruh") {
+            const active = isActive(row.window);
+            const past = !active && now >= row.window.end.getTime();
 
-          <PrayerRow
-            description="Sunrise Makruh window starts at sunrise and lasts for 15 minutes."
-            headline={formatWindow(windows.sunriseMakruh)}
-            highlight={isWindowActive(windows.sunriseMakruh)}
-            showAdhkarLink={false}
-            title="Makruh Waqt"
-            tone="makruh"
-          />
+            return (
+              <li
+                className={cn(
+                  "flex items-center justify-between gap-3 px-4 py-2 text-xs sm:px-5",
+                  active
+                    ? "bg-amber-500/12 text-amber-800 dark:text-amber-200"
+                    : "text-amber-700/90 dark:text-amber-300/80",
+                  past && "opacity-55",
+                )}
+                key={row.id}
+              >
+                <span className="flex items-center gap-1.5 font-medium">
+                  <TriangleAlert aria-hidden className="size-3.5" />
+                  Makruh
+                  {active ? <span className="font-semibold">· now</span> : null}
+                </span>
+                <span className="tabular-nums">{formatWindow(row.window)}</span>
+              </li>
+            );
+          }
 
-          <PrayerRow
-            description="Duha prayer window after sunrise Makruh until before Dhuhr Makruh."
-            headline={formatWindow(windows.duhaWindow)}
-            highlight={isWindowActive(windows.duhaWindow)}
-            showAdhkarLink={false}
-            title="Duha Window"
-          />
+          if (row.kind === "duha") {
+            const active = isActive(row.window);
+            const past = !active && now >= row.window.end.getTime();
 
-          <PrayerRow
-            description="Avoid voluntary prayers shortly before Dhuhr."
-            headline={formatWindow(windows.beforeDhuhrMakruh)}
-            highlight={isWindowActive(windows.beforeDhuhrMakruh)}
-            showAdhkarLink={false}
-            title="Makruh Before Dhuhr"
-            tone="makruh"
-          />
+            return (
+              <li
+                className={cn(
+                  "flex items-center justify-between gap-3 px-4 py-3 sm:px-5",
+                  active && "bg-primary/8",
+                  past && "text-muted-foreground",
+                )}
+                key={row.id}
+              >
+                <span className="flex items-baseline gap-2">
+                  <span className="font-medium">Duha</span>
+                  <span className="text-xs text-muted-foreground">Optional</span>
+                </span>
+                <span className="text-sm tabular-nums text-muted-foreground">
+                  {formatWindow(row.window)}
+                </span>
+              </li>
+            );
+          }
 
-          <PrayerRow
-            description="Dhuhr obligatory prayer starts at this time."
-            headline={formatTo12Hour(timings.Dhuhr)}
-            highlight={currentPrayer === "Dhuhr"}
-            prayerName="Dhuhr"
-            showAdhkarLink={showAdhkarLinks}
-            title="Dhuhr"
-          />
+          const current = currentPrayer === row.name;
+          const next = !current && isNextToday(row.name);
+          const past = !current && !next && now >= row.startsAt.getTime();
 
-          <PrayerRow
-            description="Asr obligatory prayer starts at this time."
-            headline={formatTo12Hour(timings.Asr)}
-            highlight={currentPrayer === "Asr"}
-            prayerName="Asr"
-            showAdhkarLink={showAdhkarLinks}
-            title="Asr"
-          />
+          return (
+            <li
+              aria-current={current ? "time" : undefined}
+              className={cn(
+                "relative flex items-center justify-between gap-3 px-4 py-4 sm:px-5",
+                current && "bg-primary/10",
+              )}
+              key={row.name}
+            >
+              {current ? (
+                <span
+                  aria-hidden
+                  className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-primary"
+                />
+              ) : null}
 
-          <PrayerRow
-            description="Final minutes before Maghrib are Makruh for voluntary prayer."
-            headline={formatWindow(windows.beforeMaghribMakruh)}
-            highlight={isWindowActive(windows.beforeMaghribMakruh)}
-            showAdhkarLink={false}
-            title="Makruh Waqt"
-            tone="makruh"
-          />
+              <span className="flex min-w-0 flex-col">
+                <span className="flex items-center gap-2">
+                  <span
+                    className={cn(
+                      "text-base font-semibold",
+                      current && "text-primary",
+                      past && "font-medium text-muted-foreground",
+                    )}
+                  >
+                    {row.name}
+                  </span>
+                  {row.note ? (
+                    <span className="text-xs text-muted-foreground">{row.note}</span>
+                  ) : null}
+                  {current ? (
+                    <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">
+                      Now
+                    </span>
+                  ) : next ? (
+                    <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                      Next
+                    </span>
+                  ) : null}
+                </span>
+                {showAdhkarLinks ? (
+                  <Link
+                    className="mt-0.5 text-xs font-medium text-primary underline-offset-4 hover:underline"
+                    href={`/adhkars?prayer=${encodeURIComponent(row.name)}`}
+                  >
+                    Adhkars
+                  </Link>
+                ) : null}
+              </span>
 
-          <PrayerRow
-            description="Maghrib starts and Iftar time begins."
-            headline={formatTo12Hour(timings.Maghrib)}
-            highlight={currentPrayer === "Maghrib"}
-            prayerName="Maghrib"
-            showAdhkarLink={showAdhkarLinks}
-            title="Maghrib / Iftar"
-          />
+              <span
+                className={cn(
+                  "font-display text-xl tabular-nums",
+                  current && "font-semibold text-primary",
+                  past && "text-muted-foreground",
+                )}
+              >
+                {row.time}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
 
-          <PrayerRow
-            description="Isha obligatory prayer starts at this time."
-            headline={formatTo12Hour(timings.Isha)}
-            highlight={currentPrayer === "Isha"}
-            prayerName="Isha"
-            showAdhkarLink={showAdhkarLinks}
-            title="Isha"
-          />
-        </ul>
-      </Card>
+      <p className="flex items-center gap-1.5 px-1 text-xs text-muted-foreground">
+        <TriangleAlert aria-hidden className="size-3.5 text-amber-600 dark:text-amber-300" />
+        Avoid voluntary prayers during makruh times.
+      </p>
     </section>
   );
 }

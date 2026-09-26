@@ -3,6 +3,9 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Matches when launched as an installed PWA from the home screen. */
+@custom-variant standalone (@media (display-mode: standalone));
+
 /* Prepaint fallback colors to prevent light flash before theme hydration. */
 html,
 body {

@@ -2,7 +2,8 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { useHydrated } from "@/lib/use-hydrated";
 
 const DURATION = 400;
 const STYLES_ID = "mode-toggle-circle-style";
@@ -62,20 +63,13 @@ function animateCircleTransition(x: number, y: number, done: () => void) {
   });
 }
 
-function useHydrated(): boolean {
-  return useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-}
-
 export const ModeToggle = ({ className = "" }: { className?: string }) => {
   const { setTheme, resolvedTheme } = useTheme();
   const hydrated = useHydrated();
   const btnRef = useRef<HTMLButtonElement>(null);
 
-  const isDark = resolvedTheme === "dark";
+  // The resolved theme comes from localStorage, so the server can't know it.
+  const isDark = hydrated && resolvedTheme === "dark";
 
   useEffect(() => {
     injectCircleTransitionStyles();

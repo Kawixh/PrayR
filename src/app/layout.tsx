@@ -230,7 +230,7 @@ export default function RootLayout({
             <TooltipProvider delayDuration={120}>
               <OfflineBanner />
               <div className="app-canvas">
-                <div className="mx-auto flex min-h-svh w-full max-w-5xl flex-col gap-4 px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 lg:px-8">
+                <div className="mx-auto flex min-h-svh w-full max-w-5xl flex-col gap-4 px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-4 md:pb-[calc(2rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-8">
                   <PwaInstallBanner />
                   <Suspense
                     fallback={<Navbar featureFlags={resolveFeatureFlags()} />}

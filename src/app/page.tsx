@@ -233,7 +233,7 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <>
-      <div className="homepage-clean space-y-4">
+      <div className="homepage-clean mx-auto w-full max-w-2xl space-y-4">
         <section aria-labelledby="dashboard-heading" className="space-y-2">
           <TodayCityHeading />
           <Suspense
@@ -252,7 +252,7 @@ export default function Page() {
           <HomepageSeoContent />
         </Suspense>
 
-        <section className="glass-panel rounded-3xl border-border/80 p-4 sm:p-5">
+        <section className="glass-panel rounded-3xl border-border/80 p-4 sm:p-5 standalone:hidden">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold sm:text-2xl">Resources</h2>
@@ -311,8 +311,9 @@ async function HomepageSeoContent() {
     return null;
   }
 
+  // Kept on the website for SEO; installed-app users only need the schedule.
   return (
-    <>
+    <div className="space-y-4 standalone:hidden">
       <section
         aria-labelledby="settings-meaning-heading"
         className="glass-panel space-y-4 rounded-3xl border-border/80 p-5 sm:p-6"
@@ -372,6 +373,6 @@ async function HomepageSeoContent() {
           ))}
         </div>
       </section>
-    </>
+    </div>
   );
 }

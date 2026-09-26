@@ -1,14 +1,33 @@
 "use client";
 
 import { type PrayerTimings } from "@/backend/types";
-import { Card } from "@/components/ui/card";
-import { Clock3, TriangleAlert } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { TriangleAlert } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { getCurrentPrayerName, getPrayerStatusSnapshot } from "../_utils/prayer-day";
 
 type CurrentPrayerStatusCardProps = {
   timings: PrayerTimings;
 };
+
+function formatCountdown(target: Date, now: Date): string {
+  const totalMinutes = Math.max(
+    0,
+    Math.ceil((target.getTime() - now.getTime()) / 60_000),
+  );
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (totalMinutes === 0) {
+    return "starting now";
+  }
+
+  if (hours === 0) {
+    return `in ${minutes}m`;
+  }
+
+  return minutes === 0 ? `in ${hours}h` : `in ${hours}h ${minutes}m`;
+}
 
 export function CurrentPrayerStatusCard({ timings }: CurrentPrayerStatusCardProps) {
   const [currentTime, setCurrentTime] = useState(() => new Date());
@@ -36,64 +55,49 @@ export function CurrentPrayerStatusCard({ timings }: CurrentPrayerStatusCardProp
     return null;
   }
 
-  const activeMakruh = snapshot.activeMakruh;
-  const headline = activeMakruh
-    ? "Makruh Time Right Now"
+  const { activeMakruh, nextPrayer } = snapshot;
+  const statusLabel = activeMakruh
+    ? `Makruh time until ${activeMakruh.endLabel}`
     : currentPrayer
-      ? `Pray ${currentPrayer} Now`
-      : "No Fard Prayer Right Now";
+      ? `${currentPrayer} time now`
+      : "No fard prayer right now";
 
   return (
-    <Card
-      className={
-        activeMakruh
-          ? "border-amber-500/35 bg-amber-500/10 p-5 sm:p-6"
-          : "glass-panel border-primary/25 bg-primary/6 p-5 sm:p-6"
-      }
+    <section
+      aria-label="Next prayer"
+      className="relative overflow-hidden rounded-3xl bg-primary px-5 pt-5 pb-4 text-primary-foreground shadow-[0_18px_40px_-24px_color-mix(in_oklab,var(--primary)_80%,transparent)] sm:px-6 sm:pt-6 dark:bg-[color-mix(in_oklab,var(--primary)_24%,var(--card))] dark:text-foreground dark:shadow-none dark:ring-1 dark:ring-primary/25"
     >
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div
-            className={
-              activeMakruh
-                ? "rounded-full bg-amber-500/20 p-2 text-amber-700 dark:text-amber-300"
-                : "rounded-full bg-primary/15 p-2 text-primary"
-            }
-          >
-            {activeMakruh ? (
-              <TriangleAlert className="size-4" />
-            ) : (
-              <Clock3 className="size-4" />
-            )}
-          </div>
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            Current Prayer Status
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-16 -right-10 size-48 rounded-full bg-white/10 blur-2xl"
+      />
+
+      <div className="relative">
+        <p className="text-sm font-medium opacity-80">Next prayer</p>
+        <div className="mt-1 flex items-end justify-between gap-4">
+          <h2 className="font-display text-4xl leading-none font-semibold tracking-tight sm:text-5xl">
+            {nextPrayer.name}
+          </h2>
+          <p className="font-display text-3xl leading-none tabular-nums sm:text-4xl">
+            {nextPrayer.time12}
           </p>
         </div>
+        <p className="mt-2 text-sm font-medium tabular-nums opacity-80">
+          {formatCountdown(nextPrayer.date, currentTime)}
+        </p>
 
-        <p className="font-display text-3xl leading-tight sm:text-4xl">{headline}</p>
-
-        <div className="space-y-1.5">
-          {activeMakruh ? (
-            <p className="text-sm leading-6 text-muted-foreground sm:text-base">
-              {activeMakruh.title.replace("Makrooh Waqt: ", "")}: {activeMakruh.startLabel} -{" "}
-              {activeMakruh.endLabel}
-            </p>
-          ) : currentPrayer ? (
-            <p className="text-sm leading-6 text-muted-foreground sm:text-base">
-              You can perform {currentPrayer} now.
-            </p>
-          ) : (
-            <p className="text-sm leading-6 text-muted-foreground sm:text-base">
-              No obligatory prayer is active at this moment.
-            </p>
+        <p
+          className={cn(
+            "mt-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold",
+            activeMakruh
+              ? "bg-amber-300 text-amber-950"
+              : "bg-white/15 text-primary-foreground dark:bg-primary/15 dark:text-primary",
           )}
-
-          <p className="text-sm leading-6 text-muted-foreground sm:text-base">
-            Next prayer: {snapshot.nextPrayer.name} at {snapshot.nextPrayer.time12}.
-          </p>
-        </div>
+        >
+          {activeMakruh ? <TriangleAlert aria-hidden className="size-3.5" /> : null}
+          {statusLabel}
+        </p>
       </div>
-    </Card>
+    </section>
   );
 }

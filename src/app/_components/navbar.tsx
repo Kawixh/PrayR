@@ -1,25 +1,23 @@
 "use client";
 
 import { ModeToggle } from "@/components/theme-manager";
-import { Button } from "@/components/ui/button";
 import { type FeatureFlags, type FeatureKey } from "@/features/definitions";
 import { cn } from "@/lib/utils";
 import {
   BookOpenText,
   Home,
   type LucideIcon,
-  Menu,
   NotebookTabs,
   Settings,
-  X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 type NavItem = {
   href: string;
   label: string;
+  shortLabel?: string;
   icon: LucideIcon;
   matches: (pathname: string) => boolean;
   featureKey?: FeatureKey;
@@ -29,6 +27,7 @@ const navItems: NavItem[] = [
   {
     href: "/",
     label: "Prayer Times",
+    shortLabel: "Prayers",
     icon: Home,
     matches: (pathname: string) => pathname === "/",
     featureKey: "prayerTimings",
@@ -48,7 +47,7 @@ const navItems: NavItem[] = [
     featureKey: "resourcesTab",
   },
   {
-    href: "/settings/general",
+    href: "/settings",
     label: "Settings",
     icon: Settings,
     matches: (pathname: string) => pathname.startsWith("/settings"),
@@ -57,8 +56,6 @@ const navItems: NavItem[] = [
 
 export const Navbar = ({ featureFlags }: { featureFlags: FeatureFlags }) => {
   const pathname = usePathname();
-  const [mobileMenuPath, setMobileMenuPath] = useState<string | null>(null);
-  const mobileMenuOpen = mobileMenuPath === pathname;
   const visibleNavItems = useMemo(
     () =>
       navItems.filter(
@@ -66,36 +63,6 @@ export const Navbar = ({ featureFlags }: { featureFlags: FeatureFlags }) => {
       ),
     [featureFlags],
   );
-
-  useEffect(() => {
-    if (!mobileMenuOpen) {
-      return;
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [mobileMenuOpen]);
-
-  useEffect(() => {
-    if (!mobileMenuOpen) {
-      return;
-    }
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setMobileMenuPath(null);
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [mobileMenuOpen]);
 
   return (
     <>
@@ -155,103 +122,42 @@ export const Navbar = ({ featureFlags }: { featureFlags: FeatureFlags }) => {
         </div>
       </nav>
 
-      <Button
-        aria-controls="mobile-primary-menu"
-        aria-expanded={mobileMenuOpen}
-        aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-        className={cn(
-          "fixed right-4 z-50 size-14 rounded-full border border-primary/30 text-primary-foreground shadow-[0_1px_1px_color-mix(in_oklab,var(--foreground)_9%,transparent),0_16px_30px_-20px_color-mix(in_oklab,var(--foreground)_42%,transparent)] md:hidden",
-          mobileMenuOpen
-            ? "bg-primary hover:bg-primary/90"
-            : "bg-primary/95 hover:bg-primary",
-        )}
-        onClick={() => {
-          setMobileMenuPath((openPath) =>
-            openPath === pathname ? null : pathname,
-          );
-        }}
-        style={{ bottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}
-        type="button"
+      <nav
+        aria-label="Primary"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border/70 bg-card/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg md:hidden"
       >
-        {mobileMenuOpen ? (
-          <X className="size-6" aria-hidden />
-        ) : (
-          <Menu className="size-6" aria-hidden />
-        )}
-      </Button>
+        <ul className="mx-auto flex max-w-md items-stretch justify-around px-2">
+          {visibleNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = item.matches(pathname);
 
-      <div
-        className={cn(
-          "fixed inset-0 z-40 transition-opacity duration-200 md:hidden",
-          mobileMenuOpen
-            ? "pointer-events-auto opacity-100"
-            : "pointer-events-none opacity-0",
-        )}
-        id="mobile-primary-menu"
-      >
-        <button
-          aria-label="Close menu"
-          className="absolute inset-0 bg-background/96 backdrop-blur-sm transition-opacity duration-200"
-          onClick={() => {
-            setMobileMenuPath(null);
-          }}
-          type="button"
-        />
-
-        <nav
-          aria-label="Mobile primary"
-          className="relative flex h-full flex-col px-6 pb-[calc(env(safe-area-inset-bottom)+2.5rem)] pt-[calc(env(safe-area-inset-top)+1.5rem)]"
-        >
-          <div className="flex items-center justify-between">
-            <span className="soft-chip border-primary/35 text-primary">
-              Navigation
-            </span>
-            <ModeToggle className="size-10 border-border bg-card/70 text-foreground hover:border-primary/30 hover:bg-card" />
-          </div>
-
-          <div className="mt-6 h-px bg-border/80" />
-
-          <div className="flex flex-1 items-center">
-            <ul className="w-full space-y-3">
-              {visibleNavItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = item.matches(pathname);
-
-                return (
-                  <li key={item.href}>
-                    <Link
-                      aria-current={isActive ? "page" : undefined}
-                      className={cn(
-                        "group flex items-center justify-between rounded-2xl border px-5 py-4 transition-colors duration-200",
-                        isActive
-                          ? "border-primary/45 bg-primary/14 text-primary"
-                          : "border-border/80 bg-card/75 text-foreground hover:border-primary/30 hover:bg-card",
-                      )}
-                      href={item.href}
-                      onClick={() => {
-                        setMobileMenuPath(null);
-                      }}
-                    >
-                      <span className="font-display text-[1.85rem] leading-[1.1] tracking-tight">
-                        {item.label}
-                      </span>
-                      <Icon
-                        aria-hidden
-                        className={cn(
-                          "size-7 shrink-0 transition duration-200",
-                          isActive
-                            ? "text-primary"
-                            : "text-muted-foreground group-hover:translate-x-0.5 group-hover:text-foreground",
-                        )}
-                      />
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </nav>
-      </div>
+            return (
+              <li className="flex-1" key={item.href}>
+                <Link
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors",
+                    isActive
+                      ? "text-primary"
+                      : "text-muted-foreground active:text-foreground",
+                  )}
+                  href={item.href}
+                >
+                  <span
+                    className={cn(
+                      "flex h-8 w-14 items-center justify-center rounded-full transition-colors",
+                      isActive && "bg-primary/12",
+                    )}
+                  >
+                    <Icon aria-hidden className="size-5" />
+                  </span>
+                  {item.shortLabel ?? item.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
     </>
   );
 };

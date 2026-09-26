@@ -21,17 +21,19 @@ import {
   parsePrayerMethod,
   resolvePrayerMethodByCountryCode,
 } from "@/lib/prayer-calculation-method";
+import { useHydrated } from "@/lib/use-hydrated";
 import { cn } from "@/lib/utils";
 import {
   BellRing,
   ChevronLeft,
   ChevronRight,
+  Clock3,
   FlaskConical,
   LocateFixed,
   MapPin,
   Search,
   SlidersHorizontal,
-  Sparkles,
+  ToggleRight,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -60,6 +62,7 @@ import {
   getSettingsPanelPath,
   type SettingsPanelId,
 } from "../_lib/settings-panels";
+import { AppearanceSetting } from "./appearance-setting";
 import { FeatureSettingsCard } from "./feature-settings-card";
 
 const calculationMethods = [
@@ -206,13 +209,13 @@ const schools = [
 const dashboardViewOptions = [
   {
     value: "cards",
-    label: "Current cards",
+    label: "Simple list",
     description:
-      "Shows current state cards, previous/next flow, and Makrooh warnings inside prayer times.",
+      "One row per prayer with the current and next prayer highlighted, and Makrooh times in between.",
   },
   {
     value: "timeline",
-    label: "Vertical timeline",
+    label: "Timeline",
     description:
       "Shows full day events in a vertical timeline with prayers and Makrooh blocks.",
   },
@@ -417,10 +420,31 @@ function SuggestionsSkeleton({ withCode = false }: { withCode?: boolean }) {
 }
 
 type SettingsRouteClientProps = {
-  activePanel: SettingsPanelId;
+  // null renders the settings index (the list of sections).
+  activePanel: SettingsPanelId | null;
 };
 
+// Settings are read from localStorage when state initializes, so the content
+// only mounts after hydration; the server renders a skeleton instead.
 export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
+  const hydrated = useHydrated();
+
+  if (!hydrated) {
+    return (
+      <section aria-busy="true" className="mx-auto max-w-2xl space-y-5 md:max-w-none">
+        <div className="space-y-2 px-1">
+          <div className="h-8 w-40 animate-pulse rounded-lg bg-muted" />
+          <div className="h-4 w-56 animate-pulse rounded bg-muted/70" />
+        </div>
+        <div className="h-72 animate-pulse rounded-3xl bg-card" />
+      </section>
+    );
+  }
+
+  return <SettingsRouteContent activePanel={activePanel} />;
+}
+
+function SettingsRouteContent({ activePanel }: SettingsRouteClientProps) {
   const router = useRouter();
   const [isResettingDefaults, startResetDefaultsTransition] = useTransition();
   const [settings, setSettings] =
@@ -537,12 +561,13 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
     return panels;
   }, [featureFlags.prayerTimings]);
   const fallbackPanel = availablePanels[0] ?? "features";
-  const resolvedActivePanel = availablePanels.includes(activePanel)
-    ? activePanel
-    : fallbackPanel;
+  const resolvedActivePanel =
+    activePanel && availablePanels.includes(activePanel)
+      ? activePanel
+      : fallbackPanel;
 
   useEffect(() => {
-    if (resolvedActivePanel === activePanel) {
+    if (activePanel === null || resolvedActivePanel === activePanel) {
       return;
     }
 
@@ -778,21 +803,21 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
             id: "general" as const,
             label: "General",
             description: "Location and automatic detection.",
-            summary: `${generalLocationSummary} / ${homepageSeoContentLabel}`,
-            icon: Sparkles,
+            summary: generalLocationSummary,
+            icon: MapPin,
           },
           {
             id: "prayers" as const,
             label: "Prayers",
             description: "Method and school selection.",
             summary: selectedSchoolLabel,
-            icon: MapPin,
+            icon: Clock3,
           },
           {
             id: "display" as const,
             label: "Display",
-            description: "Dashboard and Hijri date behavior.",
-            summary: `${selectedDashboardViewLabel} / ${selectedHijriAdjustmentLabel}`,
+            description: "Theme, dashboard layout and Hijri date.",
+            summary: `${selectedDashboardViewLabel} · ${selectedHijriAdjustmentLabel}`,
             icon: SlidersHorizontal,
           },
         ]
@@ -802,7 +827,7 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
       label: "Features",
       description: "Feature flag modules and app toggles.",
       summary: `Prayer timings: ${featureFlags.prayerTimings ? "Enabled" : "Disabled"}`,
-      icon: Search,
+      icon: ToggleRight,
     },
     ...(DEV_MENU_ENABLED
       ? [
@@ -830,7 +855,7 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
     },
     display: {
       title: "Display",
-      description: "Control dashboard layout and Hijri date adjustment.",
+      description: "Theme, dashboard layout and Hijri date adjustment.",
     },
     features: {
       title: "Features",
@@ -842,23 +867,72 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
     },
   };
   const activePanelMeta = panelMeta[resolvedActivePanel];
-  const activePanelIndex = menuItems.findIndex(
-    (item) => item.id === resolvedActivePanel,
-  );
-  const previousPanelItem =
-    activePanelIndex > 0 ? menuItems[activePanelIndex - 1] : null;
-  const nextPanelItem =
-    activePanelIndex >= 0 && activePanelIndex < menuItems.length - 1
-      ? menuItems[activePanelIndex + 1]
-      : null;
+
+  if (activePanel === null) {
+    return (
+      <section className="mx-auto max-w-2xl space-y-5">
+        <header className="space-y-1 px-1">
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Settings</h1>
+          <p className="text-sm text-muted-foreground">Changes save automatically.</p>
+        </header>
+
+        <nav aria-label="Settings sections">
+          <ul className="divide-y divide-border/60 overflow-hidden rounded-3xl border border-border/70 bg-card">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <li key={item.id}>
+                  <Link
+                    className="flex items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-muted/50 active:bg-muted focus-visible:bg-muted/50 focus-visible:outline-none"
+                    href={getSettingsPanelPath(item.id)}
+                  >
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
+                      <Icon aria-hidden className="size-[18px]" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-medium">{item.label}</span>
+                      <span className="block truncate text-sm text-muted-foreground">
+                        {item.summary}
+                      </span>
+                    </span>
+                    <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {!featureFlags.prayerTimings ? (
+          <p className="px-1 text-sm text-muted-foreground">
+            Prayer settings are hidden while Prayer Timings is disabled in Features.
+          </p>
+        ) : null}
+      </section>
+    );
+  }
 
   return (
     <section className="space-y-5 md:space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Settings</h1>
+        <Link
+          className="-ml-1 inline-flex items-center gap-0.5 rounded-full py-1 pr-2 text-sm font-medium text-primary md:hidden"
+          href="/settings"
+        >
+          <ChevronLeft aria-hidden className="size-4" />
+          Settings
+        </Link>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">
+          <span className="md:hidden">{activePanelMeta.title}</span>
+          <span className="hidden md:inline">Settings</span>
+        </h1>
         <p className="text-sm text-muted-foreground">
-          Manage prayer timings, display behavior, and feature access. Changes
-          save automatically.
+          <span className="md:hidden">{activePanelMeta.description}</span>
+          <span className="hidden md:inline">
+            Manage prayer timings, display behavior, and feature access. Changes
+            save automatically.
+          </span>
         </p>
       </header>
 
@@ -918,76 +992,17 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
           </CardContent>
         </aside>
 
-        <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-[0_1px_1px_color-mix(in_oklab,var(--foreground)_8%,transparent),0_8px_18px_-16px_color-mix(in_oklab,var(--foreground)_24%,transparent)] sm:p-6">
-          <header className="border-b border-border/70 pb-4">
+        <div className="rounded-3xl border border-border/70 bg-card p-5 sm:p-6">
+          <header className="hidden border-b border-border/70 pb-4 md:block">
             <h2 className="text-xl font-semibold sm:text-2xl">
               {activePanelMeta.title}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {activePanelMeta.description}
             </p>
-            <div className="mt-3 space-y-2 md:hidden">
-              <Select
-                onValueChange={(value) =>
-                  router.push(getSettingsPanelPath(value as SettingsPanelId))
-                }
-                value={resolvedActivePanel}
-              >
-                <SelectTrigger className="min-h-10 w-full rounded-md">
-                  <SelectValue placeholder="Choose settings section" />
-                </SelectTrigger>
-                <SelectContent>
-                  {menuItems.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="flex gap-2">
-                <Button
-                  asChild={Boolean(previousPanelItem)}
-                  className="flex-1 justify-start"
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  {previousPanelItem ? (
-                    <Link href={getSettingsPanelPath(previousPanelItem.id)}>
-                      <ChevronLeft className="size-4" />
-                      {previousPanelItem.label}
-                    </Link>
-                  ) : (
-                    <span>
-                      <ChevronLeft className="size-4" />
-                      Previous
-                    </span>
-                  )}
-                </Button>
-                <Button
-                  asChild={Boolean(nextPanelItem)}
-                  className="flex-1 justify-end"
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  {nextPanelItem ? (
-                    <Link href={getSettingsPanelPath(nextPanelItem.id)}>
-                      {nextPanelItem.label}
-                      <ChevronRight className="size-4" />
-                    </Link>
-                  ) : (
-                    <span>
-                      Next
-                      <ChevronRight className="size-4" />
-                    </span>
-                  )}
-                </Button>
-              </div>
-            </div>
           </header>
 
-          <div className="pt-5">
+          <div className="md:pt-5">
             {resolvedActivePanel === "general" ? (
               featureFlags.prayerTimings ? (
                 <div className="space-y-6">
@@ -1320,6 +1335,7 @@ export function SettingsRouteClient({ activePanel }: SettingsRouteClientProps) {
             {resolvedActivePanel === "display" ? (
               featureFlags.prayerTimings ? (
                 <div className="space-y-5">
+                  <AppearanceSetting />
                   <section>
                     <div className="mb-3">
                       <h3 className="text-sm font-semibold">

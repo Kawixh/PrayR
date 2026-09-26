@@ -1,25 +1,14 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { notFound, useParams } from "next/navigation";
 
 import { SettingsRouteClient } from "../_components/settings-route-client";
-import {
-  isSettingsPanelId,
-  SETTINGS_PANEL_IDS,
-} from "../_lib/settings-panels";
+import { isSettingsPanelId } from "../_lib/settings-panels";
 
-type SettingsSectionPageProps = {
-  params: Promise<{
-    section: string;
-  }>;
-};
-
-export function generateStaticParams(): Array<{ section: string }> {
-  return SETTINGS_PANEL_IDS.map((section) => ({ section }));
-}
-
-export default async function SettingsSectionPage({
-  params,
-}: SettingsSectionPageProps) {
-  const { section } = await params;
+// A client page reads params from the router, so moving between settings
+// sections never waits on the server.
+export default function SettingsSectionPage() {
+  const { section } = useParams<{ section: string }>();
   const devMenuEnabled = process.env.NEXT_PUBLIC_ENABLE_DEV_MENU !== "0";
 
   if (!isSettingsPanelId(section)) {

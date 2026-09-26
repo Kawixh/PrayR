@@ -1,7 +1,5 @@
-import { redirect } from "next/navigation";
-
-import { getSettingsPanelPath } from "./_lib/settings-panels";
+import { SettingsRouteClient } from "./_components/settings-route-client";
 
 export default function SettingsPage() {
-  redirect(getSettingsPanelPath("general"));
+  return <SettingsRouteClient activePanel={null} />;
 }

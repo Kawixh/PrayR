@@ -2,6 +2,7 @@
 
 import { type AlAdhanDayData, type AlAdhanTimingsResponse } from "@/backend/types";
 import { Card } from "@/components/ui/card";
+import { useHydrated } from "@/lib/use-hydrated";
 import { type FeatureFlags } from "@/features/definitions";
 import {
   DEFAULT_PRAYER_SCHOOL,
@@ -391,93 +392,23 @@ export function PrayerTimesSkeleton({
   dashboardView: PrayerDashboardView;
   featureFlags: FeatureFlags;
 }) {
-  const showMergedFastingCard = featureFlags.sehrAndIftarTimes;
-  const showStandaloneIslamicDateCard =
-    featureFlags.islamicCalendar && !showMergedFastingCard;
+  const showDateStrip = featureFlags.sehrAndIftarTimes || featureFlags.islamicCalendar;
 
   return (
-    <section aria-busy="true" aria-live="polite" className="space-y-5">
-      {showMergedFastingCard ? (
-        <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
-          <div className="space-y-3">
-            <div className="h-4 w-24 animate-pulse rounded bg-muted/70" />
-            <div className="h-9 w-36 animate-pulse rounded bg-muted/80" />
-            <div className="h-4 w-28 animate-pulse rounded bg-muted/70" />
-          </div>
-        </Card>
+    <section aria-busy="true" aria-label="Loading prayer times" className="space-y-3">
+      <div className="h-[9.5rem] animate-pulse rounded-3xl bg-primary/15" />
+      {showDateStrip ? (
+        <div className="h-16 animate-pulse rounded-2xl border border-border/70 bg-card" />
       ) : null}
-
-      <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
-        <div className="space-y-5">
-          <div className="flex items-center justify-between">
-            <div className="h-6 w-36 animate-pulse rounded bg-muted/80" />
-            <div className="size-5 animate-pulse rounded bg-muted/70" />
-          </div>
-          <div className="space-y-2">
-            <div className="h-10 w-40 animate-pulse rounded bg-muted/80" />
-            <div className="h-7 w-28 animate-pulse rounded bg-muted/70" />
-          </div>
-          <div className="h-4 w-48 animate-pulse rounded bg-muted/70" />
-          <div className="h-10 w-32 animate-pulse rounded-full bg-muted/70" />
-        </div>
-      </Card>
-
-      {showStandaloneIslamicDateCard ? (
-        <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
-          <div className="space-y-3">
-            <div className="h-5 w-40 animate-pulse rounded bg-muted/80" />
-            <div className="h-4 w-56 animate-pulse rounded bg-muted/70" />
-            <div className="h-4 w-48 animate-pulse rounded bg-muted/70" />
-          </div>
-        </Card>
-      ) : null}
-
-      {featureFlags.adhkars && featureFlags.adhkarOfTheDay ? (
-        <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
-          <div className="space-y-3">
-            <div className="h-5 w-32 animate-pulse rounded bg-muted/80" />
-            <div className="h-4 w-full animate-pulse rounded bg-muted/70" />
-            <div className="h-4 w-11/12 animate-pulse rounded bg-muted/70" />
-            <div className="h-4 w-10/12 animate-pulse rounded bg-muted/70" />
-          </div>
-        </Card>
-      ) : null}
-
       {dashboardView === "timeline" ? (
-        <Card className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6">
-          <div className="space-y-3">
-            <div className="h-6 w-32 animate-pulse rounded bg-muted/80" />
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div
-                className="flex items-center justify-between rounded-lg border border-border/75 bg-background/80 px-3 py-3"
-                key={`timeline-skeleton-row-${index}`}
-              >
-                <div className="h-4 w-20 animate-pulse rounded bg-muted/70" />
-                <div className="h-4 w-16 animate-pulse rounded bg-muted/70" />
-              </div>
-            ))}
-          </div>
-        </Card>
+        <div className="h-[36rem] animate-pulse rounded-3xl border border-border/70 bg-card" />
       ) : (
-        <div className="grid w-full gap-4 md:grid-cols-2">
-          {Array.from({ length: 2 }).map((_, index) => (
-            <Card
-              className="glass-panel rounded-2xl border-border/80 p-5 sm:p-6"
-              key={`prayer-panel-skeleton-${index}`}
-            >
-              <div className="space-y-5">
-                <div className="flex items-center justify-between">
-                  <div className="h-6 w-24 animate-pulse rounded bg-muted/80" />
-                  <div className="size-4 animate-pulse rounded bg-muted/70" />
-                </div>
-                <div className="space-y-2">
-                  <div className="h-11 w-40 animate-pulse rounded bg-muted/80" />
-                  <div className="h-8 w-28 animate-pulse rounded bg-muted/70" />
-                </div>
-                <div className="h-4 w-36 animate-pulse rounded bg-muted/70" />
-                <div className="h-9 w-28 animate-pulse rounded-full bg-muted/70" />
-              </div>
-            </Card>
+        <div className="divide-y divide-border/50 overflow-hidden rounded-3xl border border-border/70 bg-card">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div className="flex items-center justify-between px-4 py-4 sm:px-5" key={index}>
+              <div className="h-5 w-20 animate-pulse rounded bg-muted" />
+              <div className="h-6 w-24 animate-pulse rounded bg-muted" />
+            </div>
           ))}
         </div>
       )}
@@ -485,7 +416,22 @@ export function PrayerTimesSkeleton({
   );
 }
 
-export function PrayerTimesWrapper({
+export function PrayerTimesWrapper(props: PrayerTimesWrapperProps) {
+  const hydrated = useHydrated();
+
+  // Without server data the dashboard starts from localStorage (saved view,
+  // first-visit state), which the server can't see. Render the skeleton until
+  // hydration so both sides match.
+  if (!hydrated && !props.initialPrayerDay) {
+    return (
+      <PrayerTimesSkeleton dashboardView="cards" featureFlags={props.featureFlags} />
+    );
+  }
+
+  return <PrayerTimesContent {...props} />;
+}
+
+function PrayerTimesContent({
   featureFlags,
   initialPrayerDay = null,
 }: PrayerTimesWrapperProps) {
@@ -693,14 +639,14 @@ export function PrayerTimesWrapper({
   );
 
   return (
-    <section className="space-y-5">
+    <section className="space-y-3">
+      <CurrentPrayerStatusCard timings={prayerDay.timings} />
       {showMergedFastingCard ? (
         <SeharIftarHighlightsCard
           dateInfo={adjustedDateInfo}
           timings={prayerDay.timings}
         />
       ) : null}
-      <CurrentPrayerStatusCard timings={prayerDay.timings} />
       {showStandaloneIslamicDateCard ? (
         <IslamicDateCalendarCard dateInfo={adjustedDateInfo} />
       ) : null}

@@ -52,26 +52,20 @@ export function SeharIftarHighlightsCard({
   const hijriDateLabel = `${dateInfo.hijri.day} ${dateInfo.hijri.month.en} ${dateInfo.hijri.year} AH`;
 
   return (
-    <section>
-      <article className="mt-3 min-w-0 rounded-xl border border-primary/32 bg-primary/8 px-3.5 py-3.5 sm:px-4">
-        <div className="flex items-end justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="font-display text-3xl leading-tight break-words sm:text-4xl">
-              {label}
-            </h2>
-          </div>
-          <span className="rounded-full border border-primary/35 bg-background/85 p-2.5 text-primary">
-            <Icon className="size-5" />
-          </span>
-        </div>
-
-        <p className="font-display mt-4 text-5xl leading-none tracking-tight break-words sm:text-6xl">
+    <section
+      aria-label={`${label} time`}
+      className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card px-4 py-3"
+    >
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
+        <Icon aria-hidden className="size-5" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <p className="font-display text-xl leading-tight font-semibold tabular-nums">
           {value}
         </p>
-        <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
-          {hijriDateLabel}
-        </p>
-      </article>
+      </div>
+      <p className="text-right text-xs leading-5 text-muted-foreground">{hijriDateLabel}</p>
     </section>
   );
 }

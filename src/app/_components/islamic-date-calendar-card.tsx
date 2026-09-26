@@ -1,7 +1,7 @@
 "use client";
 
 import { type AlAdhanDateInfo } from "@/backend/types";
-import { Card } from "@/components/ui/card";
+import { CalendarDays } from "lucide-react";
 
 type IslamicDateCalendarCardProps = {
   dateInfo: AlAdhanDateInfo;
@@ -11,17 +11,24 @@ export function IslamicDateCalendarCard({ dateInfo }: IslamicDateCalendarCardPro
   const hijriMonth = dateInfo.hijri.month;
 
   return (
-    <Card className="glass-panel border-border/80 p-4 sm:p-5">
-      <div className="min-w-0">
-        <p className="soft-chip inline-flex">Islamic Date</p>
-        <h2 className="mt-3 text-balance font-display text-2xl leading-tight sm:text-3xl">
-          {dateInfo.hijri.day} {hijriMonth.en} {dateInfo.hijri.year} AH
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-          {dateInfo.hijri.weekday.en} • {dateInfo.hijri.weekday.ar}
+    <section
+      aria-label="Islamic date"
+      className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card px-4 py-3"
+    >
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
+        <CalendarDays aria-hidden className="size-5" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-muted-foreground">
+          {dateInfo.hijri.weekday.en}
         </p>
-        <p className="mt-1 text-sm text-muted-foreground sm:text-base">{hijriMonth.ar}</p>
+        <p className="font-medium">
+          {dateInfo.hijri.day} {hijriMonth.en} {dateInfo.hijri.year} AH
+        </p>
       </div>
-    </Card>
+      <p className="text-right text-sm text-muted-foreground" dir="rtl" lang="ar">
+        {hijriMonth.ar}
+      </p>
+    </section>
   );
 }
